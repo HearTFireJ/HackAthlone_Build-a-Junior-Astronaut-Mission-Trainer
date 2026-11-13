@@ -8,6 +8,7 @@ Claude Code 通过 `CLAUDE.md` 引用本文件，Codex 直接读本文件。只�
 - 题目：**Build a Junior Astronaut Mission Trainer**。
 - 一个人参赛。作者负责创意和决定，代码主要由 AI 写。
 - 仓库是公开的，评委会看。
+- 作者的目标和背景写在 `00-目标.md`（本地文件，不进仓库）。它存在的话，开始工作前先读一遍。
 
 ## 事实以原始来源为准
 
