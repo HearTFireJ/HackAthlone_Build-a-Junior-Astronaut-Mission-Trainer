@@ -24,6 +24,7 @@ Claude Code 通过 `CLAUDE.md` 引用本文件，Codex 直接读本文件。只�
 
 - 题目要求：https://hackathlone.com/challenges/junior-astronaut-mission-trainer （该页注明最终以 NASA Space Apps 官网题目页为准）
 - 赛程和奖项：https://hackathlone.com/downloads/hackathlone26-participation-kit.pdf
+- 提交要求和评分标准：原文链接和转述都在 `docs/submission.md`。写 README、展示材料、填提交表之前先读。
 
 ## 每一处改动都要守住的要求
 

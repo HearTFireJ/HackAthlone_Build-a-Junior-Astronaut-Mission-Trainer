@@ -39,6 +39,13 @@ export function AboutData() {
             I-LOFAR, a real radio telescope at Birr Castle in County Offaly that listens to the Sun.
           </li>
         </ul>
+        <h3>How it was made</h3>
+        <ul>
+          <li>
+            Built in one weekend at HackAthlone 2026 for the NASA Space Apps Challenge. The code was written
+            with the help of AI coding tools, directed and checked by a person.
+          </li>
+        </ul>
       </div>
     </details>
   )
