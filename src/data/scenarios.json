@@ -1,0 +1,391 @@
+{
+  "source": "NASA DONKI (Space Weather Database Of Notifications, Knowledge, Information)",
+  "sourceUrl": "https://ccmc.gsfc.nasa.gov/tools/DONKI/",
+  "retrievedAt": "2026-11-13",
+  "scenarios": [
+    {
+      "id": "quiet-2019",
+      "dayBefore": {
+        "date": "2019-11-30",
+        "strongestFlare": null,
+        "strongestFlareLink": null,
+        "flareCount": 0,
+        "particleEvents": [],
+        "maxKp": null
+      },
+      "days": [
+        {
+          "date": "2019-12-01",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2019-12-02",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2019-12-03",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2019-12-04",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2019-12-05",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2019-12-06",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2019-12-07",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2019-12-08",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2019-12-09",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2019-12-10",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        }
+      ]
+    },
+    {
+      "id": "sep-2017",
+      "dayBefore": {
+        "date": "2017-09-02",
+        "strongestFlare": "C7.7",
+        "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/12965/-1",
+        "flareCount": 1,
+        "particleEvents": [],
+        "maxKp": null
+      },
+      "days": [
+        {
+          "date": "2017-09-03",
+          "strongestFlare": null,
+          "strongestFlareLink": null,
+          "flareCount": 0,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2017-09-04",
+          "strongestFlare": "M5.5",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/12979/-1",
+          "flareCount": 7,
+          "particleEvents": [
+            {
+              "time": "2017-09-04T23:52Z",
+              "instruments": [
+                "SOHO: COSTEP 15.8-39.8 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/13000/-1"
+            }
+          ],
+          "maxKp": null
+        },
+        {
+          "date": "2017-09-05",
+          "strongestFlare": "M4.2",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/12992/-1",
+          "flareCount": 5,
+          "particleEvents": [
+            {
+              "time": "2017-09-05T00:30Z",
+              "instruments": [
+                "GOES13: SEM/EPS >10 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/12984/-1"
+            }
+          ],
+          "maxKp": null
+        },
+        {
+          "date": "2017-09-06",
+          "strongestFlare": "X9.3",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/13010/-1",
+          "flareCount": 5,
+          "particleEvents": [
+            {
+              "time": "2017-09-06T23:30Z",
+              "instruments": [
+                "SOHO: COSTEP 15.8-39.8 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/13081/-1"
+            },
+            {
+              "time": "2017-09-06T23:45Z",
+              "instruments": [
+                "GOES13: SEM/EPS >10 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/13036/-1"
+            }
+          ],
+          "maxKp": null
+        },
+        {
+          "date": "2017-09-07",
+          "strongestFlare": "X1.3",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/13043/-1",
+          "flareCount": 5,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2017-09-08",
+          "strongestFlare": "M8.1",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/13061/-1",
+          "flareCount": 5,
+          "particleEvents": [],
+          "maxKp": 8
+        },
+        {
+          "date": "2017-09-09",
+          "strongestFlare": "M3.7",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/13087/-1",
+          "flareCount": 3,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2017-09-10",
+          "strongestFlare": "X8.2",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/13098/-1",
+          "flareCount": 2,
+          "particleEvents": [
+            {
+              "time": "2017-09-10T16:25Z",
+              "instruments": [
+                "GOES13: SEM/EPS >100 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/13101/-1"
+            },
+            {
+              "time": "2017-09-10T16:45Z",
+              "instruments": [
+                "GOES13: SEM/EPS >10 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/13104/-1"
+            },
+            {
+              "time": "2017-09-10T20:00Z",
+              "instruments": [
+                "SOHO: COSTEP 15.8-39.8 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/13112/-1"
+            }
+          ],
+          "maxKp": null
+        },
+        {
+          "date": "2017-09-11",
+          "strongestFlare": "B9.8",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/13120/-1",
+          "flareCount": 1,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2017-09-12",
+          "strongestFlare": "C3.0",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/13124/-1",
+          "flareCount": 2,
+          "particleEvents": [],
+          "maxKp": null
+        }
+      ]
+    },
+    {
+      "id": "may-2024",
+      "dayBefore": {
+        "date": "2024-05-05",
+        "strongestFlare": "X1.3",
+        "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30457/-1",
+        "flareCount": 12,
+        "particleEvents": [],
+        "maxKp": null
+      },
+      "days": [
+        {
+          "date": "2024-05-06",
+          "strongestFlare": "X4.5",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30484/-1",
+          "flareCount": 6,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2024-05-07",
+          "strongestFlare": "M8.2",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30532/-1",
+          "flareCount": 14,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2024-05-08",
+          "strongestFlare": "X1.0",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30548/-1",
+          "flareCount": 18,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2024-05-09",
+          "strongestFlare": "X2.2",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30605/-1",
+          "flareCount": 20,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2024-05-10",
+          "strongestFlare": "X3.9",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30666/-1",
+          "flareCount": 15,
+          "particleEvents": [
+            {
+              "time": "2024-05-10T12:59Z",
+              "instruments": [
+                "SOHO: COSTEP 15.8-39.8 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/30675/-1"
+            },
+            {
+              "time": "2024-05-10T13:02Z",
+              "instruments": [
+                "SOHO: COSTEP 28.2-50.1 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/30676/-1"
+            },
+            {
+              "time": "2024-05-10T13:35Z",
+              "instruments": [
+                "GOES-P: SEISS >10 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/30677/-1"
+            }
+          ],
+          "maxKp": 8.67
+        },
+        {
+          "date": "2024-05-11",
+          "strongestFlare": "X5.8",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30711/-1",
+          "flareCount": 13,
+          "particleEvents": [
+            {
+              "time": "2024-05-11T02:10Z",
+              "instruments": [
+                "GOES-P: SEISS >100 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/30714/-1"
+            }
+          ],
+          "maxKp": 9
+        },
+        {
+          "date": "2024-05-12",
+          "strongestFlare": "X1.0",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30760/-1",
+          "flareCount": 10,
+          "particleEvents": [],
+          "maxKp": 7.33
+        },
+        {
+          "date": "2024-05-13",
+          "strongestFlare": "M6.6",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30803/-1",
+          "flareCount": 11,
+          "particleEvents": [
+            {
+              "time": "2024-05-13T14:00Z",
+              "instruments": [
+                "GOES-P: SEISS >10 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/30817/-1"
+            },
+            {
+              "time": "2024-05-13T18:07Z",
+              "instruments": [
+                "SOHO: COSTEP 15.8-39.8 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/30824/-1"
+            },
+            {
+              "time": "2024-05-13T18:07Z",
+              "instruments": [
+                "SOHO: COSTEP 28.2-50.1 MeV"
+              ],
+              "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/30825/-1"
+            }
+          ],
+          "maxKp": 6.33
+        },
+        {
+          "date": "2024-05-14",
+          "strongestFlare": "X8.7",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30849/-1",
+          "flareCount": 6,
+          "particleEvents": [],
+          "maxKp": null
+        },
+        {
+          "date": "2024-05-15",
+          "strongestFlare": "X3.4",
+          "strongestFlareLink": "https://ccmc.gsfc.nasa.gov/DONKI/view/FLR/30879/-1",
+          "flareCount": 5,
+          "particleEvents": [],
+          "maxKp": null
+        }
+      ]
+    }
+  ]
+}
