@@ -91,7 +91,12 @@ export interface AstronautReport {
   tooSickToWork: boolean
   healthBefore: number
   healthAfter: number
+  /** Health the storm would take. The numbers below explain healthBefore -> healthAfter. */
   stormDamage: number
+  /** Health lost because the base ran out of oxygen or food. */
+  shortageDamage: number
+  /** Health won back by resting. */
+  healed: number
 }
 
 /** Everything that happened in one day, for the UI to show and explain. */
@@ -204,6 +209,8 @@ export function resolveDay(state: GameState, plan: DayPlan): { state: GameState;
       healthBefore: astronaut.health,
       healthAfter: astronaut.health,
       stormDamage: 0,
+      shortageDamage: 0,
+      healed: 0,
     }
   })
 
@@ -233,10 +240,12 @@ export function resolveDay(state: GameState, plan: DayPlan): { state: GameState;
   //    "everyone rests every day" would be a free, safe way to finish the mission.
   const crew: Astronaut[] = state.crew.map((astronaut, index) => {
     const report = crewReports[index]
-    let health = astronaut.health - report.stormDamage - shortages * RULES.shortageDamage
-    health = Math.max(0, health)
+    report.shortageDamage = shortages * RULES.shortageDamage
+    let health = Math.max(0, astronaut.health - report.stormDamage - report.shortageDamage)
     if (report.did === 'rest' && shortages === 0) {
-      health = Math.min(RULES.fullHealth, health + RULES.restHealing)
+      const rested = Math.min(RULES.fullHealth, health + RULES.restHealing)
+      report.healed = rested - health
+      health = rested
     }
     report.healthAfter = health
     return { ...astronaut, health }

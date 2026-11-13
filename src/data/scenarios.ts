@@ -34,7 +34,7 @@ export const SCENARIOS: ScenarioInfo[] = [
     dates: '1–10 December 2019',
     difficulty: 'Calm',
     blurb:
-      'Every 11 years or so the Sun goes quiet. In December 2019 NASA recorded no solar flares at all for these ten days.',
+      "Every 11 years or so the Sun goes quiet. NASA's space weather database lists no solar flares at all for these ten days.",
   },
   {
     scenario: find('sep-2017'),
@@ -42,7 +42,7 @@ export const SCENARIOS: ScenarioInfo[] = [
     dates: '3–12 September 2017',
     difficulty: 'Stormy',
     blurb:
-      'The Sun fired its strongest flare in ten years. A brand-new radio telescope in Birr, Ireland, picked up the blast.',
+      'The Sun fired its strongest flare in more than ten years. A brand-new radio telescope in Birr, Ireland, picked up the blast.',
   },
   {
     scenario: find('may-2024'),
@@ -50,6 +50,6 @@ export const SCENARIOS: ScenarioInfo[] = [
     dates: '6–15 May 2024',
     difficulty: 'Very stormy',
     blurb:
-      'The biggest solar storm in twenty years. People across Ireland saw the northern lights from their gardens.',
+      'The biggest solar storm to reach Earth in twenty years. People across Ireland saw the northern lights.',
   },
 ]
