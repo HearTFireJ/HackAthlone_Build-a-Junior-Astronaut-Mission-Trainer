@@ -1,0 +1,19 @@
+# 私人笔记：不进仓库（仓库之后会公开）
+给黑客松AI的说明.md
+01-复盘.md
+
+# 依赖和构建产物
+node_modules/
+dist/
+.vite/
+
+# 密钥（NASA API key 等）
+.env
+.env.*
+!.env.example
+
+# 本机设置和系统文件
+.claude/settings.local.json
+.DS_Store
+Thumbs.db
+*.log
