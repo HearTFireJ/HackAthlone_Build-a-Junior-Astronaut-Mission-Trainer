@@ -50,6 +50,7 @@ Claude Code 通过 `CLAUDE.md` 引用本文件，Codex 直接读本文件。只�
   - 做了什么、下一步、哪里坏着，写进 `docs/progress.md`。
   - 作者确认的设计决定，写进 `docs/design.md`。
   - 新接的数据源，登记到 `docs/data.md`。
+- **命令用 `npm run dev`、`npm test`、`npm run build`、`npm run lint`。** 作者电脑上的项目路径里有 `&`，Windows 下 `npx` 和 `node_modules/.bin` 里的短命令会坏，所以 `package.json` 的脚本都写成 `node node_modules/...` 的形式。不要改回短写法；新加工具时照这个形式写。
 - 密钥只放 `.env`，不进仓库。
 - 作者是第一次用这套技术栈：写代码时，关键设计用一两句话说明为什么这么做。
 - 和作者交流用中文；游戏界面、README、commit message 用英文。
