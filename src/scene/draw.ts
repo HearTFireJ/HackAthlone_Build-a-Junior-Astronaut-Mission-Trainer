@@ -1326,14 +1326,24 @@ function faceOn(ctx: Ctx, id: string, x: number, y: number, r: number, face: Fac
 }
 
 /** Hair that hangs behind the head: it is painted before the face. */
-function hairBehind(ctx: Ctx, look: Look, x: number, y: number, r: number) {
+function hairBehind(ctx: Ctx, look: Look, x: number, y: number, r: number, face: Facing) {
   ctx.fillStyle = look.hair
   ctx.strokeStyle = EDGE
   ctx.lineWidth = 1.6
-  if (look.style === 'long') {
+  if (look.style === 'long' && face === 'up') {
+    // Seen from behind, long hair is one curtain down the back.
     box(ctx, x - r - 2, y - 5, 2 * r + 4, r + 13, 9)
     ctx.fill()
     ctx.stroke()
+  } else if (look.style === 'long') {
+    // Seen from the front it is two locks, one each side of the face.
+    // Joined up under the chin, they looked like a beard.
+    const wide = r * 0.5
+    for (const side of [-1, 1]) {
+      box(ctx, side < 0 ? x - r - 2.5 : x + r + 2.5 - wide, y - 5, wide, r + 12, wide / 2)
+      ctx.fill()
+      ctx.stroke()
+    }
   }
   if (look.style === 'bun') {
     circle(ctx, x, y - r - 3, r * 0.42)
@@ -1379,7 +1389,7 @@ function hairOnTop(ctx: Ctx, look: Look, x: number, y: number, r: number, face: 
 /** A head with nothing on it. */
 function bareHead(ctx: Ctx, id: string, x: number, y: number, r: number, face: Facing, t: number, asleep: boolean) {
   const look = lookOf(id)
-  hairBehind(ctx, look, x, y, r)
+  hairBehind(ctx, look, x, y, r, face)
   circle(ctx, x, y, r)
   ctx.fillStyle = look.skin
   ctx.fill()

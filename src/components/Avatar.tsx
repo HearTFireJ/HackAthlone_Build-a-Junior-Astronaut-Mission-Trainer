@@ -14,7 +14,8 @@ export function Avatar({ id, size = 44 }: { id: string; size?: number }) {
       <g clipPath={`url(#clip-${id})`}>
         {/* shoulders in their own colour */}
         <rect x="6" y="32" width="32" height="16" rx="8" fill={colour} />
-        {look.style === 'long' && <rect x="9" y="16" width="26" height="22" rx="8" fill={look.hair} />}
+        {/* long hair is two locks beside the face: joined under the chin it looked like a beard */}
+        {look.style === 'long' && [8.5, 28.5].map((x) => <rect key={x} x={x} y="16" width="7" height="23" rx="3.5" fill={look.hair} />)}
         <circle cx="22" cy="20" r="12.5" fill={look.hair} />
         {look.style === 'bun' && <circle cx="22" cy="6.5" r="5" fill={look.hair} />}
         {look.style === 'curly' && [[12, 12], [18, 8], [26, 8], [32, 12]].map(([x, y]) => <circle key={x} cx={x} cy={y} r="5" fill={look.hair} />)}
