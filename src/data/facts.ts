@@ -102,4 +102,5 @@ export const EVENT_FACTS: Partial<Record<string, FactId>> = {
   homesick: 'family',
   shadow: 'light',
   pod: 'cargo',
+  stuck: 'rover',
 }

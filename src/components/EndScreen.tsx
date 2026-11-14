@@ -17,8 +17,13 @@ const ANSWER_WORDS: Record<DayReport['response'], string> = {
   shelter: 'Took shelter',
 }
 
-function verdict(stars: number, evacuated: boolean): string {
-  if (evacuated) return 'The crew had to fly home early. Everyone is safe, and the outpost is waiting for you to try again.'
+function verdict(stars: number, evacuated: boolean, outOfAir: boolean): string {
+  if (evacuated && outOfAir) {
+    return 'The air ran out two days in a row, so the crew flew home early. Everyone is safe. Next time, give Life Support power before the air gets low.'
+  }
+  if (evacuated) {
+    return 'Everyone was too sick or too unhappy to work, so the crew flew home early. Everyone is safe. Next time, use rest, the sick bay and calls home sooner.'
+  }
   if (stars >= 5) return 'A perfect tour. The next commander will have a hard time beating this.'
   if (stars >= 3) return 'A strong tour. The next crew takes over a working base and real results.'
   if (stars >= 1) return 'The base is still standing and you have something to show for it. Next time, push the missions harder.'
@@ -46,7 +51,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
             </span>
           ))}
         </p>
-        <p className="lead">{verdict(rating.stars, evacuated)}</p>
+        <p className="lead">{verdict(rating.stars, evacuated, game.airOutDays >= 2)}</p>
         <button type="button" className="primary" onClick={onAgain}>
           Command another mission ▶
         </button>
@@ -73,7 +78,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
             })}
             <li className={handoverReady(game) ? 'mission done' : 'mission'}>
               <div className="mission-head">
-                <span>{handoverReady(game) ? '⭐' : '⬜'} Ready for the next crew</span>
+                <span>{handoverReady(game) ? '⭐' : '⬜'} Hand over the base</span>
                 <span className="mission-count">
                   💨 {game.air} · 🥕 {game.food}
                 </span>

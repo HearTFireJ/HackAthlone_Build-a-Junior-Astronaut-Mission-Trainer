@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { MISSION_FACTS, type FactId } from '../data/facts.ts'
 import type { ScenarioInfo } from '../data/scenarios.ts'
-import { JOBS, MISSIONS, crewInfo } from '../game/content.ts'
+import { JOBS, MISSIONS, MISSION_IDS, crewInfo } from '../game/content.ts'
 import { EVENTS } from '../game/events.ts'
 import {
   RULES,
@@ -14,7 +14,7 @@ import {
   missionDone,
 } from '../game/outpost.ts'
 import { Change, FactLine, Token } from './bits.tsx'
-import { clock, longDate, spacecraftList } from './words.ts'
+import { MISSION_ICONS, clock, longDate, spacecraftList } from './words.ts'
 
 export type Modal =
   | { kind: 'intro' }
@@ -253,6 +253,28 @@ function Report({ report, game, onNextDay }: { report: DayReport; game: GameStat
             </div>
           </li>
         ))}
+      </ul>
+
+      <ul className="report-missions" aria-label="Missions">
+        {MISSION_IDS.map((id) => {
+          const goal = MISSIONS[id].goal
+          const before = Math.min(report.missions.before[id], goal)
+          const after = Math.min(report.missions.after[id], goal)
+          return (
+            <li key={id} className={after >= goal ? 'done' : after > before ? 'moved' : undefined}>
+              <span className="rm-name">
+                {after >= goal ? '✅' : MISSION_ICONS[id]} {MISSIONS[id].name}
+              </span>
+              <span className="bar">
+                <span className="bar-fill" style={{ width: `${(100 * after) / goal}%` }} />
+              </span>
+              <span className="rm-count">
+                {after}/{goal}
+                {after > before && <strong> +{after - before} today</strong>}
+              </span>
+            </li>
+          )
+        })}
       </ul>
 
       <div className="report-base">

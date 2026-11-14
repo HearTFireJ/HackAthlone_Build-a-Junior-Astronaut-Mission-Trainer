@@ -86,7 +86,8 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
                   <span className="bar">
                     <span className="bar-fill" style={{ width: `${Math.min(100, (100 * game.missions[id]) / MISSIONS[id].goal)}%` }} />
                   </span>
-                  <span className="chip-text">{done ? `Done! ${MISSIONS[id].reward}` : MISSIONS[id].how}</span>
+                  {!done && <span className="chip-text">{MISSIONS[id].how}</span>}
+                  <span className="chip-reward">{done ? '✓' : '🎁'} {MISSIONS[id].reward}</span>
                 </li>
               )
             })}
@@ -95,12 +96,12 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
               title={`On the last day: at least ${RULES.handover.air} air and ${RULES.handover.food} food, and everyone at ${RULES.handover.stat} or more for health and mood.`}
             >
               <span className="chip-head">
-                <span>🤝 Ready for the next crew</span>
+                <span>🤝 Hand over the base</span>
               </span>
               <span className="chip-text">
-                On the last day: {RULES.handover.air}+ air, {RULES.handover.food}+ food, everyone fit and happy. Right now:{' '}
-                {handoverReady(game) ? 'yes ✅' : 'not yet'}
+                On the last day: {RULES.handover.air}+ air, {RULES.handover.food}+ food, everyone fit and happy.
               </span>
+              <span className="chip-reward">{handoverReady(game) ? '✓ Ready right now' : 'Not ready yet'}</span>
             </li>
           </ul>
           <p className="map-hint">
@@ -114,7 +115,14 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
           <SunReport info={info} game={game} radioOn={on.includes('comms')} />
 
           <section className="panel">
-            <h2>Crew</h2>
+            <h2 className="crew-title">
+              Crew
+              <span className="crew-key">
+                <span className="tone-health"><span className="pip on">♥</span> health</span>
+                <span className="tone-mood"><span className="pip on">☺</span> mood</span>
+                <span className="tone-fed"><span className="pip on">●</span> fed</span>
+              </span>
+            </h2>
             <div className="crew-list">
               {game.crew.map((astronaut) => (
                 <CrewCard
@@ -201,8 +209,8 @@ function SunReport({ info, game, radioOn }: { info: ScenarioInfo; game: GameStat
         </p>
       )}
       <p className="hint">
-        {radioOn ? 'Radio is on today: we will call if the Sun fires a big flare.' : 'Radio is off today: we cannot reach you.'}{' '}
-        Flare records: NASA DONKI.
+        {radioOn ? '📡 Radio on: we will call if the Sun fires a big flare today.' : '📡 Radio off: we cannot warn you today.'}{' '}
+        Records: NASA DONKI.
       </p>
     </section>
   )
@@ -251,18 +259,21 @@ function CrewCard({ astronaut, game, plan, open, onSelect, onAssign }: CardProps
       <button type="button" className="crew-head" onClick={onSelect} disabled={!!away} aria-expanded={open}>
         <Token id={astronaut.id} />
         <span className="crew-main">
-          <span className="crew-name">
-            {info.name} <span className="crew-loves">loves {info.lovesText}</span>
-          </span>
-          <span className="crew-stats">
-            <Pips label="Health" icon="♥" value={astronaut.health} max={RULES.maxStat} tone="health" />
-            <Pips label="Mood" icon="☺" value={astronaut.mood} max={RULES.maxStat} tone="mood" />
-            <Pips label="Fed" icon="●" value={astronaut.fed} max={RULES.fullFed} tone="fed" />
+          <span className="crew-top">
+            <span className="crew-name">
+              {info.name} <span className="crew-loves">loves {info.lovesText}</span>
+            </span>
+            <span className="crew-stats">
+              <Pips label="Health" icon="♥" value={astronaut.health} max={RULES.maxStat} tone="health" />
+              <Pips label="Mood" icon="☺" value={astronaut.mood} max={RULES.maxStat} tone="mood" />
+              <Pips label="Fed" icon="●" value={astronaut.fed} max={RULES.fullFed} tone="fed" />
+            </span>
           </span>
           <span className="crew-job">
             <span className={problem ? 'job-now bad' : 'job-now'}>{jobLabel}</span>
             {state !== 'well' && <span className={`tag tag-${state}`}>{CONDITION_WORDS[state]}</span>}
-            {willBeTired && <span className="tag tag-struggling">Tired after today: needs a day off</span>}
+            {willBeTired && <span className="tag tag-struggling">Tired after today</span>}
+            {!away && <span className="crew-change">{open ? 'Pick a job ▾' : 'Change ▸'}</span>}
           </span>
           {problem && !away && <span className="crew-problem">⚠ {problem} They will rest instead.</span>}
         </span>

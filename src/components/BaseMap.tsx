@@ -43,6 +43,13 @@ const SPOTS = {
 } as const
 type SpotId = keyof typeof SPOTS
 
+// Small craters on the ground between the buildings: [x, y, radius] on a 160 by 100 grid.
+const CRATERS: [number, number, number][] = [
+  [43, 15, 3.4], [116.5, 13, 2.4], [45.5, 49, 2.8], [113.5, 56, 2.1], [20, 33.6, 1.9], [141, 33.4, 1.7],
+  [80, 68.2, 1.5], [10, 67.6, 1.4], [150, 66, 1.3], [62, 27.6, 1.4], [100, 27.4, 1.1], [128, 67, 1.1],
+  [30, 67.8, 1], [38, 31, 0.8], [124, 31.5, 0.9], [95, 67.5, 0.8],
+]
+
 const box = (spot: SpotId): CSSProperties => {
   const { left, top, width, height } = SPOTS[spot]
   return { left: `${left}%`, top: `${top}%`, width: `${width}%`, height: `${height}%` }
@@ -123,7 +130,7 @@ export function BaseMap({ game, plan, selected, onTogglePower, onAssign, onSelec
     const cannotAfford = !running && cost > spare
     return place(
       spot,
-      `module ${running ? 'on' : 'off'}${broken ? ' broken' : ''}`,
+      `module module-${module} ${running ? 'on' : 'off'}${broken ? ' broken' : ''}`,
       <>
         <span className="spot-icon" aria-hidden="true">{MODULE_ICONS[module]}</span>
         <span className="spot-name">{MODULES[module].name}</span>
@@ -157,10 +164,30 @@ export function BaseMap({ game, plan, selected, onTogglePower, onAssign, onSelec
 
   return (
     <div className="map">
+      {/* The Moon's surface: craters, lit from the top left. */}
+      <svg className="map-ground" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <radialGradient id="pit" cx="38%" cy="34%" r="75%">
+            <stop offset="0%" stopColor="#1b1d27" />
+            <stop offset="70%" stopColor="#2a2d3a" />
+            <stop offset="100%" stopColor="#555a6c" />
+          </radialGradient>
+        </defs>
+        {CRATERS.map(([x, y, r]) => (
+          <g key={`${x}-${y}`}>
+            <circle cx={x} cy={y} r={r * 1.35} fill="rgba(255,255,255,0.045)" />
+            <circle cx={x} cy={y} r={r} fill="url(#pit)" />
+            <path d={`M ${x - r * 0.7} ${y + r * 0.72} A ${r} ${r} 0 0 0 ${x + r * 0.72} ${y - r * 0.7}`} className="rim" />
+          </g>
+        ))}
+      </svg>
       {/* Corridors and footpaths, drawn under the modules. */}
       <svg className="map-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         {corridors.map((spot) => (
-          <line key={spot} x1={hub.x} y1={hub.y} x2={centre(spot).x} y2={centre(spot).y} className="corridor" />
+          <g key={spot}>
+            <line x1={hub.x} y1={hub.y} x2={centre(spot).x} y2={centre(spot).y} className="corridor-edge" />
+            <line x1={hub.x} y1={hub.y} x2={centre(spot).x} y2={centre(spot).y} className="corridor" />
+          </g>
         ))}
         {paths.map((spot) => (
           <line key={spot} x1={hub.x} y1={hub.y} x2={centre(spot).x} y2={centre(spot).y} className="path" />
@@ -170,9 +197,6 @@ export function BaseMap({ game, plan, selected, onTogglePower, onAssign, onSelec
           className="road"
         />
       </svg>
-      <div className="pit p1" />
-      <div className="pit p2" />
-      <div className="pit p3" />
 
       {powered('comms', 'comms', null, 'Listening for alerts')}
 
@@ -180,7 +204,7 @@ export function BaseMap({ game, plan, selected, onTogglePower, onAssign, onSelec
         'panels',
         'panels',
         <>
-          <span className="spot-name">Solar panels</span>
+          <span className="spot-name">☀️ Solar panels</span>
           <span className="panel-row" aria-hidden="true">
             {Array.from({ length: game.solar }, (_, index) => (
               <span key={index} className={index < solar ? 'cell' : 'cell dead'} />
@@ -213,7 +237,7 @@ export function BaseMap({ game, plan, selected, onTogglePower, onAssign, onSelec
 
       {place(
         'shelter',
-        'shelter',
+        missionDone(game.missions, 'shield') ? 'shelter shielded' : 'shelter',
         <>
           <span className="spot-icon" aria-hidden="true">🛡️</span>
           <span className="spot-name">Storm shelter</span>
@@ -249,19 +273,20 @@ export function BaseMap({ game, plan, selected, onTogglePower, onAssign, onSelec
         'crater',
         <>
           <span className="spot-name">🌑 Dark crater</span>
-          <span className="spot-status">
-            {iceDone ? 'Ice found! ❄️' : `Ice trips: ${game.missions.ice} of ${MISSIONS.ice.goal}`}
-            {game.pod ? ' · 📦 pod waiting' : ''}
-          </span>
+          {/* The crater is small: while someone is driving there, their marker takes the place of the text. */}
+          {away.length === 0 && (
+            <span className="spot-status">
+              {iceDone ? 'Ice found! ❄️' : `Ice trips: ${game.missions.ice} of ${MISSIONS.ice.goal}`}
+              {game.pod ? ' · 📦 pod waiting' : ''}
+            </span>
+          )}
           {away.map((astronaut) => {
             const trip = astronaut.away?.trip ?? plan.jobs[astronaut.id]?.trip
             return (
-              <span key={astronaut.id} className="far-crew">
+              <span key={astronaut.id} className="far-crew" title={trip ? TRIPS[trip].name : undefined}>
+                <span aria-hidden="true">🚙</span>
                 <Token id={astronaut.id} small />
-                <span>
-                  {astronaut.away ? `${astronaut.away.daysLeft} more day${astronaut.away.daysLeft === 1 ? '' : 's'}` : 'leaves today'}
-                  {trip ? `: ${TRIPS[trip].name.toLowerCase()}` : ''}
-                </span>
+                <span>{astronaut.away ? `back in ${astronaut.away.daysLeft} day${astronaut.away.daysLeft === 1 ? '' : 's'}` : 'leaves today'}</span>
               </span>
             )
           })}

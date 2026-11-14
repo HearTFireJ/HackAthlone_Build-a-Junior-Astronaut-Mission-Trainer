@@ -166,6 +166,8 @@ export interface DayReport {
   crew: CrewReport[]
   notes: string[]
   finished: MissionId[]
+  /** Mission progress at the start and at the end of the day, to show what the day's work added. */
+  missions: { before: Missions; after: Missions }
 }
 
 // ---------------------------------------------------------------- small helpers
@@ -353,11 +355,24 @@ function drawEvent(state: GameState): void {
   const atBase = state.crew.filter((astronaut) => !astronaut.away)
   const possible = EVENT_IDS.filter((id) => !state.eventsSeen.includes(id) && EVENTS[id].when(state))
   if (possible.length === 0 || atBase.length === 0) return
+  // A card about one person at the base needs at least one person at the base, checked above.
   const [pickEvent, seedAfterEvent] = roll(state.seed)
   const [pickWho, seedAfterWho] = roll(seedAfterEvent)
   state.seed = seedAfterWho
-  const id = possible[Math.floor(pickEvent * possible.length)]
-  const who = EVENTS[id].aboutSomeone ? atBase[Math.floor(pickWho * atBase.length)].id : null
+  // While someone is out with the rover, half of the cards are about their trip.
+  const [pickKind, seedAfterKind] = roll(state.seed)
+  state.seed = seedAfterKind
+  const onTheRoad = possible.filter((id) => EVENTS[id].aboutTraveller)
+  const atHome = possible.filter((id) => !EVENTS[id].aboutTraveller)
+  const pool = onTheRoad.length > 0 && (pickKind < 0.5 || atHome.length === 0) ? onTheRoad : atHome
+  if (pool.length === 0) return
+  const id = pool[Math.floor(pickEvent * pool.length)]
+  const away = state.crew.find((astronaut) => astronaut.away)
+  const who = EVENTS[id].aboutTraveller
+    ? (away?.id ?? null)
+    : EVENTS[id].aboutSomeone
+      ? atBase[Math.floor(pickWho * atBase.length)].id
+      : null
   state.event = { id, who }
   state.eventsSeen.push(id)
 }
@@ -684,6 +699,7 @@ export function resolveDay(
     crew: crewReports,
     notes,
     finished,
+    missions: { before: { ...state.missions }, after: { ...next.missions } },
   }
 
   // How the game ends.

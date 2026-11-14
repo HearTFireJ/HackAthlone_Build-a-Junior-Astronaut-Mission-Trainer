@@ -3,7 +3,7 @@
 //
 // These events are made up for the game. Only the solar flares and storms are real records.
 
-import { CREW, crewInfo } from './content.ts'
+import { CREW, MISSIONS, crewInfo } from './content.ts'
 import type { GameState } from './outpost.ts'
 
 export const EVENT_IDS = [
@@ -16,6 +16,8 @@ export const EVENT_IDS = [
   'pump',
   'newcrew',
   'homesick',
+  'stuck',
+  'find',
 ] as const
 export type EventId = (typeof EVENT_IDS)[number]
 
@@ -33,6 +35,8 @@ export interface EventCard {
   text: (state: GameState, who: string | null) => string
   /** True when the card is about one astronaut, picked by the dice. */
   aboutSomeone: boolean
+  /** True when the card is about the astronaut who is away on a rover trip. */
+  aboutTraveller?: boolean
   /** Whether the card can turn up in this state. */
   when: (state: GameState) => boolean
   options: [EventOption, EventOption]
@@ -43,6 +47,9 @@ const nameOf = (who: string | null) => (who ? crewInfo(who).name : 'Someone')
 function moodFor(state: GameState, change: (id: string) => number): void {
   for (const astronaut of state.crew) astronaut.mood += change(astronaut.id)
 }
+
+const someoneAway = (state: GameState) => state.crew.some((astronaut) => astronaut.away)
+const traveller = (state: GameState, who: string | null) => state.crew.find((astronaut) => astronaut.id === who && astronaut.away)
 
 export const EVENTS: Record<EventId, EventCard> = {
   rock: {
@@ -251,9 +258,10 @@ export const EVENTS: Record<EventId, EventCard> = {
     options: [
       {
         label: 'Let them call home tonight',
-        detail: 'Uses 1 power today',
-        apply: (state) => {
+        detail: 'Uses 1 power today. They cheer up',
+        apply: (state, who) => {
           state.powerPenalty += 1
+          moodFor(state, (id) => (id === who ? 2 : 0))
         },
         result: (_state, who) => `${nameOf(who)} talked to family for an hour and feels better.`,
       },
@@ -264,6 +272,64 @@ export const EVENTS: Record<EventId, EventCard> = {
           moodFor(state, (id) => (id === who ? -2 : 0))
         },
         result: (_state, who) => `${nameOf(who)} nods and goes quiet.`,
+      },
+    ],
+  },
+  stuck: {
+    title: 'The rover is stuck',
+    icon: '🚙',
+    text: (_state, who) => `${nameOf(who)} calls from the rover: the wheels are sinking into soft dust.`,
+    aboutSomeone: false,
+    aboutTraveller: true,
+    when: someoneAway,
+    options: [
+      {
+        label: 'Dig it out by hand',
+        detail: 'Hard work in a spacesuit: they lose 1 health',
+        apply: (state, who) => {
+          const driver = traveller(state, who)
+          if (driver) driver.health -= 1
+        },
+        result: (_state, who) => `${nameOf(who)} dug for two hours. The rover is rolling again, and ${nameOf(who)} is worn out.`,
+      },
+      {
+        label: 'Back out slowly and go the long way',
+        detail: 'The trip takes 1 more day',
+        apply: (state, who) => {
+          const driver = traveller(state, who)
+          if (driver?.away) driver.away.daysLeft += 1
+        },
+        result: (_state, who) => `${nameOf(who)} takes the long way round. The trip will take one more day.`,
+      },
+    ],
+  },
+  find: {
+    title: 'Something shiny',
+    icon: '✨',
+    text: (_state, who) => `${nameOf(who)} calls from the rover: something is glinting in a little crater beside the track.`,
+    aboutSomeone: false,
+    aboutTraveller: true,
+    when: someoneAway,
+    options: [
+      {
+        label: 'Stop and take a look',
+        detail: 'The trip takes 1 more day. They bring something home',
+        apply: (state, who) => {
+          const driver = traveller(state, who)
+          if (driver?.away) driver.away.daysLeft += 1
+          if (state.missions.shield < MISSIONS.shield.goal) state.missions.shield = Math.min(MISSIONS.shield.goal - 1, state.missions.shield + 2)
+          else moodFor(state, () => 1)
+        },
+        result: (state, who) =>
+          state.missions.shield < MISSIONS.shield.goal
+            ? `${nameOf(who)} found a glassy kind of Moon soil. It is just what the Lab needed: the shield research jumps ahead.`
+            : `${nameOf(who)} found a glassy rock, and the whole crew wants to see it.`,
+      },
+      {
+        label: 'Keep driving',
+        detail: 'Nothing changes',
+        apply: () => {},
+        result: (_state, who) => `${nameOf(who)} drives on. Whatever it was, it is still out there.`,
       },
     ],
   },

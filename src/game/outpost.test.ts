@@ -308,6 +308,51 @@ describe('event cards', () => {
     const next = resolveDay(accepted, CALM, planOf(accepted, ['life'])).state
     expect(next.crew).toHaveLength(4)
   })
+
+  it('cards about a rover trip only turn up while someone is away, and are about that person', () => {
+    const home = createGame('sep-2017')
+    expect(EVENTS.stuck.when(home)).toBe(false)
+    expect(EVENTS.find.when(home)).toBe(false)
+
+    // Over many seeds, a card drawn while Cian is driving is either about the base or about Cian's trip.
+    let tripCards = 0
+    for (let seed = 1; seed <= 60; seed += 1) {
+      let state = createGame('sep-2017', seed)
+      if (state.event) state = answerEvent(state, 1).state
+      state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
+      if (state.event) state = answerEvent(state, 1).state
+      state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
+      if (state.event && EVENTS[state.event.id].aboutTraveller) {
+        tripCards += 1
+        expect(state.event.who).toBe('cian')
+      }
+    }
+    expect(tripCards).toBeGreaterThan(5)
+  })
+
+  it('a stuck rover costs the driver health or costs a day', () => {
+    let state = createGame('sep-2017')
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
+    const stuck = { ...state, event: { id: 'stuck' as const, who: 'cian' } }
+    const dug = answerEvent(stuck, 0).state
+    expect(crew(dug, 'cian').health).toBe(crew(state, 'cian').health - 1)
+    expect(crew(dug, 'cian').away?.daysLeft).toBe(1)
+    const longWay = answerEvent(stuck, 1).state
+    expect(crew(longWay, 'cian').health).toBe(crew(state, 'cian').health)
+    expect(crew(longWay, 'cian').away?.daysLeft).toBe(2)
+  })
+
+  it('stopping for a find costs a day and helps the shield research, but never finishes it', () => {
+    let state = createGame('sep-2017')
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
+    const found = answerEvent({ ...state, event: { id: 'find' as const, who: 'cian' } }, 0).state
+    expect(found.missions.shield).toBe(2)
+    expect(crew(found, 'cian').away?.daysLeft).toBe(2)
+    const nearlyDone = { ...state, missions: { ...state.missions, shield: MISSIONS.shield.goal - 1 }, event: { id: 'find' as const, who: 'cian' } }
+    expect(answerEvent(nearlyDone, 0).state.missions.shield).toBe(MISSIONS.shield.goal - 1)
+  })
 })
 
 describe('how a mission ends', () => {
