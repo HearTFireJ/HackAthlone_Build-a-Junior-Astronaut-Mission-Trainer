@@ -159,7 +159,9 @@ const spot = (x: number, y: number, node: NodeId, face: Facing, extra: Partial<S
 
 export const BEDS: Pt[] = [{ x: 740, y: 388 }, { x: 780, y: 384 }, { x: 820, y: 384 }, { x: 860, y: 388 }]
 export const MED_BEDS: Pt[] = [{ x: 872, y: 438 }, { x: 872, y: 472 }]
-export const PLANT_BEDS: Pt[] = [1128, 1190, 1252, 1308].flatMap((x) => [{ x, y: 403 }, { x, y: 497 }])
+// Four beds along each long wall, all inside the walls, with an aisle down the middle.
+const PLANT_COLUMNS = [1117, 1176, 1235, 1294]
+export const PLANT_BEDS: Pt[] = PLANT_COLUMNS.flatMap((x) => [{ x, y: 402 }, { x, y: 498 }])
 
 const SPOTS: Record<Exclude<Activity, 'repair'>, Spot[]> = {
   idle: [
@@ -173,10 +175,10 @@ const SPOTS: Record<Exclude<Activity, 'repair'>, Spot[]> = {
   sickbay: MED_BEDS.map((bed) => spot(bed.x, bed.y, 'hab', 'down', { lie: 'h' })),
   call: [spot(748, 440, 'hab', 'left', { work: { x: 722, y: 440 } }), spot(748, 474, 'hab', 'left', { work: { x: 722, y: 474 } })],
   garden: [
-    spot(1128, 452, 'farm', 'up', { work: { x: 1128, y: 410 } }),
-    spot(1190, 452, 'farm', 'down', { work: { x: 1190, y: 492 } }),
-    spot(1252, 452, 'farm', 'up', { work: { x: 1252, y: 410 } }),
-    spot(1308, 452, 'farm', 'down', { work: { x: 1308, y: 492 } }),
+    spot(1117, 474, 'farm', 'up', { work: { x: 1117, y: 410 } }),
+    spot(1176, 474, 'farm', 'down', { work: { x: 1176, y: 492 } }),
+    spot(1235, 474, 'farm', 'up', { work: { x: 1235, y: 410 } }),
+    spot(1294, 474, 'farm', 'down', { work: { x: 1294, y: 492 } }),
   ],
   lab: [
     spot(490, 728, 'lab', 'down', { work: { x: 490, y: 756 } }),
@@ -209,7 +211,7 @@ const REPAIR_SPOTS: Record<ModuleId | 'panels', Spot[]> = {
     spot(980, 236, 'n1', 'up', { work: { x: 980, y: 196 } }),
   ],
   life: [spot(425, 480, 'life', 'left', { work: { x: 398, y: 470 } })],
-  farm: [spot(1160, 452, 'farm', 'up', { work: { x: 1160, y: 420 } })],
+  farm: [spot(1146, 474, 'farm', 'up', { work: { x: 1146, y: 420 } })],
   comms: [spot(388, 190, 'dishPad', 'left', { work: { x: 362, y: 194 } })],
   scope: [spot(1232, 232, 'scopePad', 'right', { work: { x: 1258, y: 214 } })],
   lab: [spot(600, 716, 'lab', 'down', { work: { x: 600, y: 750 } })],

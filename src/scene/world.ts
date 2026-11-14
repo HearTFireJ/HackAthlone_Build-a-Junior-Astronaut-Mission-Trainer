@@ -778,6 +778,7 @@ export class World {
               flash: actor.flash,
               selected: this.mode === 'plan' && this.selected === actor.id,
               hover: hoverId === actor.id,
+              busy: actor.arrived && actor.steps.length === 0 && ['garden', 'lab', 'build', 'repair'].includes(actor.activity),
             },
             this.time,
           ),

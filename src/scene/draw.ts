@@ -106,8 +106,13 @@ function builtOn(p: Pt, r: number): boolean {
     [{ x: 1010, y: 640 }, { x: 1128, y: 700 }],
   ]
   for (const [a, b] of paths) if (distToSegment(p, a, b) < 22 + r) return true
+  // The landing pad.
+  if (Math.hypot(p.x - PAD.x, p.y - PAD.y) < PAD.r + 26 + r) return true
   return false
 }
+
+/** Where the crew's lander stands. It is only scenery: it brought them here. */
+const PAD = { x: 316, y: 716, r: 56 }
 
 /**
  * The Moon's surface. It is painted once into a hidden picture and then copied to the
@@ -192,6 +197,128 @@ export function paintGround(ctx: Ctx, width: number, height: number, scale: numb
     ctx.stroke()
   }
 
+  // Rocks, lit from the top left like everything else.
+  for (let i = 0; i < 70; i++) {
+    const p = { x: -700 + random() * 3000, y: -400 + random() * 1700 }
+    const r = 3 + random() * 7
+    if (builtOn(p, r + 6)) continue
+    ctx.fillStyle = 'rgba(10,12,28,0.3)'
+    ctx.beginPath()
+    ctx.ellipse(p.x + r * 0.6, p.y + r * 0.7, r * 1.1, r * 0.6, 0.5, 0, TAU)
+    ctx.fill()
+    ctx.fillStyle = '#8b8fa0'
+    ctx.beginPath()
+    ctx.ellipse(p.x, p.y, r, r * 0.78, random() * 3, 0, TAU)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(23,28,49,0.55)'
+    ctx.lineWidth = 1.2
+    ctx.stroke()
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'
+    ctx.beginPath()
+    ctx.ellipse(p.x - r * 0.3, p.y - r * 0.3, r * 0.45, r * 0.3, 0.6, 0, TAU)
+    ctx.fill()
+  }
+
+  // The landing pad, with the lander that brought the crew.
+  ctx.strokeStyle = 'rgba(40,43,58,0.35)'
+  ctx.lineWidth = 16
+  ctx.beginPath()
+  ctx.moveTo(PAD.x + PAD.r - 4, PAD.y)
+  ctx.lineTo(432, 716)
+  ctx.stroke()
+  circle(ctx, PAD.x, PAD.y, PAD.r)
+  ctx.fillStyle = '#5b5f70'
+  ctx.fill()
+  ctx.strokeStyle = '#e9c34f'
+  ctx.lineWidth = 3
+  ctx.setLineDash([12, 9])
+  circle(ctx, PAD.x, PAD.y, PAD.r - 7)
+  ctx.stroke()
+  ctx.setLineDash([])
+  ctx.fillStyle = 'rgba(10,12,28,0.32)'
+  circle(ctx, PAD.x + 12, PAD.y + 14, 30)
+  ctx.fill()
+  // Four legs with round feet.
+  ctx.strokeStyle = '#3a3f55'
+  ctx.lineWidth = 5
+  ctx.lineCap = 'round'
+  for (const a of [0.785, 2.356, 3.927, 5.498]) {
+    ctx.beginPath()
+    ctx.moveTo(PAD.x + Math.cos(a) * 18, PAD.y + Math.sin(a) * 18)
+    ctx.lineTo(PAD.x + Math.cos(a) * 38, PAD.y + Math.sin(a) * 38)
+    ctx.stroke()
+    circle(ctx, PAD.x + Math.cos(a) * 38, PAD.y + Math.sin(a) * 38, 6)
+    ctx.fillStyle = '#c9cfdf'
+    ctx.fill()
+    ctx.strokeStyle = '#3a3f55'
+    ctx.lineWidth = 2
+    ctx.stroke()
+    ctx.lineWidth = 5
+  }
+  // The body, wrapped in gold foil, with a round hatch on top.
+  ctx.beginPath()
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * TAU + 0.39
+    if (i === 0) ctx.moveTo(PAD.x + Math.cos(a) * 27, PAD.y + Math.sin(a) * 27)
+    else ctx.lineTo(PAD.x + Math.cos(a) * 27, PAD.y + Math.sin(a) * 27)
+  }
+  ctx.closePath()
+  const foil = ctx.createLinearGradient(PAD.x - 27, PAD.y - 27, PAD.x + 27, PAD.y + 27)
+  foil.addColorStop(0, '#f6dd92')
+  foil.addColorStop(1, '#b98e3a')
+  ctx.fillStyle = foil
+  ctx.fill()
+  ctx.strokeStyle = '#3a2f18'
+  ctx.lineWidth = 2.5
+  ctx.stroke()
+  circle(ctx, PAD.x, PAD.y, 13)
+  ctx.fillStyle = '#e8ecf6'
+  ctx.fill()
+  ctx.strokeStyle = '#3a3f55'
+  ctx.lineWidth = 2
+  ctx.stroke()
+  circle(ctx, PAD.x, PAD.y, 6)
+  ctx.fillStyle = '#2b3a66'
+  ctx.fill()
+  ctx.fillStyle = 'rgba(160,210,255,0.8)'
+  circle(ctx, PAD.x - 2, PAD.y - 2, 2)
+  ctx.fill()
+
+  // A mission flag by the airlock, and small lamps along the paths.
+  ctx.strokeStyle = '#e8ecf6'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(850, 300)
+  ctx.lineTo(850, 262)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(851, 263)
+  ctx.lineTo(880, 271)
+  ctx.lineTo(851, 281)
+  ctx.closePath()
+  ctx.fillStyle = '#ffd166'
+  ctx.fill()
+  ctx.strokeStyle = '#3a2f18'
+  ctx.lineWidth = 1.5
+  ctx.stroke()
+  ctx.fillStyle = 'rgba(10,12,28,0.3)'
+  ctx.beginPath()
+  ctx.ellipse(858, 304, 10, 3, 0.3, 0, TAU)
+  ctx.fill()
+  for (const [x, y] of [[770, 268], [1002, 258], [962, 606], [1084, 672], [404, 716]]) {
+    const light = ctx.createRadialGradient(x, y, 1, x, y, 22)
+    light.addColorStop(0, 'rgba(255,224,150,0.45)')
+    light.addColorStop(1, 'rgba(255,224,150,0)')
+    ctx.fillStyle = light
+    ctx.fillRect(x - 22, y - 22, 44, 44)
+    circle(ctx, x, y, 4)
+    ctx.fillStyle = '#ffe9a8'
+    ctx.fill()
+    ctx.strokeStyle = '#3a3f55'
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+  }
+
   // A signpost where the road leaves the picture.
   ctx.fillStyle = '#2a2f45'
   ctx.fillRect(1497, 792, 5, 34)
@@ -262,6 +389,48 @@ function floor(ctx: Ctx, r: Rect, colour: string) {
   box(ctx, r.x + WALL, r.y + WALL, r.w - 2 * WALL, r.h - 2 * WALL, 12)
   ctx.fillStyle = colour
   ctx.fill()
+  // Floor tiles, and a soft shadow where the walls keep the light off.
+  ctx.save()
+  ctx.clip()
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)'
+  ctx.lineWidth = 1.5
+  ctx.beginPath()
+  for (let x = r.x + WALL + 22; x < r.x + r.w - WALL; x += 22) {
+    ctx.moveTo(x, r.y)
+    ctx.lineTo(x, r.y + r.h)
+  }
+  for (let y = r.y + WALL + 22; y < r.y + r.h - WALL; y += 22) {
+    ctx.moveTo(r.x, y)
+    ctx.lineTo(r.x + r.w, y)
+  }
+  ctx.stroke()
+  const shadow = ctx.createLinearGradient(0, r.y + WALL, 0, r.y + WALL + 16)
+  shadow.addColorStop(0, 'rgba(6,8,22,0.34)')
+  shadow.addColorStop(1, 'rgba(6,8,22,0)')
+  ctx.fillStyle = shadow
+  ctx.fillRect(r.x, r.y + WALL, r.w, 16)
+  const side = ctx.createLinearGradient(r.x + WALL, 0, r.x + WALL + 12, 0)
+  side.addColorStop(0, 'rgba(6,8,22,0.26)')
+  side.addColorStop(1, 'rgba(6,8,22,0)')
+  ctx.fillStyle = side
+  ctx.fillRect(r.x + WALL, r.y, 12, r.h)
+  ctx.restore()
+}
+
+/** A small crate, used here and there. */
+function crate(ctx: Ctx, x: number, y: number, w: number, h: number, colour = '#c8a45a') {
+  box(ctx, x, y, w, h, 3)
+  ctx.fillStyle = colour
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.8
+  ctx.stroke()
+  ctx.strokeStyle = 'rgba(23,28,49,0.35)'
+  ctx.lineWidth = 1.2
+  ctx.beginPath()
+  ctx.moveTo(x + 2, y + h / 2)
+  ctx.lineTo(x + w - 2, y + h / 2)
+  ctx.stroke()
 }
 
 /** Dims a room that has no power. */
@@ -405,27 +574,70 @@ function trouble(ctx: Ctx, module: ModuleId, icon: string, colour: string, t: nu
 }
 
 function habitat(ctx: Ctx, t: number) {
-  // A round rug in the middle, where the crew gathers.
-  circle(ctx, HAB.x, HAB.y + 34, 46)
-  ctx.fillStyle = '#56659f'
-  ctx.fill()
-  circle(ctx, HAB.x, HAB.y + 34, 34)
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)'
-  ctx.lineWidth = 3
-  ctx.stroke()
+  // Floor rings, like a round room is tiled.
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+  ctx.lineWidth = 1.5
+  for (const r of [58, 88]) {
+    circle(ctx, HAB.x, HAB.y, r)
+    ctx.stroke()
+  }
+  // A soft shadow under the wall at the top.
+  ctx.save()
+  circle(ctx, HAB.x, HAB.y, HAB.r - WALL)
+  ctx.clip()
+  const shadow = ctx.createLinearGradient(0, HAB.y - HAB.r + WALL, 0, HAB.y - HAB.r + WALL + 22)
+  shadow.addColorStop(0, 'rgba(6,8,22,0.4)')
+  shadow.addColorStop(1, 'rgba(6,8,22,0)')
+  ctx.fillStyle = shadow
+  ctx.fillRect(HAB.x - HAB.r, HAB.y - HAB.r, HAB.r * 2, 40)
+  ctx.restore()
 
-  // Beds.
-  for (const bed of BEDS) {
-    box(ctx, bed.x - 14, bed.y - 24, 28, 48, 6)
-    ctx.fillStyle = '#c9d2f2'
+  // A round rug in the middle, where the crew gathers, with the table they eat at.
+  circle(ctx, HAB.x, HAB.y + 34, 46)
+  ctx.fillStyle = '#5a69a6'
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)'
+  ctx.lineWidth = 3
+  ctx.setLineDash([7, 6])
+  circle(ctx, HAB.x, HAB.y + 34, 39)
+  ctx.stroke()
+  ctx.setLineDash([])
+  circle(ctx, HAB.x, HAB.y + 26, 19)
+  ctx.fillStyle = '#e6d3ad'
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2
+  ctx.stroke()
+  for (const [dx, dy, colour] of [[-8, -5, '#ffffff'], [8, -4, '#ffffff'], [-3, 8, '#ffd166'], [9, 7, '#8fd3ff']] as [number, number, string][]) {
+    circle(ctx, HAB.x + dx, HAB.y + 26 + dy, 3.8)
+    ctx.fillStyle = colour
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(23,28,49,0.6)'
+    ctx.lineWidth = 1
+    ctx.stroke()
+  }
+
+  // Beds, each with its own blanket.
+  const blankets = ['#8fd3b0', '#f2b872', '#8fb8f2', '#d6a3f0']
+  BEDS.forEach((bed, index) => {
+    box(ctx, bed.x - 15, bed.y - 26, 30, 51, 6)
+    ctx.fillStyle = '#b9c2e6'
     ctx.fill()
     ctx.strokeStyle = EDGE
     ctx.lineWidth = 2
     ctx.stroke()
-    box(ctx, bed.x - 10, bed.y - 21, 20, 12, 4)
+    box(ctx, bed.x - 12, bed.y - 6, 24, 28, 5)
+    ctx.fillStyle = blankets[index % blankets.length]
+    ctx.fill()
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'
+    ctx.fillRect(bed.x - 12, bed.y - 6, 24, 5)
+    box(ctx, bed.x - 10, bed.y - 23, 20, 13, 5)
     ctx.fillStyle = '#ffffff'
     ctx.fill()
-  }
+    ctx.strokeStyle = 'rgba(23,28,49,0.3)'
+    ctx.lineWidth = 1
+    ctx.stroke()
+  })
   // Sick bay beds, with a red cross.
   for (const bed of MED_BEDS) {
     box(ctx, bed.x - 24, bed.y - 13, 48, 26, 6)
@@ -434,11 +646,14 @@ function habitat(ctx: Ctx, t: number) {
     ctx.strokeStyle = EDGE
     ctx.lineWidth = 2
     ctx.stroke()
+    box(ctx, bed.x - 21, bed.y - 9, 13, 18, 4)
+    ctx.fillStyle = '#dfe6fb'
+    ctx.fill()
     ctx.fillStyle = '#ff5d6c'
     ctx.fillRect(bed.x + 10, bed.y - 2, 10, 4)
     ctx.fillRect(bed.x + 13, bed.y - 5, 4, 10)
   }
-  // The radio desk for calling home.
+  // The radio desk for calling home, with two screens.
   box(ctx, 702, 424, 22, 66, 5)
   ctx.fillStyle = '#232a48'
   ctx.fill()
@@ -447,8 +662,22 @@ function habitat(ctx: Ctx, t: number) {
   ctx.stroke()
   const glow = 0.6 + Math.sin(t * 3) * 0.2
   ctx.fillStyle = `rgba(120,220,255,${glow})`
-  ctx.fillRect(706, 432, 9, 16)
-  ctx.fillRect(706, 466, 9, 16)
+  box(ctx, 706, 431, 10, 18, 2)
+  ctx.fill()
+  box(ctx, 706, 465, 10, 18, 2)
+  ctx.fill()
+  // A plant in a pot, and a shelf of lockers by the airlock.
+  circle(ctx, 884, 396, 8)
+  ctx.fillStyle = '#c9743f'
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.6
+  ctx.stroke()
+  for (const [dx, dy] of [[-5, -5], [5, -4], [0, -9], [-1, 0]]) {
+    circle(ctx, 884 + dx, 396 + dy, 5)
+    ctx.fillStyle = '#5fc27a'
+    ctx.fill()
+  }
 }
 
 function lifeSupport(ctx: Ctx, on: boolean, t: number) {
@@ -499,45 +728,145 @@ function lifeSupport(ctx: Ctx, on: boolean, t: number) {
   circle(ctx, 444, 400, 5)
   ctx.fillStyle = on ? '#5fd38d' : '#7a2f3a'
   ctx.fill()
+  // Bubbles in the tanks while the machine works.
+  if (on) {
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'
+    for (const [y, phase] of [[418, 0], [482, 1.7]]) {
+      for (let i = 0; i < 3; i++) {
+        const rise = ((t * 0.6 + phase + i * 0.33) % 1) * 30
+        circle(ctx, 322 + i * 10, y + 14 - rise, 2 + (i % 2))
+        ctx.fill()
+      }
+    }
+  }
+  // The control desk: a screen with bars, and two dials.
+  box(ctx, 386, 462, 66, 38, 6)
+  ctx.fillStyle = '#22303c'
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2
+  ctx.stroke()
+  box(ctx, 392, 468, 30, 18, 3)
+  ctx.fillStyle = on ? '#0f3a33' : '#1a2228'
+  ctx.fill()
+  if (on) {
+    ctx.fillStyle = '#7ef0c0'
+    for (let i = 0; i < 5; i++) {
+      const h = 4 + Math.abs(Math.sin(t * 2 + i * 1.3)) * 10
+      ctx.fillRect(395 + i * 5.2, 484 - h, 3.4, h)
+    }
+  }
+  for (const [x, turn] of [[432, 0.6], [444, -0.9]]) {
+    circle(ctx, x, 477, 5.5)
+    ctx.fillStyle = '#e8eef4'
+    ctx.fill()
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+    const a = on ? turn + Math.sin(t * 1.5 + x) * 0.5 : -2.2
+    ctx.strokeStyle = '#ff5d6c'
+    ctx.beginPath()
+    ctx.moveTo(x, 477)
+    ctx.lineTo(x + Math.cos(a) * 4, 477 + Math.sin(a) * 4)
+    ctx.stroke()
+  }
+  ctx.fillStyle = '#8a97a3'
+  ctx.fillRect(392, 490, 54, 4)
 }
 
 function greenhouse(ctx: Ctx, on: boolean, base: BaseView, t: number) {
   const healthy = 1 - base.wilt
+  const r = ROOMS.farm
+  // A path of lighter tiles down the aisle.
+  ctx.fillStyle = 'rgba(255,255,255,0.07)'
+  ctx.fillRect(r.x + WALL + 4, 432, r.w - 2 * WALL - 8, 36)
   PLANT_BEDS.forEach((bed, index) => {
-    box(ctx, bed.x - 26, bed.y - 18, 52, 36, 6)
-    ctx.fillStyle = '#5d4329'
+    // The planter: a wooden box of dark soil.
+    box(ctx, bed.x - 25, bed.y - 17, 50, 34, 6)
+    ctx.fillStyle = '#8a6238'
     ctx.fill()
     ctx.strokeStyle = '#2b1e12'
     ctx.lineWidth = 2
     ctx.stroke()
+    box(ctx, bed.x - 21, bed.y - 13, 42, 26, 4)
+    ctx.fillStyle = '#3d2a18'
+    ctx.fill()
     // Six plants in each bed. They sway a little, and they droop after a storm.
     for (let i = 0; i < 6; i++) {
-      const px = bed.x - 16 + (i % 3) * 16
-      const py = bed.y - 8 + Math.floor(i / 3) * 16
-      const sway = on ? Math.sin(t * 1.6 + index + i) * 0.8 : 0
-      const size = (5.2 + ((index * 7 + i * 3) % 4) * 0.5) * (0.55 + 0.45 * base.lush) * (0.7 + 0.3 * healthy)
-      const green = on ? [88, 200, 110] : [70, 120, 84]
+      const px = bed.x - 14 + (i % 3) * 14
+      const py = bed.y - 6 + Math.floor(i / 3) * 12
+      const sway = on ? Math.sin(t * 1.6 + index + i) * 0.9 : 0
+      const size = (4.6 + ((index * 7 + i * 3) % 4) * 0.45) * (0.55 + 0.45 * base.lush) * (0.7 + 0.3 * healthy)
+      const green = on ? [84, 196, 104] : [66, 118, 82]
       const sick = [150, 132, 70]
       const mix = green.map((value, k) => Math.round(value * healthy + sick[k] * (1 - healthy)))
-      ctx.fillStyle = `rgb(${mix.join(',')})`
-      circle(ctx, px + sway, py, size)
-      ctx.fill()
-      ctx.fillStyle = 'rgba(255,255,255,0.22)'
-      circle(ctx, px + sway - size * 0.3, py - size * 0.3, size * 0.4)
-      ctx.fill()
+      const leaf = `rgb(${mix.join(',')})`
+      const dark = `rgb(${mix.map((value) => Math.round(value * 0.72)).join(',')})`
+      // Four leaves around a middle.
+      for (let k = 0; k < 4; k++) {
+        const a = (k * Math.PI) / 2 + 0.6 + index
+        ctx.beginPath()
+        ctx.ellipse(px + sway + Math.cos(a) * size * 0.55, py + Math.sin(a) * size * 0.55, size * 0.7, size * 0.42, a, 0, TAU)
+        ctx.fillStyle = k % 2 ? leaf : dark
+        ctx.fill()
+      }
+      // Now and then a ripe tomato, when the plants are doing well.
+      if (healthy > 0.6 && base.lush > 0.45 && (index * 5 + i * 3) % 4 === 0) {
+        circle(ctx, px + sway + 1, py + 1, size * 0.36)
+        ctx.fillStyle = '#ff6a55'
+        ctx.fill()
+      } else {
+        circle(ctx, px + sway, py, size * 0.22)
+        ctx.fillStyle = 'rgba(255,255,255,0.25)'
+        ctx.fill()
+      }
     }
   })
+  // A watering can and a sack of seeds at the end of the aisle.
+  box(ctx, r.x + r.w - WALL - 26, 441, 15, 13, 4)
+  ctx.fillStyle = '#6cb8ff'
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.6
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(r.x + r.w - WALL - 26, 446)
+  ctx.lineTo(r.x + r.w - WALL - 35, 441)
+  ctx.stroke()
+  crate(ctx, r.x + r.w - WALL - 28, 458, 18, 10, '#d9c38a')
   if (on) {
-    // Grow-lights: a pink glow over the beds.
-    ctx.fillStyle = 'rgba(255,110,210,0.13)'
+    // Grow-lights: a pink glow over the beds, from a lamp bar above each row.
+    ctx.fillStyle = 'rgba(255,110,210,0.12)'
     for (const bed of PLANT_BEDS) {
-      box(ctx, bed.x - 30, bed.y - 22, 60, 44, 8)
+      box(ctx, bed.x - 27, bed.y - 19, 54, 38, 8)
       ctx.fill()
     }
+    ctx.fillStyle = `rgba(255,150,225,${0.75 + Math.sin(t * 2) * 0.1})`
+    ctx.fillRect(r.x + WALL + 6, r.y + WALL + 1, r.w - 2 * WALL - 12, 3)
+    ctx.fillRect(r.x + WALL + 6, r.y + r.h - WALL - 4, r.w - 2 * WALL - 12, 3)
   }
 }
 
 function lab(ctx: Ctx, on: boolean, t: number) {
+  // A mat where people stand to work.
+  box(ctx, 470, 700, 142, 40, 8)
+  ctx.fillStyle = 'rgba(255,255,255,0.06)'
+  ctx.fill()
+  // A shelf of sample jars along the top wall.
+  box(ctx, 486, 659, 126, 15, 4)
+  ctx.fillStyle = '#c9cce0'
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2
+  ctx.stroke()
+  ;(['#8cf0c0', '#ffd166', '#b79cff', '#6cb8ff', '#ff9aa8', '#8cf0c0', '#ffd166'] as string[]).forEach((colour, i) => {
+    box(ctx, 492 + i * 17, 662, 9, 9, 2)
+    ctx.fillStyle = on ? colour : '#7a7e96'
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(23,28,49,0.55)'
+    ctx.lineWidth = 1
+    ctx.stroke()
+  })
   // A long bench at the bottom and a short one on the left.
   ctx.fillStyle = '#d9dcec'
   ctx.strokeStyle = EDGE
@@ -548,31 +877,83 @@ function lab(ctx: Ctx, on: boolean, t: number) {
   box(ctx, 442, 664, 20, 56, 5)
   ctx.fill()
   ctx.stroke()
-  // A screen that glows when the Lab has power.
-  box(ctx, 478, 749, 28, 15, 3)
-  ctx.fillStyle = on ? `rgba(130,240,200,${0.7 + Math.sin(t * 4) * 0.2})` : '#3a3f55'
+  // A screen with a wiggly line, which glows when the Lab has power.
+  box(ctx, 474, 749, 36, 16, 3)
+  ctx.fillStyle = on ? '#123a38' : '#3a3f55'
   ctx.fill()
-  // Flasks.
-  for (const [x, colour] of [[540, '#8cf0c0'], [562, '#b79cff'], [592, '#6cb8ff']] as [number, string][]) {
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.5
+  ctx.stroke()
+  if (on) {
+    ctx.strokeStyle = '#7ef0c0'
+    ctx.lineWidth = 1.6
+    ctx.beginPath()
+    for (let i = 0; i <= 10; i++) {
+      const x = 477 + i * 3
+      const y = 757 + Math.sin(t * 3 + i * 0.9) * 4
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.stroke()
+  }
+  // A microscope.
+  circle(ctx, 524, 757, 7)
+  ctx.fillStyle = '#5b6282'
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.5
+  ctx.stroke()
+  circle(ctx, 524, 757, 3)
+  ctx.fillStyle = '#cfe6ff'
+  ctx.fill()
+  // Flasks that bubble.
+  for (const [x, colour] of [[548, '#8cf0c0'], [568, '#b79cff'], [592, '#6cb8ff']] as [number, string][]) {
     circle(ctx, x, 757, 7)
     ctx.fillStyle = on ? colour : '#6c7088'
     ctx.fill()
     ctx.strokeStyle = EDGE
     ctx.lineWidth = 1.5
     ctx.stroke()
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    circle(ctx, x - 2 + (on ? Math.sin(t * 4 + x) * 1.5 : 0), 755, 1.6)
+    ctx.fill()
   }
-  // A box of Moon soil to study.
-  box(ctx, 444, 676, 16, 16, 3)
+  // Moon soil to study, and the bricks pressed from it.
+  box(ctx, 444, 672, 16, 16, 3)
   ctx.fillStyle = '#9a9384'
   ctx.fill()
+  ctx.strokeStyle = 'rgba(23,28,49,0.5)'
+  ctx.lineWidth = 1
+  ctx.stroke()
+  for (const y of [694, 703, 712]) {
+    box(ctx, 445, y, 14, 7, 1.5)
+    ctx.fillStyle = '#b8b09f'
+    ctx.fill()
+    ctx.stroke()
+  }
 }
 
 function garage(ctx: Ctx, on: boolean, t: number) {
+  // Yellow and black stripes on the floor by the big door.
+  ctx.save()
+  box(ctx, 918, 712, 20, 58, 3)
+  ctx.clip()
+  ctx.fillStyle = '#e9c34f'
+  ctx.fillRect(918, 712, 20, 58)
+  ctx.strokeStyle = '#2b2f3f'
+  ctx.lineWidth = 5
+  for (let y = 700; y < 790; y += 13) {
+    ctx.beginPath()
+    ctx.moveTo(914, y + 12)
+    ctx.lineTo(942, y)
+    ctx.stroke()
+  }
+  ctx.restore()
   // Parking marks for the rover.
   ctx.strokeStyle = 'rgba(233,195,79,0.7)'
   ctx.lineWidth = 3
   ctx.setLineDash([8, 6])
-  box(ctx, 852, 716, 80, 50, 6)
+  box(ctx, 846, 716, 70, 50, 6)
   ctx.stroke()
   ctx.setLineDash([])
   // The charger. Its light blinks while it has power.
@@ -592,27 +973,79 @@ function garage(ctx: Ctx, on: boolean, t: number) {
   ctx.lineWidth = 3
   ctx.beginPath()
   ctx.moveTo(786, 700)
-  ctx.quadraticCurveTo(820, 690, 852, 726)
+  ctx.quadraticCurveTo(820, 690, 848, 726)
   ctx.stroke()
-  // Tools on the wall.
-  box(ctx, 760, 772, 60, 14, 4)
-  ctx.fillStyle = '#8891ab'
+  // A board of tools on the top wall.
+  box(ctx, 800, 681, 92, 13, 4)
+  ctx.fillStyle = '#6f7893'
   ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.8
+  ctx.stroke()
+  ctx.strokeStyle = '#e8ecf6'
+  ctx.lineWidth = 2.4
+  ctx.lineCap = 'round'
+  for (const x of [810, 824, 838, 852, 866, 880]) {
+    ctx.beginPath()
+    ctx.moveTo(x, 684)
+    ctx.lineTo(x, 691)
+    ctx.stroke()
+  }
+  // A spare wheel, a tool chest and two crates.
+  circle(ctx, 776, 746, 12)
+  ctx.fillStyle = '#23263a'
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2
+  ctx.stroke()
+  circle(ctx, 776, 746, 5)
+  ctx.fillStyle = '#aab3ca'
+  ctx.fill()
+  box(ctx, 760, 770, 44, 16, 4)
+  ctx.fillStyle = '#d2504a'
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.stroke()
+  ctx.fillStyle = '#f4f6fc'
+  ctx.fillRect(776, 776, 12, 3)
+  crate(ctx, 812, 772, 16, 14)
+  crate(ctx, 830, 776, 13, 10, '#b7c0d8')
 }
 
 function shelter(ctx: Ctx) {
-  // Two benches and a box of supplies. Nothing else fits.
+  // A long bench along the wall, and what a crew needs to wait out a storm.
   ctx.fillStyle = '#8a7a5f'
   ctx.strokeStyle = '#2b2419'
   ctx.lineWidth = 2
-  box(ctx, 500, 187, 136, 9, 3)
+  box(ctx, 500, 187, 104, 10, 3)
   ctx.fill()
   ctx.stroke()
-  // A box of food and water, in case the storm lasts.
-  box(ctx, 610, 198, 24, 18, 3)
-  ctx.fillStyle = '#c8a45a'
+  // A lamp in the ceiling.
+  const lamp = ctx.createRadialGradient(567, 232, 2, 567, 232, 62)
+  lamp.addColorStop(0, 'rgba(255,224,150,0.3)')
+  lamp.addColorStop(1, 'rgba(255,224,150,0)')
+  ctx.fillStyle = lamp
+  ctx.fillRect(495, 182, 145, 103)
+  // Food, water and a first-aid box.
+  crate(ctx, 610, 187, 24, 17)
+  crate(ctx, 616, 207, 18, 13, '#b7a37a')
+  for (const x of [500, 510, 520]) {
+    circle(ctx, x + 4, 270, 4.2)
+    ctx.fillStyle = '#7fc4ff'
+    ctx.fill()
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = 1.2
+    ctx.stroke()
+  }
+  box(ctx, 618, 262, 17, 14, 3)
+  ctx.fillStyle = '#f4f7ff'
   ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.6
   ctx.stroke()
+  ctx.fillStyle = '#ff5d6c'
+  ctx.fillRect(625, 265, 3, 8)
+  ctx.fillRect(622.5, 267.5, 8, 3)
 }
 
 function solarPanels(ctx: Ctx, base: BaseView, t: number) {
@@ -843,78 +1276,183 @@ export interface PawnDraw {
   flash?: number
   selected?: boolean
   hover?: boolean
+  /** At work: the hands are busy. */
+  busy?: boolean
 }
 
-function head(ctx: Ctx, id: string, x: number, y: number, face: Facing, suited: boolean, t: number, asleep = false) {
-  const look = lookOf(id)
-  if (suited) {
-    circle(ctx, x, y, 15)
-    ctx.fillStyle = '#f4f6fc'
-    ctx.fill()
-    ctx.strokeStyle = EDGE
-    ctx.lineWidth = 2.2
-    ctx.stroke()
-    if (face !== 'up') {
-      // The dark glass of the helmet, with a glint.
-      const shift = face === 'left' ? -5 : face === 'right' ? 5 : 0
-      ctx.beginPath()
-      ctx.ellipse(x + shift, y + 1.5, face === 'down' ? 10 : 7.5, 7.5, 0, 0, TAU)
-      ctx.fillStyle = '#1c2748'
-      ctx.fill()
-      ctx.fillStyle = 'rgba(160,210,255,0.75)'
-      ctx.beginPath()
-      ctx.ellipse(x + shift - 3, y - 1.5, 3, 1.8, -0.5, 0, TAU)
-      ctx.fill()
-    }
-    return
-  }
-  // Hair first, then the face on top of it.
-  ctx.fillStyle = look.hair
-  if (look.style === 'long' && face !== 'up') {
-    box(ctx, x - 13.5, y - 2, 27, 17, 6)
-    ctx.fill()
-  }
-  circle(ctx, x, y, 13.5)
-  ctx.fill()
-  if (look.style === 'long' && face === 'up') {
-    box(ctx, x - 13.5, y - 2, 27, 19, 7)
-    ctx.fill()
-  }
-  if (look.style === 'bun') {
-    circle(ctx, x, y - 14, 6)
-    ctx.fill()
-  }
-  if (look.style === 'curly') {
-    for (const [dx, dy] of [[-10, -8], [-4, -13], [4, -13], [10, -8]]) {
-      circle(ctx, x + dx, y + dy, 5)
-      ctx.fill()
-    }
-  }
-  ctx.strokeStyle = EDGE
-  ctx.lineWidth = 1.2
+/** A darker (below 0) or lighter (above 0) shade of a colour written like "#5fd38d". */
+function shade(hex: string, amount: number): string {
+  const n = parseInt(hex.slice(1), 16)
+  const mix = (c: number) => Math.round(amount < 0 ? c * (1 + amount) : c + (255 - c) * amount)
+  return `rgb(${mix((n >> 16) & 255)},${mix((n >> 8) & 255)},${mix(n & 255)})`
+}
+
+type Look = ReturnType<typeof lookOf>
+
+/** The face: eyes that blink, rosy cheeks and a small smile. `r` is the size of the head. */
+function faceOn(ctx: Ctx, id: string, x: number, y: number, r: number, face: Facing, t: number, asleep: boolean) {
   if (face === 'up') return
-  const shift = face === 'left' ? -3.5 : face === 'right' ? 3.5 : 0
-  circle(ctx, x + shift, y + 3, 10.5)
-  ctx.fillStyle = look.skin
-  ctx.fill()
-  // Eyes. They blink now and then, and stay shut in bed.
+  const side = face === 'left' ? -1 : face === 'right' ? 1 : 0
+  const cx = x + side * r * 0.3
   const seed = id.charCodeAt(0) * 0.37
   const blink = asleep || (t + seed) % 3.7 < 0.13
-  ctx.fillStyle = EDGE
+  ctx.fillStyle = 'rgba(255,110,125,0.4)'
+  for (const dx of side === 0 ? [-r * 0.58, r * 0.58] : [-side * r * 0.12]) {
+    circle(ctx, cx + dx, y + r * 0.42, r * 0.17)
+    ctx.fill()
+  }
+  ctx.lineCap = 'round'
   ctx.strokeStyle = EDGE
-  ctx.lineWidth = 1.6
-  const eyes = face === 'down' ? [-4, 4] : [face === 'left' ? -7 : 7]
-  for (const dx of eyes) {
+  for (const dx of side === 0 ? [-r * 0.36, r * 0.36] : [side * r * 0.22]) {
     if (blink) {
+      ctx.lineWidth = 1.5
       ctx.beginPath()
-      ctx.moveTo(x + dx - 2, y + 3.5)
-      ctx.lineTo(x + dx + 2, y + 3.5)
+      ctx.arc(cx + dx, y + r * 0.06, r * 0.14, 0.15 * Math.PI, 0.85 * Math.PI)
       ctx.stroke()
     } else {
-      circle(ctx, x + dx, y + 3, 1.8)
+      ctx.fillStyle = EDGE
+      ctx.beginPath()
+      ctx.ellipse(cx + dx, y + r * 0.12, r * 0.13, r * 0.18, 0, 0, TAU)
+      ctx.fill()
+      ctx.fillStyle = '#ffffff'
+      circle(ctx, cx + dx - r * 0.04, y + r * 0.05, r * 0.055)
       ctx.fill()
     }
   }
+  ctx.lineWidth = 1.4
+  ctx.beginPath()
+  ctx.arc(cx + side * r * 0.12, y + r * 0.34, r * 0.2, 0.18 * Math.PI, 0.82 * Math.PI)
+  ctx.stroke()
+}
+
+/** Hair that hangs behind the head: it is painted before the face. */
+function hairBehind(ctx: Ctx, look: Look, x: number, y: number, r: number) {
+  ctx.fillStyle = look.hair
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.6
+  if (look.style === 'long') {
+    box(ctx, x - r - 2, y - 5, 2 * r + 4, r + 13, 9)
+    ctx.fill()
+    ctx.stroke()
+  }
+  if (look.style === 'bun') {
+    circle(ctx, x, y - r - 3, r * 0.42)
+    ctx.fill()
+    ctx.stroke()
+  }
+  if (look.style === 'curly') {
+    for (const a of [-2.75, -2.2, -1.57, -0.94, -0.39]) {
+      circle(ctx, x + Math.cos(a) * (r + 1), y + Math.sin(a) * (r + 1), r * 0.38)
+      ctx.fill()
+      ctx.stroke()
+    }
+  }
+}
+
+/** The hair on top of the head, with a fringe. Looking sideways shows more of the back of it. */
+function hairOnTop(ctx: Ctx, look: Look, x: number, y: number, r: number, face: Facing) {
+  ctx.fillStyle = look.hair
+  if (face === 'up') {
+    circle(ctx, x, y, r)
+    ctx.fill()
+    return
+  }
+  const side = face === 'left' ? -1 : face === 'right' ? 1 : 0
+  const R = r + 0.8
+  const from = Math.PI - (side > 0 ? 0.5 : 0.1)
+  const to = TAU + (side < 0 ? 0.5 : 0.1)
+  ctx.beginPath()
+  ctx.arc(x, y, R, from, to)
+  ctx.quadraticCurveTo(x + r * 0.55, y - r * 0.42, x + side * r * 0.22, y - r * 0.4)
+  ctx.quadraticCurveTo(x - r * 0.5, y - r * 0.62, x + Math.cos(from) * R, y + Math.sin(from) * R)
+  ctx.closePath()
+  ctx.fill()
+  // A soft shine on the hair.
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)'
+  ctx.lineWidth = 2
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.arc(x, y, r * 0.68, Math.PI * 1.2, Math.PI * 1.48)
+  ctx.stroke()
+}
+
+/** A head with nothing on it. */
+function bareHead(ctx: Ctx, id: string, x: number, y: number, r: number, face: Facing, t: number, asleep: boolean) {
+  const look = lookOf(id)
+  hairBehind(ctx, look, x, y, r)
+  circle(ctx, x, y, r)
+  ctx.fillStyle = look.skin
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2
+  ctx.stroke()
+  hairOnTop(ctx, look, x, y, r, face)
+  if (look.style === 'curly' && face !== 'up') {
+    ctx.fillStyle = look.hair
+    for (const dx of [-0.55, -0.1, 0.4]) {
+      circle(ctx, x + dx * r, y - r * 0.62, r * 0.3)
+      ctx.fill()
+    }
+  }
+  faceOn(ctx, id, x, y, r, face, t, asleep)
+}
+
+/** A helmet. The glass is clear enough to see who is inside. */
+function helmet(ctx: Ctx, id: string, x: number, y: number, face: Facing, t: number) {
+  const colour = colourOf(id)
+  const side = face === 'left' ? -1 : face === 'right' ? 1 : 0
+  // A little aerial with a red light.
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(x + 11, y - 13)
+  ctx.lineTo(x + 15, y - 23)
+  ctx.stroke()
+  circle(ctx, x + 15, y - 24, 2.6)
+  ctx.fillStyle = Math.sin(t * 4) > 0 ? '#ff5d6c' : '#a23a48'
+  ctx.fill()
+  circle(ctx, x, y, 18)
+  ctx.fillStyle = '#f6f8fd'
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2.2
+  ctx.stroke()
+  if (face === 'up') {
+    // From behind: a stripe in their own colour.
+    ctx.fillStyle = colour
+    box(ctx, x - 4, y - 16, 8, 20, 3)
+    ctx.fill()
+    return
+  }
+  const vx = x + side * 4
+  ctx.save()
+  ctx.beginPath()
+  ctx.ellipse(vx, y + 1, side === 0 ? 13.5 : 11.5, 12.5, 0, 0, TAU)
+  ctx.fillStyle = '#243257'
+  ctx.fill()
+  ctx.clip()
+  // The face inside.
+  const look = lookOf(id)
+  circle(ctx, vx, y + 2.5, 10.5)
+  ctx.fillStyle = look.skin
+  ctx.fill()
+  hairOnTop(ctx, look, vx, y + 2.5, 10.5, face)
+  faceOn(ctx, id, vx, y + 2.5, 10.5, face, t, false)
+  ctx.fillStyle = 'rgba(120,190,255,0.2)'
+  ctx.fillRect(vx - 16, y - 14, 32, 30)
+  ctx.restore()
+  ctx.beginPath()
+  ctx.ellipse(vx, y + 1, side === 0 ? 13.5 : 11.5, 12.5, 0, 0, TAU)
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.8
+  ctx.stroke()
+  // The shine on the glass.
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)'
+  ctx.lineWidth = 2.2
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.arc(vx, y + 1, 9.5, Math.PI * 1.12, Math.PI * 1.4)
+  ctx.stroke()
 }
 
 export interface NameTag {
@@ -961,9 +1499,36 @@ function nameTag(ctx: Ctx, text: string, colour: string, x: number, y: number, f
 
 export const PAWN_SCALE = 1.25
 
-/** One astronaut, seen from above and a little from the front. (x, y) is where the feet are. */
+/** An arm: a short round limb from the shoulder to the hand. */
+function arm(ctx: Ctx, sx: number, sy: number, hx: number, hy: number, sleeve: string, hand: string) {
+  ctx.lineCap = 'round'
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 10
+  ctx.beginPath()
+  ctx.moveTo(sx, sy)
+  ctx.lineTo(hx, hy)
+  ctx.stroke()
+  ctx.strokeStyle = sleeve
+  ctx.lineWidth = 6.4
+  ctx.beginPath()
+  ctx.moveTo(sx, sy)
+  ctx.lineTo(hx, hy)
+  ctx.stroke()
+  circle(ctx, hx, hy, 3.9)
+  ctx.fillStyle = hand
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 1.5
+  ctx.stroke()
+}
+
+/**
+ * One astronaut, seen from above and a little from the front. (x, y) is where the feet are.
+ * A small cartoon figure: a big head with a face, a round body, short arms and legs.
+ */
 export function drawPawn(ctx: Ctx, p: PawnDraw, t: number) {
   const colour = colourOf(p.id)
+  const look = lookOf(p.id)
   const ghost = (p.alpha ?? 1) < 1
   ctx.save()
   // People are drawn a little larger than life, so they are easy to see and to click.
@@ -971,25 +1536,30 @@ export function drawPawn(ctx: Ctx, p: PawnDraw, t: number) {
   ctx.scale(PAWN_SCALE, PAWN_SCALE)
   ctx.translate(-p.x, -p.y)
   ctx.globalAlpha = p.alpha ?? 1
+  ctx.lineJoin = 'round'
 
   if (p.lie) {
     // In bed: a head on the pillow and a blanket in their own colour.
     if (p.lie === 'v') {
-      box(ctx, p.x - 12, p.y - 6, 24, 28, 6)
+      box(ctx, p.x - 12, p.y - 6, 24, 28, 7)
       ctx.fillStyle = colour
       ctx.fill()
       ctx.strokeStyle = EDGE
       ctx.lineWidth = 2
       ctx.stroke()
-      head(ctx, p.id, p.x, p.y - 14, 'down', false, t, true)
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'
+      ctx.fillRect(p.x - 11, p.y - 5, 22, 5)
+      bareHead(ctx, p.id, p.x, p.y - 15, 12.5, 'down', t, true)
     } else {
-      box(ctx, p.x - 8, p.y - 11, 30, 22, 6)
+      box(ctx, p.x - 8, p.y - 11, 30, 22, 7)
       ctx.fillStyle = colour
       ctx.fill()
       ctx.strokeStyle = EDGE
       ctx.lineWidth = 2
       ctx.stroke()
-      head(ctx, p.id, p.x - 15, p.y - 2, 'down', false, t, true)
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'
+      ctx.fillRect(p.x - 7, p.y - 10, 5, 20)
+      bareHead(ctx, p.id, p.x - 16, p.y - 2, 12.5, 'down', t, true)
     }
     ctx.restore()
     return
@@ -997,72 +1567,159 @@ export function drawPawn(ctx: Ctx, p: PawnDraw, t: number) {
 
   const walking = p.step > 0
   const seed = p.id.charCodeAt(0)
-  const bob = walking ? -Math.abs(Math.sin(p.step)) * 3.5 : Math.sin(t * 2 + seed) * 0.7
+  const bob = walking ? -Math.abs(Math.sin(p.step)) * 3 : Math.sin(t * 2 + seed) * 0.7
   const shake = p.flash && p.flash > 0 ? Math.sin(t * 60) * 2.5 : 0
   const x = p.x + shake
   const y = p.y
+  const side = p.face === 'left' ? -1 : p.face === 'right' ? 1 : 0
+  const swing = walking ? Math.sin(p.step) : 0
+  const work = p.busy && !walking ? Math.sin(t * 9 + seed) : 0
 
   if (!ghost) {
     ctx.fillStyle = 'rgba(8,10,24,0.38)'
     ctx.beginPath()
-    ctx.ellipse(x + 3, y + 2, 16, 6, 0, 0, TAU)
+    ctx.ellipse(x + 3, y + 2, 17, 6.5, 0, 0, TAU)
     ctx.fill()
   }
   if (p.selected || p.hover) {
     ctx.strokeStyle = p.selected ? '#6cb8ff' : 'rgba(255,255,255,0.7)'
     ctx.lineWidth = p.selected ? 4 : 2.5
     ctx.beginPath()
-    ctx.ellipse(x, y + 1, 23 + (p.selected ? Math.sin(t * 6) * 2 : 0), 10, 0, 0, TAU)
+    ctx.ellipse(x, y + 1, 24 + (p.selected ? Math.sin(t * 6) * 2 : 0), 10, 0, 0, TAU)
     ctx.stroke()
   }
 
-  // Feet take turns while walking.
-  const swing = walking ? Math.sin(p.step) * 3.5 : 0
-  ctx.fillStyle = p.suited ? '#9aa3bd' : '#232842'
-  box(ctx, x - 11, y - 6 - Math.max(0, swing), 9, 7, 3)
-  ctx.fill()
-  box(ctx, x + 2, y - 6 - Math.max(0, -swing), 9, 7, 3)
-  ctx.fill()
+  const cloth = p.suited ? '#f1f3f9' : colour
+  const clothDark = p.suited ? '#c5cbdb' : shade(colour, -0.3)
+  const sleeve = p.suited ? '#e3e7f1' : shade(colour, -0.1)
+  const hand = p.suited ? '#8f98b3' : look.skin
+  const boot = p.suited ? '#8a93ad' : '#2a2f4a'
 
-  // Body.
-  const top = y - 35 + bob
-  if (p.suited && p.face !== 'down') {
-    // The life-support backpack.
-    const bx = p.face === 'up' ? x - 11 : p.face === 'left' ? x + 6 : x - 20
-    box(ctx, bx, top + 2, p.face === 'up' ? 22 : 14, 22, 4)
-    ctx.fillStyle = '#aab3ca'
+  // Legs and boots. The feet take turns while walking.
+  for (const [dx, lift] of [[-6.5, Math.max(0, swing) * 4], [6.5, Math.max(0, -swing) * 4]]) {
+    box(ctx, x + dx - 4.5, y - 14 - lift, 9, 10, 3)
+    ctx.fillStyle = clothDark
     ctx.fill()
     ctx.strokeStyle = EDGE
-    ctx.lineWidth = 2
+    ctx.lineWidth = 1.6
+    ctx.stroke()
+    box(ctx, x + dx - 5.5 + side * 1.5, y - 6.5 - lift, 11, 7.5, 3.5)
+    ctx.fillStyle = boot
+    ctx.fill()
     ctx.stroke()
   }
-  box(ctx, x - 14, top, 28, 31, 10)
-  ctx.fillStyle = p.suited ? '#eef1f8' : colour
+
+  const top = y - 37 + bob
+  const shoulder = top + 8
+
+  if (p.suited && p.face !== 'down') {
+    // The life-support backpack.
+    if (side !== 0) {
+      box(ctx, x - side * 21 - 6, top + 1, 13, 23, 4)
+      ctx.fillStyle = '#aab3ca'
+      ctx.fill()
+      ctx.strokeStyle = EDGE
+      ctx.lineWidth = 2
+      ctx.stroke()
+    }
+  }
+
+  // Seen from the front or the back, the arms hang at the sides, behind the body's edge.
+  if (side === 0) {
+    for (const dir of [-1, 1]) {
+      const reach = work !== 0 ? 6 + work * dir * 3 : 0
+      const sway = walking ? swing * dir * 3 : 0
+      const up = p.face === 'up' && work !== 0
+      arm(ctx, x + dir * 13.5, shoulder, x + dir * (15.5 - (work !== 0 ? 5 : 0)), shoulder + 13 - reach * (up ? 1.6 : 1) + sway, sleeve, hand)
+    }
+  }
+
+  // Body.
+  box(ctx, x - 13, top, 26, 27, 10)
+  ctx.fillStyle = cloth
   ctx.fill()
   ctx.strokeStyle = EDGE
   ctx.lineWidth = 2.2
   ctx.stroke()
+  // A little shading down one side makes it round.
+  ctx.fillStyle = 'rgba(10,14,40,0.13)'
+  box(ctx, x + 4, top + 2.5, 7.5, 22, 5)
+  ctx.fill()
   if (p.suited) {
     // A band in their own colour, so everyone can tell who is who in a suit.
     ctx.fillStyle = colour
-    ctx.fillRect(x - 13, top + 12, 26, 8)
+    ctx.fillRect(x - 12, top + 13, 24, 6)
     ctx.strokeStyle = EDGE
     ctx.lineWidth = 1
-    ctx.strokeRect(x - 13, top + 12, 26, 8)
-  } else {
-    ctx.fillStyle = 'rgba(0,0,0,0.22)'
-    ctx.fillRect(x - 13, top + 19, 26, 4)
+    ctx.strokeRect(x - 12, top + 13, 24, 6)
     if (p.face === 'down') {
-      ctx.fillStyle = 'rgba(255,255,255,0.5)'
-      ctx.fillRect(x - 1.2, top + 4, 2.4, 14)
+      // The control box on the chest, with two small lights.
+      box(ctx, x - 6.5, top + 4, 13, 7, 2)
+      ctx.fillStyle = '#8f98b3'
+      ctx.fill()
+      ctx.stroke()
+      ctx.fillStyle = '#5fd38d'
+      circle(ctx, x - 3, top + 7.5, 1.4)
+      ctx.fill()
+      ctx.fillStyle = '#ffd166'
+      circle(ctx, x + 2.5, top + 7.5, 1.4)
+      ctx.fill()
+    }
+    if (p.face === 'up') {
+      box(ctx, x - 11, top - 1, 22, 24, 5)
+      ctx.fillStyle = '#aab3ca'
+      ctx.fill()
+      ctx.strokeStyle = EDGE
+      ctx.lineWidth = 2
+      ctx.stroke()
+      ctx.strokeStyle = 'rgba(23,28,49,0.45)'
+      ctx.lineWidth = 1.5
+      for (const dy of [6, 11, 16]) {
+        ctx.beginPath()
+        ctx.moveTo(x - 6, top + dy)
+        ctx.lineTo(x + 6, top + dy)
+        ctx.stroke()
+      }
+    }
+  } else {
+    // A belt, and from the front a collar, a zip and a badge.
+    ctx.fillStyle = clothDark
+    ctx.fillRect(x - 12, top + 18, 24, 3.6)
+    if (p.face === 'down') {
+      ctx.fillStyle = '#f6f8fd'
+      ctx.beginPath()
+      ctx.moveTo(x - 6, top + 1.2)
+      ctx.lineTo(x, top + 8)
+      ctx.lineTo(x + 6, top + 1.2)
+      ctx.closePath()
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)'
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.moveTo(x, top + 8)
+      ctx.lineTo(x, top + 18)
+      ctx.stroke()
+      circle(ctx, x - 6.5, top + 12, 2.6)
+      ctx.fillStyle = '#ffffff'
+      ctx.fill()
     }
   }
 
-  head(ctx, p.id, x, top - 8, p.face, p.suited, t)
+  // Seen from the side, one arm swings in front of the body.
+  if (side !== 0) {
+    const angle = work !== 0 ? -1.15 + work * 0.35 : swing * 0.75
+    const hx = x + side * (2 + Math.sin(-angle) * 14)
+    const hy = shoulder + Math.cos(angle) * 14
+    arm(ctx, x + side * 2, shoulder, hx, hy, sleeve, hand)
+  }
+
+  const hy = top - 10
+  if (p.suited) helmet(ctx, p.id, x, hy, p.face, t)
+  else bareHead(ctx, p.id, x, hy, 15.5, p.face, t, false)
 
   if (p.flash && p.flash > 0) {
     ctx.fillStyle = `rgba(255,60,90,${Math.min(0.6, p.flash)})`
-    box(ctx, x - 17, top - 24, 34, 60, 14)
+    box(ctx, x - 19, top - 30, 38, 68, 16)
     ctx.fill()
   }
   if (p.selected) {
@@ -1070,9 +1727,9 @@ export function drawPawn(ctx: Ctx, p: PawnDraw, t: number) {
     const lift = Math.abs(Math.sin(t * 4)) * 6
     ctx.fillStyle = '#6cb8ff'
     ctx.beginPath()
-    ctx.moveTo(x - 9, top - 62 - lift)
-    ctx.lineTo(x + 9, top - 62 - lift)
-    ctx.lineTo(x, top - 50 - lift)
+    ctx.moveTo(x - 9, top - 64 - lift)
+    ctx.lineTo(x + 9, top - 64 - lift)
+    ctx.lineTo(x, top - 52 - lift)
     ctx.fill()
   }
   ctx.restore()
