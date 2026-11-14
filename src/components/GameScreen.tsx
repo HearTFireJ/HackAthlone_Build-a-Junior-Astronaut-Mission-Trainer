@@ -137,7 +137,7 @@ export function GameScreen(props: Props) {
   const onCue = (cue: Cue) => {
     if (cue.kind === 'caption') {
       const line = { text: cue.text, tone: cue.tone, link: cue.link }
-      setCaption(line)
+      if (!cue.logOnly) setCaption(line)
       setLog((lines) => [...lines, line])
     } else if (cue.kind === 'time') {
       setTimeLabel(cue.label)

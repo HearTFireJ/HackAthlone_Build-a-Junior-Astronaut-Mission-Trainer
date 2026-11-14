@@ -25,7 +25,7 @@ export interface CaptionLink {
 
 /** One thing that happens in the film, at a time in seconds from its start. */
 export type Cue = { t: number } & (
-  | { kind: 'caption'; text: string; tone: Tone; link?: CaptionLink }
+  | { kind: 'caption'; text: string; tone: Tone; link?: CaptionLink; /** Only for the Mission Control log, not the big caption. */ logOnly?: boolean }
   | { kind: 'time'; label: string }
   | { kind: 'go'; who: string; act: Activity; repairAt?: ModuleId | 'panels'; hurry?: boolean }
   | { kind: 'rover-in'; who: string; act: Activity; hurry?: boolean }
@@ -165,6 +165,7 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
       tone: 'bad',
       link: stormLink ?? undefined,
     })
+    add(t + 0.1, { kind: 'caption', text: 'Real storm particles are far too small to see. The game draws them so you can watch the storm.', tone: 'plain', logOnly: true })
     let sheltered = false
     for (const member of report.crew) {
       if (member.hurt > 0) {
