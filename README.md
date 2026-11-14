@@ -33,7 +33,7 @@ While you play, the game does not lecture. The real records and the real-life fa
    | Lab | 2 | Lets the crew do research |
    | Rover Bay | 2 | Charges the rover for a trip |
 
-2. **Give each astronaut a job.** Tend the plants, do research, build the radio telescope outside, repair the solar panels, drive the rover, rest, go to the sick bay, or call home. Each astronaut has health, mood and hunger. Each one loves a different job and does it better. Some are friends, and two get on each other's nerves. Three days of work in a row makes anyone tired, and then only a day off helps.
+2. **Give each astronaut a job.** Tend the plants, do research, build the radio telescope outside, repair the solar panels, drive the rover, rest, go to the sick bay, or call home. Each astronaut has health, mood and hunger. Each one loves a different job and does it better; the one who loves driving does a two-day rover trip in one day. Some are friends, and two get on each other's nerves. Three days of work in a row makes anyone tired, and then only a day off helps.
 
 3. **Work on your four missions.** They are why the crew is there, and each one changes the base when it is finished:
 

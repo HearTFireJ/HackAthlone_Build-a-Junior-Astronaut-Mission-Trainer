@@ -16,6 +16,7 @@ import {
   createGame,
   emptyPlan,
   handoverReady,
+  tripDays,
   jobProblem,
   powerAvailable,
   poweredModules,
@@ -210,18 +211,35 @@ describe('rover trips', () => {
   it('the three ice trips go in order, and finishing them makes Life Support better', () => {
     let state = createGame('sep-2017')
     expect(availableTrips(state)).toEqual(['scout'])
-    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'scout' } })).state
     expect(state.missions.ice).toBe(1)
-    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
-    expect(crew(state, 'cian').away).toEqual({ trip: 'drill', daysLeft: 1 })
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'drill' } })).state
+    expect(crew(state, 'aoife').away).toEqual({ trip: 'drill', daysLeft: 1 })
     expect(availableTrips(state)).toEqual([])
     state = resolveDay(state, CALM, planOf(state, ['life'])).state
     expect(state.missions.ice).toBe(2)
-    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'haul' } })).state
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'haul' } })).state
     const done = resolveDay(state, CALM, planOf(state, ['life']))
     expect(done.report.finished).toEqual(['ice'])
     const after = resolveDay(done.state, CALM, planOf(done.state, ['life']))
     expect(after.report.air.made).toBe(RULES.lifeAirWithIce)
+  })
+
+  it('someone who loves driving does a two-day trip in one day', () => {
+    expect(tripDays('cian', 'scout')).toBe(1)
+    expect(tripDays('cian', 'drill')).toBe(1)
+    expect(tripDays('aoife', 'drill')).toBe(2)
+    let state = createGame('sep-2017')
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
+    expect(crew(state, 'cian').away).toBeNull()
+    expect(state.missions.ice).toBe(2)
+    const done = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'haul' } }))
+    expect(done.report.finished).toEqual(['ice'])
+    // So on the very last day the quick driver can still set off, and nobody else can.
+    const lastDay = { ...createGame('sep-2017'), day: RULES.maxDays, missions: { ice: 1, shield: 0, dish: 0, sun: 0 } }
+    expect(jobProblem(lastDay, planOf(lastDay, ['garage']), 'cian', { kind: 'trip', trip: 'drill' })).toBeNull()
+    expect(jobProblem(lastDay, planOf(lastDay, ['garage']), 'niamh', { kind: 'trip', trip: 'drill' })).toMatch(/Not enough days/)
   })
 })
 
@@ -294,17 +312,17 @@ describe('flares, alerts and storms', () => {
   })
 
   it('someone who gets too ill on a rover trip drives home with nothing', () => {
-    // A severe storm on day 2, with the radio off, catches Cian on the road.
+    // A severe storm on day 2, with the radio off, catches Aoife on the road.
     const rough = scenarioOf('sep-2017', [{}, { watchFlare: FLARE, storm: SEVERE_STORM }])
     let state = createGame('sep-2017')
-    state = resolveDay(state, rough, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
-    state = resolveDay(state, rough, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
-    expect(crew(state, 'cian').health).toBe(RULES.maxStat - RULES.stormOutside[1])
-    expect(crew(state, 'cian').away?.daysLeft).toBe(1)
+    state = resolveDay(state, rough, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'scout' } })).state
+    state = resolveDay(state, rough, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'drill' } })).state
+    expect(crew(state, 'aoife').health).toBe(RULES.maxStat - RULES.stormOutside[1])
+    expect(crew(state, 'aoife').away?.daysLeft).toBe(1)
     const next = resolveDay(state, rough, planOf(state, ['life']))
-    expect(crew(next.state, 'cian').away).toBeNull()
+    expect(crew(next.state, 'aoife').away).toBeNull()
     expect(next.state.missions.ice).toBe(1)
-    expect(next.report.crew.find((member) => member.id === 'cian')?.notes.join(' ')).toMatch(/drove home early/)
+    expect(next.report.crew.find((member) => member.id === 'aoife')?.notes.join(' ')).toMatch(/drove home early/)
   })
 
   it('the Moon-soil shield makes the inside of the base safer', () => {
@@ -366,17 +384,17 @@ describe('event cards', () => {
     expect(EVENTS.stuck.when(home)).toBe(false)
     expect(EVENTS.find.when(home)).toBe(false)
 
-    // Over many seeds, a card drawn while Cian is driving is either about the base or about Cian's trip.
+    // Over many seeds, a card drawn while Aoife is driving is either about the base or about Aoife's trip.
     let tripCards = 0
     for (let seed = 1; seed <= 60; seed += 1) {
       let state = createGame('sep-2017', seed)
       if (state.event) state = answerEvent(state, 1).state
-      state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
+      state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'scout' } })).state
       if (state.event) state = answerEvent(state, 1).state
-      state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
+      state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'drill' } })).state
       if (state.event && EVENTS[state.event.id].aboutTraveller) {
         tripCards += 1
-        expect(state.event.who).toBe('cian')
+        expect(state.event.who).toBe('aoife')
       }
     }
     expect(tripCards).toBeGreaterThan(5)
@@ -384,29 +402,29 @@ describe('event cards', () => {
 
   it('a stuck rover costs the driver health or costs a day', () => {
     let state = createGame('sep-2017')
-    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
-    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
-    const stuck = { ...state, event: { id: 'stuck' as const, who: 'cian' } }
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'scout' } })).state
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'drill' } })).state
+    const stuck = { ...state, event: { id: 'stuck' as const, who: 'aoife' } }
     const dug = answerEvent(stuck, 0).state
-    expect(crew(dug, 'cian').health).toBe(crew(state, 'cian').health - 1)
-    expect(crew(dug, 'cian').away?.daysLeft).toBe(1)
+    expect(crew(dug, 'aoife').health).toBe(crew(state, 'aoife').health - 1)
+    expect(crew(dug, 'aoife').away?.daysLeft).toBe(1)
     const longWay = answerEvent(stuck, 1).state
-    expect(crew(longWay, 'cian').health).toBe(crew(state, 'cian').health)
-    expect(crew(longWay, 'cian').away?.daysLeft).toBe(2)
+    expect(crew(longWay, 'aoife').health).toBe(crew(state, 'aoife').health)
+    expect(crew(longWay, 'aoife').away?.daysLeft).toBe(2)
   })
 
   it('a find on the road costs a day, and only helps the research once it is carried home', () => {
     const alarm = scenarioOf('sep-2017', [{}, {}, { watchFlare: FLARE }])
     let state = createGame('sep-2017')
-    state = resolveDay(state, alarm, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
-    state = resolveDay(state, alarm, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
-    const found = answerEvent({ ...state, event: { id: 'find' as const, who: 'cian' } }, 0).state
+    state = resolveDay(state, alarm, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'scout' } })).state
+    state = resolveDay(state, alarm, planOf(state, ['garage', 'life'], { aoife: { kind: 'trip', trip: 'drill' } })).state
+    const found = answerEvent({ ...state, event: { id: 'find' as const, who: 'aoife' } }, 0).state
     expect(found.missions.shield).toBe(0)
-    expect(crew(found, 'cian').away).toEqual({ trip: 'drill', daysLeft: 2, found: true })
+    expect(crew(found, 'aoife').away).toEqual({ trip: 'drill', daysLeft: 2, found: true })
 
     // Called back by an alert: the trip is lost, and the find with it.
     const recalled = resolveDay(found, alarm, planOf(found, ['comms', 'life']), 'inside').state
-    expect(crew(recalled, 'cian').away).toBeNull()
+    expect(crew(recalled, 'aoife').away).toBeNull()
     expect(recalled.missions.shield).toBe(0)
 
     // Left to finish: two more days, then the find reaches the Lab.
@@ -453,11 +471,11 @@ describe('things the screen promises', () => {
 describe('how a mission ends', () => {
   it('a rover trip that cannot be finished in time cannot start, and nobody may be away at the handover', () => {
     const lastDay = { ...createGame('sep-2017'), day: RULES.maxDays, missions: { ice: 1, shield: 0, dish: 0, sun: 0 } }
-    expect(jobProblem(lastDay, planOf(lastDay, ['garage']), 'cian', { kind: 'trip', trip: 'drill' })).toMatch(/Not enough days/)
+    expect(jobProblem(lastDay, planOf(lastDay, ['garage']), 'aoife', { kind: 'trip', trip: 'drill' })).toMatch(/Not enough days/)
     const ready = { ...createGame('sep-2017'), status: 'done' as const }
     expect(handoverReady(ready)).toBe(true)
     const stillOut = structuredClone(ready)
-    crew(stillOut, 'cian').away = { trip: 'drill', daysLeft: 1 }
+    crew(stillOut, 'aoife').away = { trip: 'drill', daysLeft: 1 }
     expect(handoverReady(stillOut)).toBe(false)
   })
 

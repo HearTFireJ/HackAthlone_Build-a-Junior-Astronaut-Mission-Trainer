@@ -31,6 +31,7 @@ import {
   powerAvailable,
   powerUsed,
   poweredModules,
+  tripDays,
   workPoints,
 } from '../game/outpost.ts'
 import { sunActivity, weatherOn, yesterdayOf } from '../game/weather.ts'
@@ -281,7 +282,7 @@ export function GameScreen(props: Props) {
     const job = planning && selected && hovered.kind === 'place' ? jobAt(place, game) : null
     if (job && selected) {
       const problem = choiceProblem(game, plan, selected, job)
-      const work = job.kind === 'trip' && job.trip ? TRIPS[job.trip].name : JOBS[job.kind].name
+      const work = job.kind === 'trip' && job.trip ? `${TRIPS[job.trip].name} (${plural(tripDays(selected, job.trip), 'day')})` : JOBS[job.kind].name
       const out = jobOutput(game, selected, job)
       hover = problem ? [crewInfo(selected).name, problem] : [`${crewInfo(selected).name} →`, out ? `${work}  ${out}` : work]
       hoverMission = null
@@ -512,7 +513,7 @@ function JobMenu({ astronautId, game, plan, anchor, onAssign, onClose }: { astro
   for (const kind of JOB_IDS) {
     if (kind === 'trip') {
       for (const trip of availableTrips(game)) {
-        choices.push({ job: { kind, trip }, label: `${TRIPS[trip].name} (${plural(TRIPS[trip].days, 'day')})`, does: `Brings: ${TRIPS[trip].brings}. Outside!` })
+        choices.push({ job: { kind, trip }, label: `${TRIPS[trip].name} (${plural(tripDays(astronautId, trip), 'day')})`, does: `Brings: ${TRIPS[trip].brings}. Outside!` })
       }
     } else {
       choices.push({ job: { kind }, label: JOBS[kind].name, does: JOBS[kind].does })

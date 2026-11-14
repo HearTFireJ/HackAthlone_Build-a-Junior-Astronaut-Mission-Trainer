@@ -223,6 +223,15 @@ export function workPoints(astronaut: Astronaut, job: JobId): number {
   return crewInfo(astronaut.id).loves.includes(job) ? 3 : 2
 }
 
+/**
+ * How many days a rover trip takes this astronaut. Someone who loves driving is quick:
+ * a two-day trip takes them one day. (A made-up rule of the game.)
+ */
+export function tripDays(astronautId: string, trip: TripId): number {
+  const days = TRIPS[trip].days
+  return crewInfo(astronautId).loves.includes('trip') ? Math.max(1, days - 1) : days
+}
+
 /** How many worn-out solar panels a day of repair brings back. */
 export function panelsFixed(solarLoss: number, points: number): number {
   return Math.min(solarLoss, points >= 2 ? 2 : 1)
@@ -291,7 +300,7 @@ export function jobProblem(state: GameState, plan: Plan, astronautId: string, jo
   if (job.kind === 'trip') {
     if (condition(astronaut) !== 'well') return 'Not well enough to drive.'
     if (!job.trip || !availableTrips(state).includes(job.trip)) return 'That trip is not possible today.'
-    if (TRIPS[job.trip].days > RULES.maxDays - state.day + 1) return 'Not enough days left for this trip.'
+    if (tripDays(astronautId, job.trip) > RULES.maxDays - state.day + 1) return 'Not enough days left for this trip.'
     // One rover: if two people are given a trip, the first one on the crew list gets it.
     const order = state.crew.map((member) => member.id)
     const earlier = order.slice(0, order.indexOf(astronautId))
@@ -486,7 +495,7 @@ export function resolveDay(
     entry.points = workPoints(astronaut, wanted.kind)
     if (wanted.kind === 'trip' && wanted.trip) {
       entry.trip = wanted.trip
-      astronaut.away = { trip: wanted.trip, daysLeft: TRIPS[wanted.trip].days }
+      astronaut.away = { trip: wanted.trip, daysLeft: tripDays(astronaut.id, wanted.trip) }
     }
     return entry
   })
