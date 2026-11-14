@@ -203,6 +203,8 @@ const CALL_WORDS: Record<NonNullable<DayReport['call']>, { title: string; tone: 
 function Report({ report, game, onNextDay }: { report: DayReport; game: GameState; onNextDay: () => void }) {
   const { storm, flare, call } = report
   const over = game.status !== 'playing'
+  // Finished missions are shown in their own box, so their lines are left out of the list below.
+  const otherNotes = report.notes.filter((note) => !note.startsWith('Mission complete'))
   return (
     <Card tone="report">
       <p className="eyebrow">
@@ -244,6 +246,14 @@ function Report({ report, game, onNextDay }: { report: DayReport; game: GameStat
           </p>
         )}
       </div>
+
+      {report.finished.map((id) => (
+        <div key={id} className="win-box">
+          <h2>⭐ Mission complete: {MISSIONS[id].name}!</h2>
+          <p>{MISSIONS[id].reward}</p>
+          <FactLine id={MISSION_FACTS[id]} />
+        </div>
+      ))}
 
       <ul className="report-crew">
         {report.crew.map((member) => (
@@ -290,19 +300,14 @@ function Report({ report, game, onNextDay }: { report: DayReport; game: GameStat
         <span>🥕 Food: +{report.food.made} grown, {report.food.eaten} eaten, {report.food.left} left</span>
       </div>
 
-      {report.notes.length > 0 && (
+      {otherNotes.length > 0 && (
         <ul className="report-list">
-          {report.notes.map((note) => (
-            <li key={note} className={report.finished.some((id) => note.includes(MISSIONS[id].name)) ? 'win' : undefined}>
-              {note}
-            </li>
+          {otherNotes.map((note) => (
+            <li key={note}>{note}</li>
           ))}
         </ul>
       )}
 
-      {report.finished.map((id) => (
-        <FactLine key={id} id={MISSION_FACTS[id]} />
-      ))}
       {storm && report.finished.length === 0 && report.response !== 'shelter' && <FactLine id="panels" />}
 
       <button type="button" className="primary" onClick={onNextDay}>

@@ -332,6 +332,8 @@ button:disabled { cursor: not-allowed; }
 .sun-box.storm { border-color: var(--bad); background: rgba(255, 107, 122, 0.09); }
 .sun-box.quiet { border-color: #3d4a80; background: rgba(108, 184, 255, 0.06); }
 .sun-box h2 { font-size: 1.15rem; }
+.win-box { width: 100%; display: grid; gap: 0.35rem; border-radius: 14px; padding: 0.75rem 0.9rem; border: 1px solid var(--power); background: rgba(255, 209, 102, 0.1); box-shadow: 0 0 24px rgba(255, 209, 102, 0.18); }
+.win-box h2 { font-size: 1.15rem; color: var(--power); }
 .call { font-size: 0.95rem; }
 .call.tone-good strong { color: var(--good); }
 .call.tone-bad strong { color: var(--bad); }
