@@ -10,7 +10,9 @@ import { type ScenarioInfo, SCENARIOS } from './data/scenarios.ts'
 import { clearGame, loadGame, saveGame } from './save.ts'
 import { MODULES, MODULE_IDS, STARTS, type ModuleId } from './game/content.ts'
 import { EVENTS, type EventId } from './game/events.ts'
+import { DEMO, demoGame } from './game/demo.ts'
 import {
+  RULES,
   type DayReport,
   type GameState,
   type Job,
@@ -50,6 +52,8 @@ type Screen =
   | { name: 'crew'; info: ScenarioInfo }
   | {
       name: 'game'
+      /** A prepared game opened to show to an audience. It is never saved over the player's own game. */
+      demo?: boolean
       info: ScenarioInfo
       game: GameState
       plan: Plan
@@ -72,7 +76,7 @@ type Screen =
       /** Everything that has happened so far, in order. */
       log: LogLine[]
     }
-  | { name: 'end'; info: ScenarioInfo; game: GameState }
+  | { name: 'end'; info: ScenarioInfo; game: GameState; demo?: boolean }
 
 type Playing = Extract<Screen, { name: 'game' }>
 
@@ -131,6 +135,42 @@ function factsOf(report: DayReport): FactId[] {
   return facts
 }
 
+/**
+ * The demo: "?demo" at the end of the address opens a prepared game on the morning of
+ * 11 May 2024, "?demo=end" opens the end of that game, and "?demo=5" another morning.
+ * A script plays the days before with the game's own rules: see src/game/demo.ts.
+ */
+function demoScreen(): Screen | null {
+  const wanted = new URLSearchParams(window.location.search).get('demo')
+  if (wanted === null) return null
+  const info = SCENARIOS.find((item) => item.scenario.id === DEMO.scenarioId)
+  if (!info) return null
+  const asked = Number(wanted)
+  const day = wanted === 'end' ? RULES.maxDays + 1 : asked >= 2 && asked <= RULES.maxDays ? Math.floor(asked) : DEMO.day
+  const { game, plan } = demoGame(info.scenario, day)
+  if (game.status !== 'playing') return { name: 'end', info, game, demo: true }
+  let facts: FactId[] = ['flare']
+  for (const report of game.history) facts = withFacts(facts, ...factsOf(report))
+  return {
+    name: 'game',
+    demo: true,
+    info,
+    game,
+    plan,
+    modal: null,
+    selected: null,
+    phase: 'plan',
+    dayKey: game.day,
+    script: null,
+    pending: null,
+    facts,
+    guideSeen: guideEntries(game, facts),
+    speed: 1,
+    effect: null,
+    log: [{ day: game.day, text: `👉 Demo: a script played days 1 to ${game.day - 1} by the game's own rules. Today is yours.`, tone: 'plain' }],
+  }
+}
+
 /** What the picture shows when an event card has been answered. */
 const EVENT_EFFECTS: Partial<Record<EventId, { fx: SceneEffect['fx']; place?: PlaceId; onlyOption?: number }>> = {
   rock: { fx: 'smoke', place: 'farm' },
@@ -143,7 +183,7 @@ const EVENT_EFFECTS: Partial<Record<EventId, { fx: SceneEffect['fx']; place?: Pl
 }
 
 function App() {
-  const [screen, setScreen] = useState<Screen>({ name: 'start' })
+  const [screen, setScreen] = useState<Screen>(() => demoScreen() ?? { name: 'start' })
 
   // Every change to a running game goes through here, using the latest state.
   const update = (change: (current: Playing) => Screen) =>
@@ -152,8 +192,8 @@ function App() {
   // Keep the game in the browser each morning, so a closed tab does not lose it.
   // Only the planning morning is saved: a day that is half played starts again from its morning.
   useEffect(() => {
-    if (screen.name === 'end') clearGame()
-    if (screen.name !== 'game' || screen.phase !== 'plan' || screen.modal?.kind === 'intro') return
+    if (screen.name === 'end' && !screen.demo) clearGame()
+    if (screen.name !== 'game' || screen.demo || screen.phase !== 'plan' || screen.modal?.kind === 'intro') return
     saveGame({
       scenarioId: screen.info.scenario.id,
       game: screen.game,
@@ -302,7 +342,7 @@ function App() {
           update((current) => {
             if (!current.pending) return current
             const { state, report } = current.pending
-            if (state.status !== 'playing') return { name: 'end', info: current.info, game: state }
+            if (state.status !== 'playing') return { name: 'end', info: current.info, game: state, demo: current.demo }
             const landed = state.crew.filter((astronaut) => !current.game.crew.some((old) => old.id === astronaut.id))
             return {
               ...current,
@@ -360,7 +400,7 @@ function App() {
         }
         onHandover={(now) =>
           update((current) => {
-            if (now) return { name: 'end', info: current.info, game: handOver(current.game) }
+            if (now) return { name: 'end', info: current.info, game: handOver(current.game), demo: current.demo }
             // Staying: today's event card, if there is one, is still waiting.
             return { ...current, modal: current.game.event ? { kind: 'event' } : null }
           })

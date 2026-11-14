@@ -4,6 +4,10 @@ A browser game for children aged 7 to 12. You are the commander of a Moon outpos
 
 **Play it:** https://heartfirej.github.io/HackAthlone_Build-a-Junior-Astronaut-Mission-Trainer/
 
+**Short of time? A prepared game:** adding `?demo` to the address opens the base on the morning of 11 May 2024, the day of the great storm: https://heartfirej.github.io/HackAthlone_Build-a-Junior-Astronaut-Mission-Trainer/?demo
+
+That morning is not made by hand. A small script plays the first five days with the game's own rules, always with the same crew and the same dice, and then hands the base to you. The log on the left says so. `?demo=end` opens the end of the same game, played to the last day by the script. The code is in `src/game/demo.ts`.
+
 No download, no account. Made for a laptop screen; it also works on a phone. The game is saved in your own browser each morning, so a closed tab can be picked up again; nothing is sent anywhere.
 
 Built at HackAthlone 2026 (TUS Athlone, Ireland) for the NASA Space Apps Challenge 2026, challenge *Build a Junior Astronaut Mission Trainer*.
@@ -126,7 +130,7 @@ npm run build
 
 - `src/game/` holds the rules as plain TypeScript, with no React.
   - `outpost.ts` is the rules engine. One function, `resolveDay(state, scenario, plan, response)`, takes the day's plan and returns the next state and a report of what happened. The only dice are for the morning event cards, and they are seeded, so every rule can be tested.
-  - `content.ts` holds the modules, jobs, crew and missions. `events.ts` holds the morning event cards.
+  - `content.ts` holds the modules, jobs, crew and missions. `events.ts` holds the morning event cards. `demo.ts` is the scripted commander behind the `?demo` address.
   - `weather.ts` describes the real records the game reads.
 - `src/data/` holds the saved NASA records, the text for each mission and the sourced facts.
 - `src/scene/` holds the moving picture of the base, drawn on a canvas. `script.ts` turns the day's result into a list of timed cues (who walks where, what pops up, when the storm sweeps in). `world.ts` plays those cues and moves everyone. `draw.ts` paints. None of it changes the rules: the result of the day is worked out first, and the picture only shows it.

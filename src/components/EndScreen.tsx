@@ -2,7 +2,8 @@ import type { ScenarioInfo } from '../data/scenarios.ts'
 import { MISSIONS, MISSION_IDS, crewInfo } from '../game/content.ts'
 import { RULES, type DayReport, type GameState, handoverReady, missionDone, rate } from '../game/outpost.ts'
 import { AboutData } from './AboutData.tsx'
-import { FactLine, Pips, Token } from './bits.tsx'
+import { Avatar } from './Avatar.tsx'
+import { FactLine, Pips } from './bits.tsx'
 import { Icon } from './Icon.tsx'
 import { clock, longDate } from './words.ts'
 
@@ -101,7 +102,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
           <ul className="end-crew">
             {game.crew.map((astronaut) => (
               <li key={astronaut.id}>
-                <Token id={astronaut.id} />
+                <Avatar id={astronaut.id} size={44} />
                 <span>
                   <strong>{crewInfo(astronaut.id).name}</strong>
                   <span className="crew-stats">
