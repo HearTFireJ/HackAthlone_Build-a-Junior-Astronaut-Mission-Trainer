@@ -1,74 +1,166 @@
 import { useState } from 'react'
-import { DayScreen } from './components/DayScreen.tsx'
-import { MissionPicker } from './components/MissionPicker.tsx'
-import { ReportScreen } from './components/ReportScreen.tsx'
-import { ResultScreen } from './components/ResultScreen.tsx'
+import { EndScreen } from './components/EndScreen.tsx'
+import { GameScreen } from './components/GameScreen.tsx'
+import { type Modal, Modals } from './components/Modals.tsx'
+import { StartScreen } from './components/StartScreen.tsx'
 import type { ScenarioInfo } from './data/scenarios.ts'
-import { type DayPlan, type DayReport, type GameState, createGame, emptyPlan, resolveDay } from './game/mission.ts'
+import { MODULES, MODULE_IDS, type ModuleId } from './game/content.ts'
+import { EVENTS } from './game/events.ts'
+import {
+  type GameState,
+  type Job,
+  type Plan,
+  type Response,
+  alertFor,
+  answerEvent,
+  canRun,
+  createGame,
+  emptyPlan,
+  jobProblem,
+  powerAvailable,
+  poweredModules,
+  resolveDay,
+} from './game/outpost.ts'
 
 // The app is always on exactly one of these screens.
-// All game rules are in src/game/; this file only moves between screens.
+// All the rules live in src/game/. This file only moves between screens and
+// passes the player's clicks to the rules.
 type Screen =
-  | { name: 'pick' }
-  | { name: 'plan'; info: ScenarioInfo; game: GameState; plan: DayPlan }
-  | { name: 'result'; info: ScenarioInfo; game: GameState; report: DayReport }
-  | { name: 'report'; info: ScenarioInfo; game: GameState }
+  | { name: 'start' }
+  | { name: 'game'; info: ScenarioInfo; game: GameState; plan: Plan; modal: Modal; selected: string | null }
+  | { name: 'end'; info: ScenarioInfo; game: GameState }
 
-function startMission(info: ScenarioInfo): Screen {
-  const game = createGame(info.scenario)
-  // A new day starts with everyone resting, so every job is a choice the player makes.
-  return { name: 'plan', info, game, plan: emptyPlan(game) }
+type Playing = Extract<Screen, { name: 'game' }>
+
+/** Switches off anything the plan asks for that cannot run or does not fit the power budget. */
+function fitToPower(game: GameState, plan: Plan): Plan {
+  const on = poweredModules(game, plan)
+  const power = Object.fromEntries(MODULE_IDS.map((module) => [module, on.includes(module)])) as Record<ModuleId, boolean>
+  return { ...plan, power }
+}
+
+/** Today's plan starts as yesterday's, so the player only changes what they want to change. */
+function planForNewDay(game: GameState, yesterday: Plan | null): Plan {
+  const fresh = emptyPlan(game)
+  if (!yesterday) return fresh
+  const wanted = { ...fresh, power: { ...yesterday.power } }
+  for (const module of MODULE_IDS) if (!canRun(game, module)) wanted.power[module] = false
+  const plan = fitToPower(game, wanted)
+  for (const astronaut of game.crew) {
+    const job = yesterday.jobs[astronaut.id]
+    // Rover trips are one-off decisions: they are never repeated automatically.
+    if (astronaut.away || !job || job.kind === 'trip') continue
+    if (!jobProblem(game, plan, astronaut.id, job)) plan.jobs[astronaut.id] = job
+  }
+  return plan
+}
+
+function seedFromClock(): number {
+  return Math.floor(Math.random() * 1_000_000) + 1
 }
 
 function App() {
-  const [screen, setScreen] = useState<Screen>({ name: 'pick' })
+  const [screen, setScreen] = useState<Screen>({ name: 'start' })
 
-  if (screen.name === 'pick') {
-    return <MissionPicker onPick={(info) => setScreen(startMission(info))} />
-  }
+  // Every change to a running game goes through here, using the latest state.
+  const update = (change: (current: Playing) => Screen) =>
+    setScreen((current) => (current.name === 'game' ? change(current) : current))
 
-  if (screen.name === 'plan') {
+  if (screen.name === 'start') {
     return (
-      <DayScreen
-        game={screen.game}
-        plan={screen.plan}
-        onChange={(change) =>
-          setScreen((current) => (current.name === 'plan' ? { ...current, plan: change(current.plan) } : current))
-        }
-        onStart={() => {
-          // Read the plan from the latest state, in case a job was tapped a moment ago.
-          setScreen((current) => {
-            if (current.name !== 'plan') return current
-            const { state, report } = resolveDay(current.game, current.plan)
-            return { name: 'result', info: current.info, game: state, report }
-          })
-          window.scrollTo(0, 0)
+      <StartScreen
+        onPick={(info) => {
+          const game = createGame(info.scenario.id, seedFromClock())
+          setScreen({ name: 'game', info, game, plan: emptyPlan(game), modal: { kind: 'intro' }, selected: null })
         }}
       />
     )
   }
 
-  if (screen.name === 'result') {
-    return (
-      <ResultScreen
-        game={screen.game}
-        report={screen.report}
-        onNext={() => {
-          const { info, game } = screen
-          setScreen(game.status === 'playing' ? { name: 'plan', info, game, plan: emptyPlan(game) } :{ name: 'report', info, game })
-          window.scrollTo(0, 0)
-        }}
-      />
-    )
+  if (screen.name === 'end') {
+    return <EndScreen info={screen.info} game={screen.game} onAgain={() => setScreen({ name: 'start' })} />
   }
+
+  const finishDay = (response: Response) =>
+    update((current) => {
+      const { state, report } = resolveDay(current.game, current.info.scenario, current.plan, response)
+      return { ...current, game: state, modal: { kind: 'report', report }, selected: null }
+    })
 
   return (
-    <ReportScreen
-      game={screen.game}
-      info={screen.info}
-      onReplay={() => setScreen(startMission(screen.info))}
-      onPickAnother={() => setScreen({ name: 'pick' })}
-    />
+    <>
+      <GameScreen
+        info={screen.info}
+        game={screen.game}
+        plan={screen.plan}
+        selected={screen.selected}
+        onSelect={(id) => update((current) => ({ ...current, selected: current.selected === id ? null : id }))}
+        onTogglePower={(module) =>
+          update((current) => {
+            const turningOn = !current.plan.power[module]
+            const spare = powerAvailable(current.game) - poweredModules(current.game, current.plan).reduce((sum, id) => sum + MODULES[id].power, 0)
+            if (turningOn && (MODULES[module].power > spare || !canRun(current.game, module))) return current
+            return { ...current, plan: { ...current.plan, power: { ...current.plan.power, [module]: turningOn } } }
+          })
+        }
+        onAssign={(astronautId: string, job: Job) =>
+          update((current) => {
+            const jobs = { ...current.plan.jobs, [astronautId]: job }
+            // One rover: giving someone a trip takes it away from anyone else.
+            if (job.kind === 'trip') {
+              for (const [id, other] of Object.entries(jobs)) {
+                if (id !== astronautId && other.kind === 'trip') jobs[id] = { kind: 'rest' }
+              }
+            }
+            return { ...current, plan: { ...current.plan, jobs } }
+          })
+        }
+        onStart={() =>
+          update((current) => {
+            const alert = alertFor(current.game, current.info.scenario, current.plan)
+            if (alert) return { ...current, modal: { kind: 'alert', alert }, selected: null }
+            const { state, report } = resolveDay(current.game, current.info.scenario, current.plan, 'carry')
+            return { ...current, game: state, modal: { kind: 'report', report }, selected: null }
+          })
+        }
+      />
+      <Modals
+        modal={screen.modal}
+        info={screen.info}
+        game={screen.game}
+        plan={screen.plan}
+        onCloseIntro={() =>
+          update((current) => ({ ...current, modal: current.game.event ? { kind: 'event' } : null }))
+        }
+        onAnswerEvent={(option) =>
+          update((current) => {
+            const pending = current.game.event
+            if (!pending) return { ...current, modal: null }
+            const card = EVENTS[pending.id]
+            const { state, result } = answerEvent(current.game, option)
+            return {
+              ...current,
+              game: state,
+              // The answer may have cost power: make sure the plan still fits.
+              plan: fitToPower(state, current.plan),
+              modal: { kind: 'event-result', icon: card.icon, title: card.title, text: result },
+            }
+          })
+        }
+        onCloseEventResult={() => update((current) => ({ ...current, modal: null }))}
+        onRespond={finishDay}
+        onNextDay={() =>
+          update((current) => {
+            if (current.game.status !== 'playing') return { name: 'end', info: current.info, game: current.game }
+            return {
+              ...current,
+              plan: planForNewDay(current.game, current.plan),
+              modal: current.game.event ? { kind: 'event' } : null,
+            }
+          })
+        }
+      />
+    </>
   )
 }
 

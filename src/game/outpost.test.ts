@@ -1,0 +1,358 @@
+import { describe, expect, it } from 'vitest'
+import raw from '../data/scenarios.json'
+import { MISSIONS, MODULE_IDS, type ModuleId } from './content.ts'
+import { EVENTS, EVENT_IDS } from './events.ts'
+import {
+  RULES,
+  type GameState,
+  type Job,
+  type Plan,
+  type Response,
+  alertFor,
+  answerEvent,
+  availableTrips,
+  calmPreview,
+  createGame,
+  emptyPlan,
+  jobProblem,
+  powerAvailable,
+  poweredModules,
+  rate,
+  resolveDay,
+  workPoints,
+} from './outpost.ts'
+import { FLARE, SEVERE_STORM, STORM, scenarioOf } from './testing.ts'
+import type { Scenario } from './weather.ts'
+
+const CALM = scenarioOf('sep-2017')
+/** The three real stretches of days the game ships with. */
+const REAL: Scenario[] = raw.scenarios
+
+/** A plan with these modules on and these jobs; everyone else rests. */
+function planOf(state: GameState, power: ModuleId[], jobs: Record<string, Job> = {}): Plan {
+  const plan = emptyPlan(state)
+  for (const module of power) plan.power[module] = true
+  Object.assign(plan.jobs, jobs)
+  return plan
+}
+
+function crew(state: GameState, id: string) {
+  const found = state.crew.find((astronaut) => astronaut.id === id)
+  if (!found) throw new Error(`no ${id}`)
+  return found
+}
+
+/** Plays whole days with the same kind of plan until the game ends. */
+function playOut(scenario: Scenario, makePlan: (state: GameState) => Plan, response: Response = 'carry', eventOption = 1): GameState {
+  let state = createGame(scenario.id, 7)
+  while (state.status === 'playing') {
+    if (state.event) state = answerEvent(state, eventOption).state
+    state = resolveDay(state, scenario, makePlan(state), response).state
+  }
+  return state
+}
+
+describe('starting a game', () => {
+  it('sets up the crew and supplies for the chosen difficulty', () => {
+    expect(createGame('quiet-2019').crew).toHaveLength(4)
+    expect(createGame('sep-2017').crew).toHaveLength(3)
+    expect(createGame('may-2024').air).toBeLessThan(createGame('quiet-2019').air)
+  })
+})
+
+describe('power', () => {
+  it('cannot run every module at once', () => {
+    const state = createGame('sep-2017')
+    const everything = planOf(state, [...MODULE_IDS])
+    expect(poweredModules(state, everything).length).toBeLessThan(MODULE_IDS.length)
+  })
+
+  it('saves unused power in the battery, up to its size', () => {
+    const state = createGame('sep-2017')
+    const { state: next } = resolveDay(state, CALM, planOf(state, ['comms']))
+    expect(next.battery).toBe(RULES.batteryCap)
+    expect(powerAvailable(next)).toBe(state.solar + RULES.batteryCap)
+  })
+})
+
+describe('air and food', () => {
+  it('Life Support makes air only when it has power', () => {
+    const state = createGame('sep-2017')
+    expect(resolveDay(state, CALM, planOf(state, ['life'])).state.air).toBe(state.air + RULES.lifeAir - 3)
+    expect(resolveDay(state, CALM, planOf(state, [])).state.air).toBe(state.air - 3)
+  })
+
+  it('the Greenhouse grows more when someone tends it, most of all someone who loves plants', () => {
+    const state = createGame('sep-2017')
+    const lights = resolveDay(state, CALM, planOf(state, ['farm'])).report.food.made
+    const withCian = resolveDay(state, CALM, planOf(state, ['farm'], { cian: { kind: 'garden' } })).report.food.made
+    const withAoife = resolveDay(state, CALM, planOf(state, ['farm'], { aoife: { kind: 'garden' } })).report.food.made
+    expect(lights).toBe(RULES.farmFood)
+    expect(withCian).toBe(RULES.farmFood + 2)
+    expect(withAoife).toBe(RULES.farmFood + 3)
+  })
+
+  it('the numbers on the report add up', () => {
+    const state = createGame('sep-2017')
+    const { report } = resolveDay(state, CALM, planOf(state, ['farm', 'life'], { aoife: { kind: 'garden' } }))
+    expect(report.food.left).toBe(state.food + report.food.made - report.food.eaten)
+    expect(report.air.left).toBe(state.air + report.air.made - report.air.used)
+  })
+
+  it('when food is short the hungriest eat first, and going hungry hurts in the end', () => {
+    let state = createGame('sep-2017')
+    state = { ...state, food: 1 }
+    crew(state, 'niamh').fed = 1
+    const first = resolveDay(state, CALM, planOf(state, ['life']))
+    expect(first.report.crew.find((member) => member.id === 'niamh')?.ate).toBe(true)
+    expect(crew(first.state, 'aoife').fed).toBe(RULES.fullFed - 1)
+    let hungry = first.state
+    for (let i = 0; i < 3; i += 1) hungry = resolveDay(hungry, CALM, planOf(hungry, ['life'])).state
+    expect(crew(hungry, 'aoife').health).toBeLessThan(RULES.maxStat)
+  })
+
+  it('two days without air ends the mission early', () => {
+    let state = createGame('sep-2017')
+    state = { ...state, air: 0 }
+    state = resolveDay(state, CALM, planOf(state, [])).state
+    expect(state.status).toBe('playing')
+    state = resolveDay(state, CALM, planOf(state, [])).state
+    expect(state.status).toBe('evacuated')
+  })
+})
+
+describe('jobs', () => {
+  it('a job in a module without power cannot be done', () => {
+    const state = createGame('sep-2017')
+    const plan = planOf(state, [], { aoife: { kind: 'garden' } })
+    expect(jobProblem(state, plan, 'aoife', { kind: 'garden' })).toMatch(/needs power/)
+    const { report } = resolveDay(state, CALM, plan)
+    expect(report.food.made).toBe(0)
+  })
+
+  it('people do the job they love better', () => {
+    const state = createGame('sep-2017')
+    expect(workPoints(crew(state, 'niamh'), 'build')).toBe(3)
+    expect(workPoints(crew(state, 'aoife'), 'build')).toBe(2)
+  })
+
+  it('someone who is a bit low works slowly, and someone very low cannot work', () => {
+    const state = createGame('sep-2017')
+    crew(state, 'niamh').mood = 2
+    expect(workPoints(crew(state, 'niamh'), 'build')).toBe(1)
+    crew(state, 'niamh').mood = 1
+    expect(jobProblem(state, planOf(state, []), 'niamh', { kind: 'build' })).toMatch(/unhappy/)
+    crew(state, 'niamh').health = 1
+    const { report } = resolveDay(state, CALM, planOf(state, ['life'], { niamh: { kind: 'build' } }))
+    expect(report.crew.find((member) => member.id === 'niamh')?.did).toBe('Sick bay')
+  })
+
+  it('rest lifts mood, the sick bay lifts health, and calling home needs the radio', () => {
+    const state = createGame('sep-2017')
+    for (const astronaut of state.crew) Object.assign(astronaut, { health: 2, mood: 2 })
+    // The other two work somewhere else, so friendships do not change the numbers.
+    const rested = resolveDay(state, CALM, planOf(state, ['life', 'lab'], { aoife: { kind: 'rest' }, cian: { kind: 'lab' }, niamh: { kind: 'build' } })).state
+    expect(crew(rested, 'aoife')).toMatchObject({ health: 3, mood: 4 })
+    const treated = resolveDay(state, CALM, planOf(state, ['life', 'lab'], { cian: { kind: 'sickbay' }, aoife: { kind: 'lab' }, niamh: { kind: 'build' } })).state
+    expect(crew(treated, 'cian')).toMatchObject({ health: 4, mood: 3 })
+    const called = resolveDay(state, CALM, planOf(state, ['life', 'lab', 'comms'], { niamh: { kind: 'call' }, aoife: { kind: 'lab' }, cian: { kind: 'lab' } })).state
+    expect(crew(called, 'niamh').mood).toBe(5)
+    expect(jobProblem(state, planOf(state, []), 'niamh', { kind: 'call' })).toMatch(/Radio Dish/)
+  })
+
+  it('working three days in a row costs mood', () => {
+    let state = createGame('sep-2017')
+    const plan = (current: GameState) => planOf(current, ['life', 'lab'], { aoife: { kind: 'lab' } })
+    for (let i = 0; i < 2; i += 1) state = resolveDay(state, CALM, plan(state)).state
+    const before = crew(state, 'aoife').mood
+    state = resolveDay(state, CALM, plan(state)).state
+    expect(crew(state, 'aoife').mood).toBe(before - 1)
+  })
+
+  it('friends cheer each other up and rivals annoy each other', () => {
+    const state = createGame('sep-2017')
+    for (const astronaut of state.crew) astronaut.mood = 3
+    const friends = resolveDay(state, CALM, planOf(state, ['life', 'lab'], { aoife: { kind: 'lab' }, cian: { kind: 'lab' }, niamh: { kind: 'build' } })).state
+    expect(crew(friends, 'cian').mood).toBe(4)
+    const rivals = resolveDay(state, CALM, planOf(state, ['life', 'lab'], { cian: { kind: 'lab' }, niamh: { kind: 'lab' }, aoife: { kind: 'build' } })).state
+    expect(crew(rivals, 'cian').mood).toBe(2)
+  })
+})
+
+describe('rover trips', () => {
+  it('need the Rover Bay, and there is only one rover', () => {
+    const state = createGame('sep-2017')
+    expect(jobProblem(state, planOf(state, []), 'cian', { kind: 'trip', trip: 'scout' })).toMatch(/Rover Bay/)
+    const both = planOf(state, ['garage'], { aoife: { kind: 'trip', trip: 'scout' }, cian: { kind: 'trip', trip: 'scout' } })
+    expect(jobProblem(state, both, 'aoife', both.jobs.aoife)).toBeNull()
+    expect(jobProblem(state, both, 'cian', both.jobs.cian)).toMatch(/one rover/)
+  })
+
+  it('the three ice trips go in order, and finishing them makes Life Support better', () => {
+    let state = createGame('sep-2017')
+    expect(availableTrips(state)).toEqual(['scout'])
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'scout' } })).state
+    expect(state.missions.ice).toBe(1)
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'drill' } })).state
+    expect(crew(state, 'cian').away).toEqual({ trip: 'drill', daysLeft: 1 })
+    expect(availableTrips(state)).toEqual([])
+    state = resolveDay(state, CALM, planOf(state, ['life'])).state
+    expect(state.missions.ice).toBe(2)
+    state = resolveDay(state, CALM, planOf(state, ['garage', 'life'], { cian: { kind: 'trip', trip: 'haul' } })).state
+    const done = resolveDay(state, CALM, planOf(state, ['life']))
+    expect(done.report.finished).toEqual(['ice'])
+    const after = resolveDay(done.state, CALM, planOf(done.state, ['life']))
+    expect(after.report.air.made).toBe(RULES.lifeAirWithIce)
+  })
+})
+
+describe('flares, alerts and storms', () => {
+  const stormy = scenarioOf('sep-2017', [{ watchFlare: FLARE, storm: STORM }])
+  const severe = scenarioOf('sep-2017', [{ watchFlare: FLARE, storm: SEVERE_STORM }])
+  const falseAlarm = scenarioOf('sep-2017', [{ watchFlare: FLARE }])
+
+  it('the alert only arrives when the Radio Dish is on', () => {
+    const state = createGame('sep-2017')
+    expect(alertFor(state, stormy, planOf(state, []))).toBeNull()
+    expect(alertFor(state, stormy, planOf(state, ['comms']))?.cloudKnown).toBe(false)
+    expect(alertFor(state, stormy, planOf(state, ['comms', 'scope']))?.cloudKnown).toBe(true)
+  })
+
+  it('a storm hurts people outside most, people inside a little, and nobody in the shelter', () => {
+    const state = createGame('sep-2017')
+    const plan = planOf(state, ['comms'], { niamh: { kind: 'build' } })
+    const carried = resolveDay(state, stormy, plan, 'carry').state
+    expect(crew(carried, 'niamh').health).toBe(RULES.maxStat - RULES.stormOutside[0])
+    expect(crew(carried, 'aoife').health).toBe(RULES.maxStat) // rest heals the one heart the storm took
+    const sheltered = resolveDay(state, stormy, plan, 'shelter')
+    expect(crew(sheltered.state, 'niamh').health).toBe(RULES.maxStat)
+    expect(sheltered.report.call).toBe('saved')
+    expect(sheltered.report.heartsSaved).toBeGreaterThan(0)
+  })
+
+  it('a severe storm hurts more', () => {
+    const state = createGame('sep-2017')
+    const plan = planOf(state, ['comms'], { niamh: { kind: 'build' } })
+    expect(crew(resolveDay(state, severe, plan, 'carry').state, 'niamh').health).toBe(RULES.maxStat - RULES.stormOutside[1])
+  })
+
+  it('with the radio off there is no warning and no choice', () => {
+    const state = createGame('sep-2017')
+    const { state: next, report } = resolveDay(state, stormy, planOf(state, [], { niamh: { kind: 'build' } }), 'shelter')
+    expect(report.call).toBe('surprise')
+    expect(crew(next, 'niamh').health).toBeLessThan(RULES.maxStat)
+  })
+
+  it('taking cover costs work: sheltering halves it, and calling people in cancels a rover trip', () => {
+    const state = createGame('sep-2017')
+    const plan = planOf(state, ['comms', 'garage'], { niamh: { kind: 'build' }, cian: { kind: 'trip', trip: 'scout' } })
+    const carried = resolveDay(state, falseAlarm, plan, 'carry').state
+    const inside = resolveDay(state, falseAlarm, plan, 'inside')
+    expect(carried.missions.dish).toBe(3)
+    expect(inside.state.missions.dish).toBe(1)
+    expect(carried.missions.ice).toBe(1)
+    expect(inside.state.missions.ice).toBe(0)
+    expect(inside.report.call).toBe('false-alarm')
+  })
+
+  it('the Moon-soil shield makes the inside of the base safer', () => {
+    const state = createGame('sep-2017')
+    const plain = resolveDay(state, stormy, planOf(state, [], { aoife: { kind: 'lab' } })).report
+    state.missions.shield = MISSIONS.shield.goal
+    const shielded = resolveDay(state, stormy, planOf(state, [], { aoife: { kind: 'lab' } })).report
+    const lost = (report: typeof plain) => report.crew.reduce((sum, member) => sum + Math.max(0, member.healthBefore - member.healthAfter), 0)
+    expect(lost(shielded)).toBeLessThan(lost(plain) + 1)
+    expect(shielded.notes.join(' ')).not.toMatch(/hurt the plants/)
+  })
+
+  it('the planning preview never gives away a storm', () => {
+    const state = createGame('sep-2017')
+    const plan = planOf(state, ['farm'], { aoife: { kind: 'garden' } })
+    expect(calmPreview(state, stormy, plan).storm).toBeNull()
+    expect(calmPreview(state, stormy, plan).food.left).toBe(calmPreview(state, CALM, plan).food.left)
+  })
+})
+
+describe('event cards', () => {
+  it('the same seed draws the same events', () => {
+    const run = (seed: number) => {
+      let state = createGame('sep-2017', seed)
+      const seen: string[] = []
+      for (let i = 0; i < 5; i += 1) {
+        if (state.event) {
+          seen.push(state.event.id)
+          state = answerEvent(state, 1).state
+        }
+        state = resolveDay(state, CALM, planOf(state, ['life', 'farm'])).state
+      }
+      return seen
+    }
+    expect(run(42)).toEqual(run(42))
+  })
+
+  it('every card has two answers, and neither answer breaks the game', () => {
+    for (const id of EVENT_IDS) {
+      for (const option of [0, 1]) {
+        const state = { ...createGame('sep-2017'), event: { id, who: 'aoife' } }
+        const { state: next, result } = answerEvent(state, option)
+        expect(result.length).toBeGreaterThan(0)
+        expect(next.event).toBeNull()
+        expect(EVENTS[id].options).toHaveLength(2)
+      }
+    }
+  })
+
+  it('a new astronaut lands the morning after the commander says yes', () => {
+    const state = { ...createGame('sep-2017'), event: { id: 'newcrew' as const, who: null } }
+    const accepted = answerEvent(state, 0).state
+    const next = resolveDay(accepted, CALM, planOf(accepted, ['life'])).state
+    expect(next.crew).toHaveLength(4)
+  })
+})
+
+describe('how a mission ends', () => {
+  it('runs for ten days, then counts stars', () => {
+    const state = playOut(CALM, (current) => planOf(current, ['life', 'farm'], { aoife: { kind: 'garden' } }))
+    expect(state.status).toBe('done')
+    expect(state.history).toHaveLength(RULES.maxDays)
+    expect(rate(state).maxStars).toBe(5)
+  })
+
+  it('doing nothing at all fails', () => {
+    const state = playOut(CALM, (current) => emptyPlan(current))
+    expect(state.status).toBe('evacuated')
+  })
+
+  it('keeping everyone cosy and doing no missions earns one star at most: there is no free safe option', () => {
+    for (const entry of REAL) {
+      const state = playOut(entry, (current) => planOf(current, ['life', 'farm', 'comms'], { aoife: { kind: 'garden' } }), 'shelter')
+      expect(rate(state).stars).toBeLessThanOrEqual(1)
+    }
+  })
+})
+
+describe('the real NASA records the game ships with', () => {
+  const days = REAL.flatMap((scenario) => scenario.days)
+
+  it('has three stretches of ten days', () => {
+    expect(REAL.map((scenario) => scenario.days.length)).toEqual([10, 10, 10])
+  })
+
+  // The alert card tells players this, so it has to be true of the data.
+  it('every particle storm came after a big flare that threw off a cloud (a CME)', () => {
+    const storms = days.filter((entry) => entry.storm)
+    expect(storms.length).toBe(6)
+    for (const entry of storms) {
+      expect(entry.watchFlare?.cme).toBe(true)
+      expect(entry.watchFlare!.time < entry.storm!.time).toBe(true)
+    }
+  })
+
+  it('no flare without a cloud was followed by a storm, and many flares with a cloud were not either', () => {
+    const noCloud = days.filter((entry) => entry.watchFlare && !entry.watchFlare.cme)
+    expect(noCloud.length).toBeGreaterThan(0)
+    expect(noCloud.every((entry) => !entry.storm)).toBe(true)
+    const cloud = days.filter((entry) => entry.watchFlare?.cme)
+    expect(cloud.filter((entry) => !entry.storm).length).toBeGreaterThanOrEqual(cloud.length / 2)
+  })
+})

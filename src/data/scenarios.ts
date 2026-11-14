@@ -1,12 +1,12 @@
 // The real space weather the game ships with, plus the words shown for each mission.
 // scenarios.json is written by scripts/fetch-donki.mjs (npm run data): do not edit it by hand.
 
-import type { Scenario } from '../game/scenario.ts'
+import type { Scenario } from '../game/weather.ts'
 import raw from './scenarios.json'
 
 export interface ScenarioInfo {
   scenario: Scenario
-  /** Short name on the mission picker. */
+  /** Short name on the start screen. */
   title: string
   /** The real dates, written for people. */
   dates: string
@@ -27,6 +27,8 @@ export const DATA_SOURCE = {
   name: raw.source,
   url: raw.sourceUrl,
   retrievedAt: raw.retrievedAt,
+  /** The smallest flare that triggers an alert in the game. */
+  alertFlare: raw.alertFlare,
 }
 
 export const SCENARIOS: ScenarioInfo[] = [
@@ -50,7 +52,7 @@ export const SCENARIOS: ScenarioInfo[] = [
     dates: '3–12 September 2017',
     difficulty: 'Stormy',
     blurb:
-      "The Sun fired the biggest flare of its whole 11-year cycle. Four days later, a brand-new radio telescope in Birr, Ireland, picked up radio waves from another giant flare.",
+      'The Sun fired the biggest flare of its whole 11-year cycle. Four days later, a brand-new radio telescope in Birr, Ireland, picked up radio waves from another giant flare.',
     sources: [
       {
         label: 'NASA: the flare of 6 September 2017',
@@ -67,8 +69,7 @@ export const SCENARIOS: ScenarioInfo[] = [
     title: 'The Great May Storm',
     dates: '6–15 May 2024',
     difficulty: 'Very stormy',
-    blurb:
-      'The strongest solar storm to reach Earth in twenty years. People across Ireland saw the northern lights.',
+    blurb: 'The strongest solar storm to reach Earth in twenty years. People across Ireland saw the northern lights.',
     sources: [
       {
         label: 'NASA: the storm of May 2024',

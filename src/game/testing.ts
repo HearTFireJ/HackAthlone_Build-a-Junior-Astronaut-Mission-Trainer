@@ -1,31 +1,19 @@
-// Helpers for tests only: build small made-up scenarios so each rule can be
-// tested on its own. The game itself only ever uses real data from src/data/.
+// Helpers for tests: build a made-up stretch of space weather, so each test can
+// say exactly which days have a flare or a storm.
 
-import { type DayPlan, type GameState, type Job, MISSION_DAYS } from './mission.ts'
-import type { Scenario, SpaceWeatherDay, StormLevel } from './scenario.ts'
+import type { Scenario, StormRecord, WatchFlare, WeatherDay } from './weather.ts'
 
-export function makeDay(storm: StormLevel = 0, strongestFlare: string | null = null): SpaceWeatherDay {
-  const instruments = storm === 2 ? ['GOES-P: SEISS >100 MeV'] : ['GOES-P: SEISS >10 MeV']
-  return {
-    date: '2000-01-01',
-    strongestFlare,
-    strongestFlareLink: null,
-    flareCount: strongestFlare ? 1 : 0,
-    particleEvents: storm > 0 ? [{ time: '2000-01-01T12:00Z', instruments, link: '' }] : [],
-    maxKp: null,
-  }
+export const FLARE: WatchFlare = { class: 'X2.0', time: '2030-01-01T10:00Z', cme: true, location: null, link: 'https://example.org/flare' }
+export const FLARE_NO_CLOUD: WatchFlare = { ...FLARE, cme: false }
+export const STORM: StormRecord = { time: '2030-01-01T15:00Z', severe: false, instruments: ['GOES: >10 MeV'], link: 'https://example.org/storm' }
+export const SEVERE_STORM: StormRecord = { ...STORM, severe: true }
+
+export function day(parts: Partial<WeatherDay> = {}): WeatherDay {
+  return { date: '2030-01-01', flareCount: 0, strongestFlare: null, watchFlare: null, storm: null, maxKp: null, ...parts }
 }
 
-/** A scenario with a storm of the given level on each mission day (0 = calm). */
-export function makeScenario(storms: StormLevel[] = []): Scenario {
-  const days = Array.from({ length: MISSION_DAYS }, (_, index) => makeDay(storms[index] ?? 0))
-  return { id: 'test', dayBefore: makeDay(), days }
+/** A scenario from a list of days. Missing days are calm. It always has ten days. */
+export function scenarioOf(id: string, days: Partial<WeatherDay>[] = []): Scenario {
+  const all = Array.from({ length: 10 }, (_, index) => day(days[index] ?? {}))
+  return { id, dayBefore: day(), days: all }
 }
-
-/** The same job list for the three astronauts, in crew order. */
-export function jobs(state: GameState, first: Job, second: Job, third: Job): DayPlan {
-  const [a, b, c] = state.crew
-  return { shelter: false, jobs: { [a.id]: first, [b.id]: second, [c.id]: third } }
-}
-
-export const SHELTER: DayPlan = { shelter: true, jobs: {} }

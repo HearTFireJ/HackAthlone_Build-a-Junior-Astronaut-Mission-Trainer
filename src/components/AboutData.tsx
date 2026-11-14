@@ -1,7 +1,7 @@
 import { DATA_SOURCE } from '../data/scenarios.ts'
 import { longDate } from './words.ts'
 
-/** Tells the player, honestly, what is real NASA data and what is made simple for the game. */
+/** Tells the player, honestly, what is real NASA data and what is made up for the game. */
 export function AboutData() {
   return (
     <details className="about">
@@ -10,9 +10,12 @@ export function AboutData() {
         <h3>Real</h3>
         <ul>
           <li>
-            The dates, the solar flares and their sizes, and the days when spacecraft near Earth first measured
-            a new burst of fast particles from the Sun. They come from NASA's space weather database, called
-            DONKI.
+            Every solar flare and every particle storm in the game: its date, its time and its size. They come from
+            NASA's space weather database, called DONKI, and each one links to its record.
+          </li>
+          <li>
+            Whether a huge cloud of gas left the Sun with a flare. Scientists call that cloud a coronal mass ejection,
+            or CME. DONKI records which flares came with one.
           </li>
           <li>
             These are saved records, not live data. We copied them from{' '}
@@ -21,33 +24,39 @@ export function AboutData() {
             </a>{' '}
             on {longDate(DATA_SOURCE.retrievedAt)}.
           </li>
-          <li>
-            The Moon has no air and no magnetic field to block those particles. That is why astronauts need a
-            storm shelter.
-          </li>
         </ul>
         <h3>Made simple for the game</h3>
         <ul>
-          <li>Power, oxygen and food are counted in small made-up units, and health is shown as hearts.</li>
           <li>
-            In the game a storm lasts one day: the day it started. Real particle storms can go on for several
-            days. A "calm day" in the game only means that no new storm started.
+            Mission Control only calls about flares of class {DATA_SOURCE.alertFlare.replace('.0', '')} or bigger. That
+            cut-off is a game rule.
           </li>
           <li>
-            The forecast only looks at yesterday's biggest flare. Real forecasters use much more, and they are
-            still sometimes wrong.
+            In the game a storm lasts one day: the day spacecraft near Earth first measured it. Real particle storms
+            can go on for several days.
           </li>
-          <li>After a storm, the radio link is down the next morning. That is a game rule.</li>
           <li>
-            The Moon base, the crew and Mission Control in Athlone are made up. Mission Control is inspired by
-            I-LOFAR, a real radio telescope at Birr Castle in County Offaly that listens to the Sun.
+            A storm is called "severe" in the game when the spacecraft measured protons above 100 MeV, which get
+            through more shielding.
+          </li>
+          <li>
+            Power, air and food are counted in small made-up units. Health, mood and hunger are shown as simple marks.
+            How much a storm hurts, how it wears the solar panels and how it harms the plants are game rules.
+          </li>
+        </ul>
+        <h3>Made up</h3>
+        <ul>
+          <li>The outpost, the crew, the missions and the morning event cards.</li>
+          <li>
+            Mission Control in Athlone. It is inspired by I-LOFAR, a real radio telescope at Birr Castle in County
+            Offaly that listens to the Sun.
           </li>
         </ul>
         <h3>How it was made</h3>
         <ul>
           <li>
-            Built in one weekend at HackAthlone 2026 for the NASA Space Apps Challenge. The code was written
-            with the help of AI coding tools, directed and checked by a person.
+            Built in one weekend at HackAthlone 2026 for the NASA Space Apps Challenge. The code was written with the
+            help of AI coding tools, directed and checked by a person.
           </li>
         </ul>
       </div>
