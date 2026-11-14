@@ -1,24 +1,24 @@
-# 私人笔记：不进仓库（仓库之后会公开）
+# Private notes: kept out of the public repo
 00-目标.md
 CLAUDE.local.md
 01-复盘.md
 
-# 给 agent 的工作说明和中文工作笔记：只在本机用，不进仓库
+# Local instructions for the AI coding tools, and working notes
 AGENTS.md
 CLAUDE.md
 docs/
 
-# 依赖和构建产物
+# Dependencies and build output
 node_modules/
 dist/
 .vite/
 
-# 密钥（NASA API key 等）
+# Secrets
 .env
 .env.*
 !.env.example
 
-# 本机设置和系统文件
+# Local settings and system files
 .claude/settings.local.json
 .DS_Store
 Thumbs.db
