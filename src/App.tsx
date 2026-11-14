@@ -26,7 +26,14 @@ import {
 } from './game/outpost.ts'
 import type { PlaceId } from './scene/layout.ts'
 import type { SceneEffect } from './scene/Scene.tsx'
-import { MORNING, type Cue, later, morningScript, restScript } from './scene/script.ts'
+import { MORNING, type Cue, type Tone, later, morningScript, restScript } from './scene/script.ts'
+
+/** One line of the log: something that happened, and on which day. */
+export interface LogLine {
+  day: number
+  text: string
+  tone: Tone
+}
 
 // The app is always on exactly one of these screens.
 // All the rules live in src/game/. This file only moves between screens and
@@ -54,6 +61,8 @@ type Screen =
       guideSeen: number
       speed: number
       effect: SceneEffect | null
+      /** Everything that has happened so far, in order. */
+      log: LogLine[]
     }
   | { name: 'end'; info: ScenarioInfo; game: GameState }
 
@@ -152,6 +161,7 @@ function App() {
             guideSeen: 0,
             speed: 1,
             effect: null,
+            log: [],
           })
         }}
       />
@@ -174,6 +184,8 @@ function App() {
         script={screen.script}
         speed={screen.speed}
         effect={screen.effect}
+        log={screen.log}
+        onLog={(text, tone) => update((current) => ({ ...current, log: [...current.log, { day: current.game.day, text, tone }] }))}
         guideNew={Math.max(0, guideEntries(screen.game, screen.facts) - screen.guideSeen)}
         onGuide={() =>
           update((current) =>
@@ -267,6 +279,7 @@ function App() {
               // The answer may have cost power: make sure the plan still fits.
               plan: fitToPower(state, current.plan),
               modal: { kind: 'event-result', icon: card.icon, title: card.title, text: result, reaction },
+              log: [...current.log, { day: current.game.day, text: `${card.icon} ${card.title}: ${result}`, tone: 'plain' }],
               facts: withFacts(current.facts, EVENT_FACTS[pending.id]),
             }
           })

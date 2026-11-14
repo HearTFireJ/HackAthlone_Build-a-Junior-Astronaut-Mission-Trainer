@@ -26,7 +26,7 @@ import {
   type Step,
   HAB,
 } from './layout.ts'
-import { hudOf, type Cue, type Hud, type Tone } from './script.ts'
+import { FLOAT_SECONDS, hudOf, type Cue, type Hud, type Tone } from './script.ts'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -75,6 +75,11 @@ interface FloatText {
   text: string
   tone: Tone
   age: number
+  /** Seconds it stays up, and how fast it drifts upward. The little "z" of a sleeper is quick. */
+  life?: number
+  rise?: number
+  /** Roughly how wide the words are, for keeping two lines from sitting on each other. */
+  wide?: number
 }
 
 interface Planned {
@@ -261,7 +266,7 @@ export class World {
     }
     this.particles = this.particles.filter((p) => p.age < p.life)
     for (const f of this.floats) f.age += step
-    this.floats = this.floats.filter((f) => f.age < 2.4)
+    this.floats = this.floats.filter((f) => f.age < (f.life ?? 2.4))
   }
 
   private moveActor(actor: Actor, step: number) {
@@ -433,9 +438,12 @@ export class World {
         } else {
           const actor = this.actors.get(cue.at.who)
           if (!actor) break
-          if (actor.hidden) this.float(1470, 800, `${crewInfo(actor.id).name}: ${cue.text}`, cue.tone)
-          else this.float(actor.x, actor.y - 62 * PAWN_SCALE - 22, cue.text, cue.tone)
+          const text = cue.named || actor.hidden ? `${crewInfo(actor.id).name}  ${cue.text}` : cue.text
+          if (actor.hidden) this.float(1470, 800, text, cue.tone)
+          else this.float(actor.x, actor.y - 62 * PAWN_SCALE - 22, text, cue.tone)
         }
+        // The page keeps a log of these.
+        this.onCue(cue)
         break
       }
       case 'hit': {
@@ -511,10 +519,18 @@ export class World {
   }
 
   private float(x: number, y: number, text: string, tone: Tone) {
-    // Two signs over the same head do not sit on top of each other.
-    let lift = 0
-    for (const other of this.floats) if (Math.abs(other.x - x) < 60 && Math.abs(other.y - y) < 12 && other.age < 1) lift += 24
-    this.floats.push({ x, y: y - lift, text, tone, age: 0 })
+    // Words stay up long enough to read, and two lines never sit on top of each other:
+    // a new line that would touch an older one is put above it. They all drift up at the
+    // same speed, so they stay apart.
+    const rise = 12
+    const wide = [...text].length * 12.5 + 16
+    let top = y
+    for (let tries = 0; tries < 12; tries++) {
+      const clash = this.floats.some((other) => other.wide !== undefined && Math.abs(other.x - x) < (other.wide + wide) / 2 && Math.abs(other.y - other.age * rise - top) < 30)
+      if (!clash) break
+      top -= 31
+    }
+    this.floats.push({ x, y: top, text, tone, age: 0, life: FLOAT_SECONDS, rise, wide })
   }
 
   private send(actor: Actor, act: Activity, repairAt: ModuleId | 'panels', hurry: boolean) {
@@ -831,12 +847,21 @@ export class World {
 
     // Signs that float up: "+2 🥕", "−1 ♥".
     for (const f of this.floats) {
-      const alpha = f.age < 1.7 ? 1 : Math.max(0, 1 - (f.age - 1.7) / 0.7)
+      const life = f.life ?? 2.4
+      const alpha = f.age < life - 0.7 ? 1 : Math.max(0, 1 - (f.age - (life - 0.7)) / 0.7)
       ctx.globalAlpha = alpha
       ctx.font = '800 22px "Segoe UI", system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      const y = f.y - f.age * 22
+      const y = f.y - f.age * (f.rise ?? 22)
+      if (f.wide !== undefined) {
+        // A dark plate behind the words, so they can be read over anything.
+        const w = ctx.measureText(f.text).width + 22
+        ctx.fillStyle = 'rgba(10,13,28,0.82)'
+        ctx.beginPath()
+        ctx.roundRect(f.x - w / 2, y - 14, w, 28, 14)
+        ctx.fill()
+      }
       ctx.lineWidth = 5
       ctx.lineJoin = 'round'
       ctx.strokeStyle = 'rgba(8,10,24,0.9)'

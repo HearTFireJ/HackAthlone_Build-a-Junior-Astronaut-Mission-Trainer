@@ -3,7 +3,7 @@
 // The rules (src/game/outpost.ts) have already decided everything that happens. This
 // file only decides how to show it. It is plain data, so it can be tested without a screen.
 
-import { JOBS, MISSIONS, TRIPS, type JobId, type MissionId, type ModuleId } from '../game/content.ts'
+import { JOBS, MISSIONS, TRIPS, crewInfo, type JobId, type MissionId, type ModuleId } from '../game/content.ts'
 import { RULES, type DayReport, type GameState, type Missions, type Why } from '../game/outpost.ts'
 import type { Activity, PlaceId } from './layout.ts'
 
@@ -24,7 +24,10 @@ export type Cue = { t: number } & (
   | { kind: 'time'; label: string }
   | { kind: 'go'; who: string; act: Activity; repairAt?: ModuleId | 'panels'; hurry?: boolean }
   | { kind: 'rover-in'; who: string; act: Activity; hurry?: boolean }
-  | { kind: 'float'; at: PlaceId | { who: string }; text: string; tone: Tone }
+  /** Words that float up over a place or a person. `named` writes the person's name in front. */
+  | { kind: 'float'; at: PlaceId | { who: string }; text: string; tone: Tone; named?: boolean }
+  /** A line for the log only: nothing is drawn. */
+  | { kind: 'note'; text: string; tone: Tone }
   | { kind: 'hit'; who: string }
   | { kind: 'flare' }
   | { kind: 'storm'; seconds: number; severe: boolean }
@@ -36,6 +39,10 @@ export type Cue = { t: number } & (
 
 /** A cue without its time. */
 type Body<C> = C extends unknown ? Omit<C, 't'> : never
+
+/** How long floating words stay up, and how far apart the evening's lines come, in seconds. */
+export const FLOAT_SECONDS = 3.6
+const EVENING_GAP = 0.6
 
 /** Seconds from "Start the day" to the moment a flare alert can come in. */
 export const MORNING = 6.5
@@ -87,6 +94,9 @@ export function morningScript(before: GameState, preview: DayReport, alert: bool
   const repairs = repairTargets(before, preview)
   preview.crew.forEach((member, index) => {
     const wasAway = !!before.crew.find((a) => a.id === member.id)?.away
+    // The log says where everyone is going.
+    const going = member.job === 'trip-away' ? 'still out with the rover' : member.job === 'trip' && member.trip ? TRIPS[member.trip].name : JOBS[member.job].name
+    cues.push({ t: 0.25 * index, kind: 'note', text: `${crewInfo(member.id).name} → ${going}`, tone: 'plain' })
     if (member.job === 'trip-away') return
     if (wasAway) {
       // Gave up a trip: the rover brings them home first thing.
@@ -244,18 +254,21 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
   } else if (report.food.eaten < report.crew.length) {
     add(t, { kind: 'caption', text: 'There was not enough food for everyone.', tone: 'warn' })
   }
+  let shown = 0
   for (const member of report.crew) {
-    let when = t
     const mood = member.moodAfter - member.moodBefore
-    const why = member.why.map((reason) => WHY_WORDS[reason]).slice(0, 2).join(', ')
-    if (mood !== 0 || why) {
-      add(when, { kind: 'float', at: { who: member.id }, text: `☺ ${mood === 0 ? '±0' : signed(mood)}${why ? ` ${why}` : ''}`, tone: mood < 0 ? 'bad' : 'good' })
-      when += 0.7
-    }
     const health = member.healthAfter - (member.healthBefore - member.hurt)
-    if (health !== 0) add(when, { kind: 'float', at: { who: member.id }, text: `♥ ${signed(health)}`, tone: health < 0 ? 'bad' : 'good' })
+    const why = member.why.map((reason) => WHY_WORDS[reason]).slice(0, 2).join(', ')
+    const parts: string[] = []
+    if (mood !== 0 || why) parts.push(`☺ ${mood === 0 ? '±0' : signed(mood)}`)
+    if (health !== 0) parts.push(`♥ ${signed(health)}`)
+    if (why) parts.push(why)
+    if (parts.length === 0) continue
+    add(t + shown * EVENING_GAP, { kind: 'float', at: { who: member.id }, text: parts.join('  '), tone: mood < 0 || health < 0 ? 'bad' : 'good', named: true })
+    shown += 1
   }
-  t += 2.8
+  // Leave the last line up long enough to be read.
+  t += Math.max(2.8, (shown - 1) * EVENING_GAP + FLOAT_SECONDS)
   add(t, { kind: 'end' })
   return cues
 }

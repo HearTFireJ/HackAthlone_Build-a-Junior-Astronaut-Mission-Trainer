@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import type { LogLine } from '../App.tsx'
 import type { ScenarioInfo } from '../data/scenarios.ts'
 import {
   CLASHES,
@@ -54,6 +55,9 @@ interface Props {
   script: Cue[] | null
   speed: number
   effect: SceneEffect | null
+  /** Everything that has happened so far, and a way to add a line to it. */
+  log: LogLine[]
+  onLog: (text: string, tone: Tone) => void
   /** How many entries in the field guide the player has not looked at yet. */
   guideNew: number
   onGuide: () => void
@@ -67,10 +71,6 @@ interface Props {
   onSpeed: () => void
 }
 
-interface LogLine {
-  text: string
-  tone: Tone
-}
 
 /** The job done at a place, for "pick someone, then click where they should go". */
 function jobAt(place: PlaceId, game: GameState): Job | null {
@@ -177,7 +177,7 @@ export function GameScreen(props: Props) {
   // The numbers shown while a day plays. They belong to one day: "day" says which.
   const [played, setPlayed] = useState<{ day: number; hud: Hud } | null>(null)
   const hud = played && played.day === dayKey ? played.hud : null
-  const [caption, setCaption] = useState<LogLine | null>(null)
+  const [caption, setCaption] = useState<{ text: string; tone: Tone } | null>(null)
   // Where the picked astronaut stands on the picture: the job menu opens beside them.
   const [anchor, setAnchor] = useState<Anchor | null>(null)
   const [timeLabel, setTimeLabel] = useState('Morning')
@@ -209,6 +209,13 @@ export function GameScreen(props: Props) {
   const onCue = (cue: Cue) => {
     if (cue.kind === 'caption') {
       setCaption({ text: cue.text, tone: cue.tone })
+      props.onLog(cue.text, cue.tone)
+    } else if (cue.kind === 'note') {
+      props.onLog(cue.text, cue.tone)
+    } else if (cue.kind === 'float') {
+      // The words that float up over a person or a place, with whose they are.
+      const whose = typeof cue.at === 'string' ? PLACE_WORDS[cue.at][0] : crewInfo(cue.at.who).name
+      props.onLog(`${whose}: ${cue.text}`, cue.tone)
     } else if (cue.kind === 'time') {
       setTimeLabel(cue.label)
     } else if (cue.kind === 'hud') {
@@ -338,7 +345,9 @@ export function GameScreen(props: Props) {
       <section className="scene-wrap">
         <Scene game={game} plan={plan} dayKey={dayKey} script={script} speed={speed} selected={planning ? selected : null} targets={targets} effect={effect} onPick={onPick} onHover={setHovered} onCue={onCue} onAnchor={setAnchor} />
 
-        {/* The crew, as small portraits. They only show how everyone is: orders are given on the picture. */}
+        <div className="left-float">
+        {/* The crew, as small portraits. Clicking one picks that astronaut, just like clicking
+            them on the picture: the job list still opens beside them there. */}
         <ul className="crew-strip" aria-label="Crew">
           {game.crew.map((astronaut) => {
             const stats = shown.crew[astronaut.id] ?? astronaut
@@ -346,7 +355,8 @@ export function GameScreen(props: Props) {
             const away = astronaut.away
             const picked = planning && selected === astronaut.id
             return (
-              <li key={astronaut.id} className={`crew-chip state-${state}${picked ? ' picked' : ''}`}>
+              <li key={astronaut.id}>
+                <button type="button" className={`crew-chip state-${state}${picked ? ' picked' : ''}`} disabled={!planning || !!away} onClick={() => props.onSelect(picked ? null : astronaut.id)} aria-pressed={picked}>
                 <Avatar id={astronaut.id} size={34} />
                 <span className="crew-main">
                   <span className="crew-name">
@@ -359,11 +369,14 @@ export function GameScreen(props: Props) {
                     <Pips label="Fed" icon="●" value={stats.fed} max={RULES.fullFed} tone="fed" />
                   </span>
                 </span>
+                </button>
               </li>
             )
           })}
           {game.arriving && <li className="crew-note">🚀 {crewInfo(game.arriving).name} lands tomorrow.</li>}
         </ul>
+        <LogWindow lines={props.log} />
+        </div>
 
         {/* The missions, and the fifth star. */}
         <ul className="goals" aria-label="Missions">
@@ -472,6 +485,30 @@ export function GameScreen(props: Props) {
         </div>
       </section>
     </main>
+  )
+}
+
+/**
+ * The log: one line for each thing that happens, in the order it happens. It fills up
+ * while the day plays, stays afterwards, and can be scrolled back to earlier days.
+ */
+function LogWindow({ lines }: { lines: LogLine[] }) {
+  const box = useRef<HTMLDivElement>(null)
+  // Keep the newest line in view.
+  useEffect(() => {
+    const element = box.current
+    if (element) element.scrollTop = element.scrollHeight
+  }, [lines.length])
+  if (lines.length === 0) return null
+  return (
+    <div className="log" ref={box} role="log" aria-label="What has happened so far">
+      {lines.map((line, index) => (
+        <Fragment key={index}>
+          {(index === 0 || lines[index - 1].day !== line.day) && <p className="log-day">Day {line.day}</p>}
+          <p className={`log-line log-${line.tone}`}>{line.text}</p>
+        </Fragment>
+      ))}
+    </div>
   )
 }
 
