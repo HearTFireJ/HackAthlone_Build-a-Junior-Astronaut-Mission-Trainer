@@ -17,9 +17,11 @@ import {
   type Response,
   alertFor,
   answerEvent,
+  allMissionsDone,
   canRun,
   createGame,
   emptyPlan,
+  handOver,
   jobProblem,
   powerAvailable,
   poweredModules,
@@ -258,6 +260,7 @@ function App() {
             return { ...current, plan: { ...current.plan, jobs } }
           })
         }
+        onHandover={() => update((current) => (current.modal || current.phase !== 'plan' || !allMissionsDone(current.game) ? current : { ...current, modal: { kind: 'handover' } }))}
         onHelp={() => update((current) => (current.modal || current.phase !== 'plan' ? current : { ...current, modal: { kind: 'intro' } }))}
         onStart={() =>
           update((current) => {
@@ -289,7 +292,8 @@ function App() {
               log: [...current.log, ...landed.map((astronaut) => ({ day: state.day, text: `🚀 ${crewInfo(astronaut.id).name} has landed and joins the crew.`, tone: 'good' as const }))],
               game: state,
               plan: planForNewDay(state, current.plan),
-              modal: state.event ? { kind: 'event' } : null,
+              // The morning after the last mission is finished, the commander is asked whether to hand over.
+              modal: allMissionsDone(state) && !allMissionsDone(current.game) ? { kind: 'handover' } : state.event ? { kind: 'event' } : null,
               phase: 'plan',
               dayKey: current.dayKey + 1,
               script: null,
@@ -334,6 +338,13 @@ function App() {
             // Now that the card is out of the way, the picture shows what happened.
             const reaction = current.modal?.kind === 'event-result' ? current.modal.reaction : undefined
             return { ...current, modal: null, effect: reaction ? { key: (current.effect?.key ?? 0) + 1, ...reaction } : current.effect }
+          })
+        }
+        onHandover={(now) =>
+          update((current) => {
+            if (now) return { name: 'end', info: current.info, game: handOver(current.game) }
+            // Staying: today's event card, if there is one, is still waiting.
+            return { ...current, modal: current.game.event ? { kind: 'event' } : null }
           })
         }
         onRespond={(response: Response) =>

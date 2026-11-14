@@ -15,6 +15,8 @@ import {
   calmPreview,
   createGame,
   emptyPlan,
+  allMissionsDone,
+  handOver,
   handoverReady,
   panelsFixed,
   tripDays,
@@ -504,6 +506,19 @@ describe('how a mission ends', () => {
     const stillOut = structuredClone(ready)
     crew(stillOut, 'aoife').away = { trip: 'drill', daysLeft: 1 }
     expect(handoverReady(stillOut)).toBe(false)
+  })
+
+  it('finishing every mission does not end the tour: the commander chooses when to hand over', () => {
+    const almost = { ...createGame('sep-2017'), day: 4, missions: { ice: MISSIONS.ice.goal, shield: MISSIONS.shield.goal, dish: MISSIONS.dish.goal, sun: MISSIONS.sun.goal - 1 } }
+    expect(handOver(almost)).toBe(almost)
+    const next = resolveDay(almost, CALM, planOf(almost, ['life', 'farm', 'scope']), 'carry').state
+    expect(allMissionsDone(next)).toBe(true)
+    expect(next.status).toBe('playing')
+    expect(next.day).toBe(5)
+    const over = handOver(next)
+    expect(over.status).toBe('done')
+    expect(over.history).toHaveLength(1)
+    expect(rate(over).missions).toHaveLength(4)
   })
 
   it('runs for ten days, then counts stars', () => {

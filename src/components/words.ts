@@ -1,7 +1,7 @@
 // Small helpers that turn game values into words and symbols for the screen.
 
-import type { JobId, MissionId, ModuleId } from '../game/content.ts'
-import type { Condition } from '../game/outpost.ts'
+import { crewInfo, type JobId, type MissionId, type ModuleId } from '../game/content.ts'
+import { RULES, type Condition, type GameState } from '../game/outpost.ts'
 
 export const MODULE_ICONS: Record<ModuleId, string> = {
   life: '💨',
@@ -58,4 +58,19 @@ export const CONDITION_WORDS: Record<Condition, string> = {
 
 export function plural(count: number, word: string): string {
   return `${count} ${word}${count === 1 ? '' : 's'}`
+}
+
+/** What the base still lacks for a good handover to the next crew, as a few short words each. */
+export function handoverNeeds(game: GameState): string[] {
+  const needs: string[] = []
+  const { air, food, stat } = RULES.handover
+  if (game.air < air) needs.push(`${air - game.air} more air`)
+  if (game.food < food) needs.push(`${food - game.food} more food`)
+  for (const a of game.crew) {
+    const name = crewInfo(a.id).name
+    if (a.away) needs.push(`${name} back home`)
+    if (a.health < stat) needs.push(`${name} healthier`)
+    if (a.mood < stat) needs.push(`${name} happier`)
+  }
+  return needs
 }

@@ -52,6 +52,11 @@ export function EndScreen({ info, game, onAgain }: Props) {
           ))}
         </p>
         <p className="lead">{verdict(rating.stars, evacuated, game.airOutDays >= 2)}</p>
+        {!evacuated && days < RULES.maxDays && (
+          <p className="hint">
+            You handed the base over early, after day {days} of {RULES.maxDays}.
+          </p>
+        )}
         <button type="button" className="primary" onClick={onAgain}>
           Command another mission ▶
         </button>

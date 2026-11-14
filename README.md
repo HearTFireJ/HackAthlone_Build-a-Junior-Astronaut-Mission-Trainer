@@ -54,7 +54,7 @@ While you play, the game does not lecture. The real records and the real-life fa
 
 Most flares bring no storm. The game then tells you what really happened that day, with a link to NASA's record.
 
-At the end you earn up to five stars: one for each finished mission, and one for handing the next crew a base with air, food and a healthy, happy crew. Nobody dies in this game. If things go very wrong the crew flies home early and you can try again.
+The tour lasts ten days. Once all four missions are done you choose: hand the base over that morning, or stay and get it ready. At the end you earn up to five stars: one for each finished mission, and one for handing the next crew a base with air, food and a healthy, happy crew. Nobody dies in this game. If things go very wrong the crew flies home early and you can try again.
 
 ### The decisions the challenge asks for
 

@@ -8,9 +8,11 @@ import {
   type GameState,
   type Plan,
   type Response,
+  handoverReady,
   jobProblem,
   missionDone,
 } from '../game/outpost.ts'
+import { handoverNeeds } from './words.ts'
 import type { SceneEffect } from '../scene/Scene.tsx'
 
 export type Modal =
@@ -19,6 +21,8 @@ export type Modal =
   | { kind: 'event-result'; icon: string; title: string; text: string; reaction?: Omit<SceneEffect, 'key'> }
   | { kind: 'guide' }
   | { kind: 'alert'; alert: Alert }
+  /** Every mission is done: hand the base over now, or stay? */
+  | { kind: 'handover' }
   | null
 
 interface Props {
@@ -30,6 +34,8 @@ interface Props {
   onAnswerEvent: (option: number) => void
   onCloseEventResult: () => void
   onRespond: (response: Response) => void
+  /** true: end the tour now. false: stay. */
+  onHandover: (now: boolean) => void
 }
 
 function Card({ tone, children }: { tone: string; children: ReactNode }) {
@@ -41,7 +47,7 @@ function Card({ tone, children }: { tone: string; children: ReactNode }) {
 }
 
 /** Everything that pops up over the base: the welcome, event cards, flare alerts, the day's report. */
-export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, onCloseEventResult, onRespond }: Props) {
+export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, onCloseEventResult, onRespond, onHandover }: Props) {
   if (!modal) return null
 
   if (modal.kind === 'intro') {
@@ -115,6 +121,38 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
         <button type="button" className="primary" onClick={onCloseEventResult}>
           OK
         </button>
+      </Card>
+    )
+  }
+
+  if (modal.kind === 'handover') {
+    const ready = handoverReady(game)
+    return (
+      <Card tone="event">
+        <p className="eyebrow">Day {game.day} · This morning</p>
+        <h2>⭐ All four missions are done!</h2>
+        <p>The next crew can come as soon as you call them.</p>
+        <p className={`clue ${ready ? 'safe' : 'unknown'}`}>
+          {ready ? (
+            <>
+              🤝 <strong>The base is ready.</strong> Handing over now earns the last star.
+            </>
+          ) : (
+            <>
+              🤝 <strong>The base is not ready for the last star.</strong> Needs {handoverNeeds(game).join(', ')}.
+            </>
+          )}
+        </p>
+        <div className="choices">
+          <button type="button" className="choice" onClick={() => onHandover(true)}>
+            <strong>Hand over now</strong>
+            <span>The tour ends this morning. The base is judged as it is.</span>
+          </button>
+          <button type="button" className="choice" onClick={() => onHandover(false)}>
+            <strong>{game.day >= RULES.maxDays ? 'Stay one more day' : `Stay until day ${RULES.maxDays}`}</strong>
+            <span>Keep working on the base. You can still hand over on any morning.</span>
+          </button>
+        </div>
       </Card>
     )
   }

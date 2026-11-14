@@ -820,9 +820,10 @@ export function resolveDay(
 
   // How the game ends.
   const everyoneDown = next.crew.every((astronaut) => condition(astronaut) === 'unable')
-  const allMissions = MISSION_IDS.every((id) => missionDone(next.missions, id))
   if (everyoneDown || next.airOutDays >= 2) next.status = 'evacuated'
-  else if (allMissions || state.day >= RULES.maxDays) next.status = 'done'
+  // Finishing every mission does not end the tour by itself: the commander may hand over
+  // early (handOver), or stay to get the base ready for the next crew.
+  else if (state.day >= RULES.maxDays) next.status = 'done'
 
   // Set up tomorrow.
   next.history = [...state.history, report]
@@ -871,6 +872,20 @@ export interface Rating {
   /** One star per finished mission, plus one for a good handover. */
   stars: number
   maxStars: number
+}
+
+/** True once all four missions are done. From then on the commander may hand the base over early. */
+export function allMissionsDone(state: GameState): boolean {
+  return MISSION_IDS.every((id) => missionDone(state.missions, id))
+}
+
+/**
+ * Ends the tour before the last day. Only allowed in the morning, with every mission done.
+ * The base is judged as it stands right now.
+ */
+export function handOver(state: GameState): GameState {
+  if (state.status !== 'playing' || !allMissionsDone(state)) return state
+  return { ...state, status: 'done', event: null }
 }
 
 export function handoverReady(state: GameState): boolean {

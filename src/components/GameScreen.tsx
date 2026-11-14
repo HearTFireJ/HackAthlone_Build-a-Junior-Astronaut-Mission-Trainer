@@ -25,6 +25,7 @@ import {
   calmPreview,
   canRun,
   condition,
+  allMissionsDone,
   handoverReady,
   jobProblem,
   missionDone,
@@ -43,7 +44,7 @@ import type { Pick } from '../scene/world.ts'
 import { isMuted, play, setMuted } from '../sound.ts'
 import { Avatar } from './Avatar.tsx'
 import { Pips } from './bits.tsx'
-import { CONDITION_WORDS, JOB_ICONS, MISSION_ICONS, longDate, plural } from './words.ts'
+import { CONDITION_WORDS, JOB_ICONS, MISSION_ICONS, handoverNeeds, longDate, plural } from './words.ts'
 
 interface Props {
   info: ScenarioInfo
@@ -58,6 +59,8 @@ interface Props {
   effect: SceneEffect | null
   /** A card is open over the game: the keyboard is not for the base right now. */
   locked: boolean
+  /** Opens the card that asks whether to end the tour early. */
+  onHandover: () => void
   /** Everything that has happened so far, and a way to add a line to it. */
   log: LogLine[]
   onLog: (text: string, tone: Tone) => void
@@ -157,21 +160,6 @@ function choiceProblem(game: GameState, plan: Plan, astronautId: string, job: Jo
   if (job.kind !== 'trip') return jobProblem(game, plan, astronautId, job)
   const jobs = Object.fromEntries(Object.entries(plan.jobs).filter(([id, other]) => id === astronautId || other.kind !== 'trip'))
   return jobProblem(game, { ...plan, jobs }, astronautId, job)
-}
-
-/** What the base still lacks for a good handover to the next crew, as a few short words each. */
-function handoverNeeds(game: GameState): string[] {
-  const needs: string[] = []
-  const { air, food, stat } = RULES.handover
-  if (game.air < air) needs.push(`${air - game.air} more air`)
-  if (game.food < food) needs.push(`${food - game.food} more food`)
-  for (const a of game.crew) {
-    const name = crewInfo(a.id).name
-    if (a.away) needs.push(`${name} back home`)
-    if (a.health < stat) needs.push(`${name} healthier`)
-    if (a.mood < stat) needs.push(`${name} happier`)
-  }
-  return needs
 }
 
 /** The main screen: the living base, with a few numbers around it. */
@@ -458,6 +446,12 @@ export function GameScreen(props: Props) {
             <span className="goal-count">{handoverReady(game) ? 'ready' : 'not yet'}</span>
             {/* The fifth star. Say what is still missing, so it is never a surprise at the end. */}
             {!handoverReady(game) && <span className="goal-needs">Needs {handoverNeeds(game).join(', ')}.</span>}
+            {/* With every mission done, the commander may end the tour on any morning. */}
+            {phase === 'plan' && allMissionsDone(game) && (
+              <button type="button" className="goal-button" onClick={props.onHandover}>
+                Hand over now
+              </button>
+            )}
           </li>
         </ul>
 
