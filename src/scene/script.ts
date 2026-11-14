@@ -267,7 +267,9 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
           : WHY_WORDS[reason]
     const why = member.why.map(words).slice(0, 3).join(', ')
     const parts: string[] = []
-    if (mood !== 0 || why) parts.push(`☺ ${mood === 0 ? '±0' : signed(mood)}`)
+    // A mood that is already full cannot go up: say so, or "±0 loves this job" reads like a bug.
+    const steady = member.moodAfter >= RULES.maxStat ? 'full' : '±0'
+    if (mood !== 0 || why) parts.push(`☺ ${mood === 0 ? steady : signed(mood)}`)
     if (health !== 0) parts.push(`♥ ${signed(health)}`)
     if (why) parts.push(why)
     if (parts.length === 0) continue

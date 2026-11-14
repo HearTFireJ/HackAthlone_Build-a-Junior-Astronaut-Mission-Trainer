@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { EndScreen } from './components/EndScreen.tsx'
 import { GameScreen } from './components/GameScreen.tsx'
 import { type Modal, Modals } from './components/Modals.tsx'
 import { StartScreen } from './components/StartScreen.tsx'
 import { FieldGuide } from './components/FieldGuide.tsx'
 import { EVENT_FACTS, MISSION_FACTS, type FactId } from './data/facts.ts'
-import type { ScenarioInfo } from './data/scenarios.ts'
+import { type ScenarioInfo, SCENARIOS } from './data/scenarios.ts'
+import { clearGame, loadGame, saveGame } from './save.ts'
 import { MODULES, MODULE_IDS, type ModuleId } from './game/content.ts'
 import { EVENTS, type EventId } from './game/events.ts'
 import {
@@ -142,9 +143,48 @@ function App() {
   const update = (change: (current: Playing) => Screen) =>
     setScreen((current) => (current.name === 'game' ? change(current) : current))
 
+  // Keep the game in the browser each morning, so a closed tab does not lose it.
+  // Only the planning morning is saved: a day that is half played starts again from its morning.
+  useEffect(() => {
+    if (screen.name === 'end') clearGame()
+    if (screen.name !== 'game' || screen.phase !== 'plan' || screen.modal?.kind === 'intro') return
+    saveGame({
+      scenarioId: screen.info.scenario.id,
+      game: screen.game,
+      plan: screen.plan,
+      facts: screen.facts,
+      guideSeen: screen.guideSeen,
+      dayKey: screen.dayKey,
+      log: screen.log,
+    })
+  }, [screen])
+
   if (screen.name === 'start') {
+    const saved = loadGame()
+    const savedInfo = saved ? SCENARIOS.find((info) => info.scenario.id === saved.scenarioId) : undefined
     return (
       <StartScreen
+        saved={saved && savedInfo ? { title: savedInfo.title, day: saved.game.day } : null}
+        onContinue={() => {
+          if (!saved || !savedInfo) return
+          setScreen({
+            name: 'game',
+            info: savedInfo,
+            game: saved.game,
+            plan: saved.plan,
+            modal: saved.game.event ? { kind: 'event' } : null,
+            selected: null,
+            phase: 'plan',
+            dayKey: saved.dayKey,
+            script: null,
+            pending: null,
+            facts: saved.facts,
+            guideSeen: saved.guideSeen,
+            speed: 1,
+            effect: null,
+            log: saved.log,
+          })
+        }}
         onPick={(info) => {
           const game = createGame(info.scenario.id, seedFromClock())
           setScreen({

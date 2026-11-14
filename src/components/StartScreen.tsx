@@ -7,10 +7,13 @@ import { plural } from './words.ts'
 
 interface Props {
   onPick: (info: ScenarioInfo) => void
+  /** A game left unfinished in this browser, if there is one. */
+  saved: { title: string; day: number } | null
+  onContinue: () => void
 }
 
 /** First screen: what the game is, and which real stretch of days to play. */
-export function StartScreen({ onPick }: Props) {
+export function StartScreen({ onPick, saved, onContinue }: Props) {
   return (
     <main className="screen start">
       <header className="start-head hero">
@@ -24,6 +27,15 @@ export function StartScreen({ onPick }: Props) {
         </div>
         <HeroArt />
       </header>
+
+      {saved && (
+        <button type="button" className="continue-card" onClick={onContinue}>
+          <span className="continue-go">▶ Continue</span>
+          <span>
+            {saved.title}, day {saved.day}
+          </span>
+        </button>
+      )}
 
       <section aria-labelledby="pick-title">
         <h2 id="pick-title">Choose your mission</h2>

@@ -4,7 +4,7 @@ A browser game for children aged 7 to 12. You are the commander of a Moon outpos
 
 **Play it:** https://heartfirej.github.io/HackAthlone_Build-a-Junior-Astronaut-Mission-Trainer/
 
-No download, no account. Made for a laptop screen; it also works on a phone.
+No download, no account. Made for a laptop screen; it also works on a phone. The game is saved in your own browser each morning, so a closed tab can be picked up again; nothing is sent anywhere.
 
 Built at HackAthlone 2026 (TUS Athlone, Ireland) for the NASA Space Apps Challenge 2026, challenge *Build a Junior Astronaut Mission Trainer*.
 
@@ -33,7 +33,7 @@ While you play, the game does not lecture. The real records and the real-life fa
    | Lab | 2 | Lets the crew do research |
    | Rover Bay | 2 | Charges the rover for a trip |
 
-2. **Give each astronaut a job.** Tend the plants, do research, build the radio telescope outside, repair the solar panels, drive the rover, rest, go to the sick bay, or call home. Each astronaut has health, mood and hunger. Each one loves a different job and does it better; the one who loves driving does a two-day rover trip in one day. Some are friends, and two get on each other's nerves. Three days of work in a row makes anyone tired, and then only a day off helps.
+2. **Give each astronaut a job.** Tend the plants, do research, build the radio telescope outside, repair the solar panels, drive the rover, rest, go to the sick bay, or call home. Each astronaut has health, mood and hunger. Each one loves a different job and does it better; the one who loves driving does a two-day rover trip in one day, and the one who loves fixing things mends three worn solar panels in a day instead of two. Some are friends, and two get on each other's nerves. Three days of work in a row makes anyone tired, and then only a day off helps.
 
 3. **Work on your four missions.** They are why the crew is there, and each one changes the base when it is finished:
 
