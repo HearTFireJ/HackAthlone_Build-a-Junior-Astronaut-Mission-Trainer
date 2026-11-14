@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { MISSION_FACTS, type FactId } from '../data/facts.ts'
 import type { ScenarioInfo } from '../data/scenarios.ts'
 import {
   CLASHES,
@@ -7,6 +8,8 @@ import {
   JOB_IDS,
   MISSIONS,
   MISSION_IDS,
+  MODULES,
+  MODULE_IDS,
   TRIPS,
   crewInfo,
   type JobId,
@@ -14,12 +17,13 @@ import {
 } from '../game/content.ts'
 import {
   RULES,
-  type Astronaut,
+  type DayReport,
   type GameState,
   type Job,
   type Plan,
   availableTrips,
   calmPreview,
+  canRun,
   condition,
   handoverReady,
   jobProblem,
@@ -29,8 +33,12 @@ import {
   poweredModules,
 } from '../game/outpost.ts'
 import { sunActivity, weatherOn, yesterdayOf } from '../game/weather.ts'
-import { BaseMap } from './BaseMap.tsx'
-import { Pips, Token } from './bits.tsx'
+import type { PlaceId } from '../scene/layout.ts'
+import { Scene, type SceneEffect } from '../scene/Scene.tsx'
+import { hudOf, type CaptionLink, type Cue, type Hud, type Tone } from '../scene/script.ts'
+import type { Pick } from '../scene/world.ts'
+import { Avatar } from './Avatar.tsx'
+import { FactLine, Pips } from './bits.tsx'
 import { CONDITION_WORDS, JOB_ICONS, MISSION_ICONS, longDate, plural } from './words.ts'
 
 interface Props {
@@ -38,20 +46,156 @@ interface Props {
   game: GameState
   plan: Plan
   selected: string | null
-  onSelect: (astronautId: string) => void
+  /** 'plan': the commander is giving orders. 'play': the day is playing out. */
+  phase: 'plan' | 'play'
+  dayKey: number
+  script: Cue[] | null
+  speed: number
+  effect: SceneEffect | null
+  lastReport: DayReport | null
+  onSelect: (astronautId: string | null) => void
   onTogglePower: (module: ModuleId) => void
   onAssign: (astronautId: string, job: Job) => void
   onStart: () => void
   onHelp: () => void
+  onAlert: () => void
+  onDayEnd: () => void
+  onSpeed: () => void
 }
 
-/** The main screen: the base seen from above, and the commander's panel beside it. */
-export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower, onAssign, onStart, onHelp }: Props) {
+interface LogLine {
+  text: string
+  tone: Tone
+  link?: CaptionLink
+}
+
+/** The job done at a place, for "pick someone, then click where they should go". */
+function jobAt(place: PlaceId, game: GameState): Job | null {
+  switch (place) {
+    case 'farm':
+      return game.broken.includes('farm') ? { kind: 'repair' } : { kind: 'garden' }
+    case 'lab':
+      return game.broken.includes('lab') ? { kind: 'repair' } : { kind: 'lab' }
+    case 'site':
+      return { kind: 'build' }
+    case 'panels':
+      return { kind: 'repair' }
+    case 'habitat':
+      return { kind: 'rest' }
+    case 'garage': {
+      if (game.broken.includes('garage')) return { kind: 'repair' }
+      const trips = availableTrips(game)
+      return trips.length > 0 ? { kind: 'trip', trip: trips[0] } : null
+    }
+    case 'life':
+    case 'comms':
+    case 'scope':
+      return game.broken.includes(place) ? { kind: 'repair' } : null
+    default:
+      return null
+  }
+}
+
+const PLACE_HINTS: Partial<Record<PlaceId, string>> = {
+  shelter: 'The storm shelter. You can send everyone here when a flare alert comes in.',
+  habitat: 'The crew quarters. Pick an astronaut first, then click here to let them rest.',
+  panels: 'The solar panels make all the power. Pick an astronaut, then click here to repair them.',
+  site: 'The radio telescope is built here. Pick an astronaut, then click here to build.',
+}
+
+/** The main screen: the living base, with a few numbers around it. */
+export function GameScreen(props: Props) {
+  const { info, game, plan, selected, phase, dayKey, script, speed, effect, lastReport } = props
+  // The numbers shown while a day plays. They belong to one day: "day" says which.
+  const [played, setPlayed] = useState<{ day: number; hud: Hud } | null>(null)
+  const hud = played && played.day === dayKey ? played.hud : null
+  const [caption, setCaption] = useState<LogLine | null>(null)
+  const [log, setLog] = useState<LogLine[]>([])
+  const [timeLabel, setTimeLabel] = useState('Morning')
+  const [toast, setToast] = useState<{ text: string; key: number } | null>(null)
+
+  const toastCount = useRef(0)
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 3200)
+    return () => clearTimeout(timer)
+  }, [toast])
+
+  const say = (text: string) => {
+    toastCount.current += 1
+    setToast({ text, key: toastCount.current })
+  }
+
   const weather = weatherOn(info.scenario, game.day)
+  const shown = phase === 'play' && hud ? hud : hudOf(game)
   const available = powerAvailable(game)
   const used = powerUsed(game, plan)
   const on = poweredModules(game, plan)
   const preview = calmPreview(game, info.scenario, plan)
+  const planning = phase === 'plan'
+
+  const onCue = (cue: Cue) => {
+    if (cue.kind === 'caption') {
+      const line = { text: cue.text, tone: cue.tone, link: cue.link }
+      setCaption(line)
+      setLog((lines) => [...lines, line])
+    } else if (cue.kind === 'time') {
+      setTimeLabel(cue.label)
+      if (cue.label === 'Morning') setLog([])
+    } else if (cue.kind === 'hud') {
+      setPlayed((current) => ({ day: dayKey, hud: { ...(current && current.day === dayKey ? current.hud : hudOf(game)), ...cue.patch } }))
+    } else if (cue.kind === 'alert') {
+      props.onAlert()
+    } else if (cue.kind === 'end') {
+      props.onDayEnd()
+    }
+  }
+
+  const togglePower = (module: ModuleId) => {
+    const turningOn = !plan.power[module] || !on.includes(module)
+    if (turningOn) {
+      if (game.broken.includes(module)) return say(`The ${MODULES[module].name} is broken. Give someone the Repair job.`)
+      if (!canRun(game, module)) return say(`The ${MODULES[module].name} cannot run today.`)
+      if (MODULES[module].power > available - used) return say(`Not enough power left for the ${MODULES[module].name}. Switch something else off first.`)
+    }
+    props.onTogglePower(module)
+  }
+
+  const assign = (id: string, job: Job) => {
+    const problem = jobProblem(game, plan, id, job)
+    if (problem) return say(problem)
+    props.onAssign(id, job)
+    props.onSelect(null)
+  }
+
+  const onPick = (pick: Pick | null) => {
+    if (!planning) return
+    if (!pick) return props.onSelect(null)
+    if (pick.kind === 'pawn') return props.onSelect(selected === pick.id ? null : pick.id)
+    if (pick.kind === 'switch') return togglePower(pick.module)
+    const place = pick.id
+    if (selected) {
+      const job = jobAt(place, game)
+      if (!job) return say(place === 'shelter' ? PLACE_HINTS.shelter! : `There is no job for ${crewInfo(selected).name} there today.`)
+      return assign(selected, job)
+    }
+    const module = (['life', 'farm', 'comms', 'scope', 'lab', 'garage'] as PlaceId[]).includes(place) ? (place as ModuleId) : null
+    if (module) return togglePower(module)
+    say(PLACE_HINTS[place] ?? 'Pick an astronaut first.')
+  }
+
+  // The places that light up while someone is picked.
+  const targets: PlaceId[] = []
+  if (planning && selected) {
+    for (const place of ['farm', 'lab', 'site', 'panels', 'habitat', 'garage', 'life', 'comms', 'scope'] as PlaceId[]) {
+      const job = jobAt(place, game)
+      if (job && !jobProblem(game, plan, selected, job)) targets.push(place)
+    }
+  }
+
+  const yesterday = yesterdayOf(info.scenario, game.day)
+  const activity = sunActivity(yesterday)
+  const fact = lastReport ? factFor(lastReport) : null
 
   return (
     <main className="game">
@@ -64,115 +208,209 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
             {longDate(weather.date)} · real date
           </span>
           <span className={`tag tag-${info.difficulty.replace(' ', '-').toLowerCase()}`}>{info.title}</span>
-          <button type="button" className="help" onClick={onHelp}>
+          <button type="button" className="help" onClick={props.onHelp} disabled={!planning}>
             ? How to play
           </button>
         </div>
+
         <div className="meters">
-          <Meter icon="⚡" label="Power" value={`${available - used} left`} detail={`${used} of ${available} used`} tone={available - used === 0 ? 'calm' : 'good'} />
-          <Meter icon="💨" label="Air" value={String(game.air)} detail={`after today: ${preview.air.left}`} tone={preview.air.left < game.crew.length ? 'bad' : preview.air.left < game.crew.length * 2 ? 'warn' : 'good'} />
-          <Meter icon="🥕" label="Food" value={String(game.food)} detail={`after today: ${preview.food.left}`} tone={preview.food.left < game.crew.length ? 'bad' : preview.food.left < game.crew.length * 2 ? 'warn' : 'good'} />
+          <Meter icon="⚡" label="Power" value={`${available - used}`} detail={`left of ${available}`} tone={available - used === 0 ? 'calm' : 'good'} />
+          <Meter
+            icon="💨"
+            label="Air"
+            value={String(shown.air)}
+            detail={planning ? `after today: ${preview.air.left}` : ''}
+            tone={!planning ? 'good' : preview.air.left < game.crew.length ? 'bad' : preview.air.left < game.crew.length * 2 ? 'warn' : 'good'}
+          />
+          <Meter
+            icon="🥕"
+            label="Food"
+            value={String(shown.food)}
+            detail={planning ? `after today: ${preview.food.left}` : ''}
+            tone={!planning ? 'good' : preview.food.left < game.crew.length ? 'bad' : preview.food.left < game.crew.length * 2 ? 'warn' : 'good'}
+          />
         </div>
       </header>
 
-      <div className="game-body">
-        <section className="map-wrap" aria-label="The base, seen from above">
-          <div className="map-box">
-            <BaseMap game={game} plan={plan} selected={selected} onTogglePower={onTogglePower} onAssign={onAssign} onSelect={onSelect} />
-          </div>
-          <ul className="mission-strip" aria-label="Missions">
-            {MISSION_IDS.map((id) => {
-              const done = missionDone(game.missions, id)
-              return (
-                <li key={id} className={done ? 'chip done' : 'chip'} title={`${MISSIONS[id].how} Reward: ${MISSIONS[id].reward}`}>
-                  <span className="chip-head">
-                    <span>{done ? '✅' : MISSION_ICONS[id]} {MISSIONS[id].name}</span>
-                    <span className="mission-count">
-                      {Math.min(game.missions[id], MISSIONS[id].goal)}/{MISSIONS[id].goal}
+      <div className="stage">
+        <aside className="crew-col">
+          {game.crew.map((astronaut) => {
+            const stats = shown.crew[astronaut.id] ?? astronaut
+            const state = condition({ ...astronaut, health: stats.health, mood: stats.mood })
+            const job = plan.jobs[astronaut.id]
+            const problem = job && !astronaut.away ? jobProblem(game, plan, astronaut.id, job) : null
+            const away = astronaut.away
+            const picked = planning && selected === astronaut.id
+            const real: Job | undefined = problem ? { kind: astronaut.health <= 1 ? 'sickbay' : 'rest' } : job
+            const jobLabel = away
+              ? `🚙 ${TRIPS[away.trip].name} · ${plural(away.daysLeft, 'day')} left`
+              : real
+                ? `${JOB_ICONS[real.kind]} ${real.kind === 'trip' && real.trip ? TRIPS[real.trip].name : JOBS[real.kind].name}`
+                : '🛋️ Rest'
+            return (
+              <div key={astronaut.id} className={`crew-card state-${state}${picked ? ' picked' : ''}`}>
+                <button type="button" className="crew-head" disabled={!!away || !planning} onClick={() => props.onSelect(picked ? null : astronaut.id)} aria-expanded={picked}>
+                  <Avatar id={astronaut.id} />
+                  <span className="crew-main">
+                    <span className="crew-name">
+                      {crewInfo(astronaut.id).name}
+                      {state !== 'well' && <span className={`tag tag-${state}`}>{CONDITION_WORDS[state]}</span>}
                     </span>
+                    <span className="crew-stats">
+                      <Pips label="Health" icon="♥" value={stats.health} max={RULES.maxStat} tone="health" />
+                      <Pips label="Mood" icon="☺" value={stats.mood} max={RULES.maxStat} tone="mood" />
+                      <Pips label="Fed" icon="●" value={stats.fed} max={RULES.fullFed} tone="fed" />
+                    </span>
+                    <span className="crew-job">{jobLabel}</span>
+                  </span>
+                </button>
+              </div>
+            )
+          })}
+          {game.arriving && <p className="hint">🚀 {crewInfo(game.arriving).name} lands tomorrow morning.</p>}
+
+          <ul className="goals" aria-label="Missions">
+            {MISSION_IDS.map((id) => {
+              const done = missionDone(shown.missions, id)
+              return (
+                <li key={id} className={done ? 'goal done' : 'goal'} title={`${MISSIONS[id].how} Reward: ${MISSIONS[id].reward}`}>
+                  <span className="goal-name">
+                    {done ? '✅' : MISSION_ICONS[id]} {MISSIONS[id].name}
                   </span>
                   <span className="bar">
-                    <span className="bar-fill" style={{ width: `${Math.min(100, (100 * game.missions[id]) / MISSIONS[id].goal)}%` }} />
+                    <span className="bar-fill" style={{ width: `${Math.min(100, (100 * shown.missions[id]) / MISSIONS[id].goal)}%` }} />
                   </span>
-                  {!done && <span className="chip-text">{MISSIONS[id].how}</span>}
-                  <span className="chip-reward">{done ? '✓' : '🎁'} {MISSIONS[id].reward}</span>
+                  <span className="goal-count">
+                    {Math.min(shown.missions[id], MISSIONS[id].goal)}/{MISSIONS[id].goal}
+                  </span>
                 </li>
               )
             })}
             <li
-              className="chip"
+              className={handoverReady(game) ? 'goal done' : 'goal'}
               title={`On the last day: at least ${RULES.handover.air} air and ${RULES.handover.food} food, and everyone at ${RULES.handover.stat} or more for health and mood.`}
             >
-              <span className="chip-head">
-                <span>🤝 Hand over the base</span>
-              </span>
-              <span className="chip-text">
-                On the last day: {RULES.handover.air}+ air, {RULES.handover.food}+ food, everyone fit and happy.
-              </span>
-              <span className="chip-reward">{handoverReady(game) ? '✓ Ready right now' : 'Not ready yet'}</span>
+              <span className="goal-name">🤝 Hand over the base</span>
+              <span className="goal-count">{handoverReady(game) ? 'ready now' : 'not ready'}</span>
             </li>
           </ul>
-        </section>
 
-        <aside className="side">
-          <SunReport info={info} game={game} radioOn={on.includes('comms')} />
-
-          <section className="panel">
-            <h2 className="crew-title">
-              Crew
-              <span className="crew-key">
-                <span className="tone-health"><span className="pip on">♥</span> health</span>
-                <span className="tone-mood"><span className="pip on">☺</span> mood</span>
-                <span className="tone-fed"><span className="pip on">●</span> fed</span>
-              </span>
-            </h2>
-            <div className="crew-list">
-              {game.crew.map((astronaut) => (
-                <CrewCard
-                  key={astronaut.id}
-                  astronaut={astronaut}
-                  game={game}
-                  plan={plan}
-                  open={selected === astronaut.id}
-                  onSelect={() => onSelect(astronaut.id)}
-                  onAssign={(job) => onAssign(astronaut.id, job)}
-                />
-              ))}
-              {game.arriving && (
-                <p className="hint">🚀 {crewInfo(game.arriving).name} lands tomorrow morning.</p>
-              )}
-            </div>
+          <section className="radio" aria-label="Messages from Mission Control">
+            <h2>📡 Mission Control</h2>
+            {planning && (
+              <p>
+                {game.radioYesterday ? (
+                  <>
+                    Yesterday the Sun fired {yesterday.flareCount === 0 ? 'no flares' : plural(yesterday.flareCount, 'flare')}
+                    {yesterday.strongestFlare ? ` (biggest: ${yesterday.strongestFlare})` : ''}. The Sun is{' '}
+                    <strong className={`activity-${activity.replace(' ', '-')}`}>{activity}</strong>.
+                  </>
+                ) : (
+                  <>No Sun report: the Radio Dish was off yesterday.</>
+                )}{' '}
+                {on.includes('comms') ? 'Radio on: we will call if there is a big flare.' : 'Radio off: we cannot warn you today.'}
+              </p>
+            )}
+            {log.length > 0 && (
+              <ul className="radio-log">
+                {planning && <li className="radio-when">Yesterday:</li>}
+                {log.map((line, index) => (
+                  <li key={index} className={`tone-${line.tone}`}>
+                    {line.text}{' '}
+                    {line.link && (
+                      <a href={line.link.href} target="_blank" rel="noreferrer">
+                        {line.link.label}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {planning && fact && <FactLine id={fact} />}
+            <p className="hint">Sun records: NASA DONKI. Saved records, not live.</p>
           </section>
-
         </aside>
-      </div>
 
-      <footer className="action-bar">
-        <div className="action-notes">
-          <span className="note next-step">
-            {selected
-              ? `👉 Now click where ${crewInfo(selected).name} should go on the map, or pick a job in the list.`
-              : '👉 Click ⚡ on a module to give it power. Click an astronaut to give them a job. Then start the day.'}
-          </span>
-          {!on.includes('comms') && <span className="note warn">📡 Radio Dish is off: no storm alerts today, no Sun report tomorrow.</span>}
-          {preview.air.left < game.crew.length && <span className="note bad">💨 The air will run low tomorrow.</span>}
-          {preview.food.left < game.crew.length && <span className="note bad">🥕 Not enough food for tomorrow.</span>}
-          {on.includes('lab') && !someoneDoes(game, plan, 'lab') && (
-            <span className="note warn">🧪 The Lab is on, but nobody is doing research there.</span>
+        <section className="scene-wrap">
+          <Scene game={game} plan={plan} dayKey={dayKey} script={script} speed={speed} selected={planning ? selected : null} targets={targets} effect={effect} onPick={onPick} onCue={onCue} />
+
+          {planning ? (
+            <div className="subtitle plain">
+              {selected
+                ? `👉 Now click where ${crewInfo(selected).name} should go.`
+                : '👉 Click a ⚡ switch to turn a module on. Click an astronaut, then a place. Then start the day.'}
+            </div>
+          ) : (
+            caption && (
+              <div className={`subtitle tone-${caption.tone}`} key={caption.text}>
+                {caption.text}{' '}
+                {caption.link && (
+                  <a href={caption.link.href} target="_blank" rel="noreferrer">
+                    {caption.link.label}
+                  </a>
+                )}
+              </div>
+            )
           )}
-          {on.includes('garage') && !someoneDoes(game, plan, 'trip') && (
-            <span className="note warn">🚙 The Rover Bay is on, but nobody is going on a trip.</span>
+
+          {planning && selected && <JobMenu astronautId={selected} game={game} plan={plan} onAssign={(choice) => assign(selected, choice)} onClose={() => props.onSelect(null)} />}
+
+          {/* On a small screen the switches in the picture are too small to tap: big ones go here. */}
+          {planning && (
+            <div className="power-row">
+              {MODULE_IDS.map((module) => (
+                <button key={module} type="button" className={on.includes(module) ? 'power-chip on' : 'power-chip'} onClick={() => togglePower(module)}>
+                  ⚡{MODULES[module].power} {MODULES[module].name}
+                </button>
+              ))}
+            </div>
           )}
-          {available - used > RULES.batteryCap && (
-            <span className="note">🔋 The battery only saves {RULES.batteryCap} power. {available - used - RULES.batteryCap} will be wasted.</span>
+
+          {toast && (
+            <div className="toast" key={toast.key} role="status">
+              {toast.text}
+            </div>
           )}
-        </div>
-        <button type="button" className="primary" onClick={onStart}>
-          Start day {game.day} ▶
-        </button>
-      </footer>
+
+          <div className="dock">
+            {planning ? (
+              <>
+                <div className="warnings">
+                  {!on.includes('comms') && <span className="note warn">📡 Radio off: no storm alerts today.</span>}
+                  {preview.air.left < game.crew.length && <span className="note bad">💨 The air will run low tomorrow.</span>}
+                  {preview.food.left < game.crew.length && <span className="note bad">🥕 Not enough food for tomorrow.</span>}
+                  {on.includes('lab') && !someoneDoes(game, plan, 'lab') && <span className="note warn">🧪 Lab on, but nobody is researching.</span>}
+                  {on.includes('garage') && !someoneDoes(game, plan, 'trip') && <span className="note warn">🚙 Rover Bay on, but nobody is driving.</span>}
+                  {available - used > RULES.batteryCap && (
+                    <span className="note">🔋 The battery only saves {RULES.batteryCap}. {available - used - RULES.batteryCap} power will be wasted.</span>
+                  )}
+                </div>
+                <button type="button" className="primary" onClick={props.onStart}>
+                  Start day {game.day} ▶
+                </button>
+              </>
+            ) : (
+              <div className="clock">
+                <span className="clock-label">{timeLabel}</span>
+                <button type="button" className="speed" onClick={props.onSpeed}>
+                  {speed > 1 ? '▶ Normal speed' : '⏩ Faster'}
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
     </main>
   )
+}
+
+/** One real-life fact that fits what happened yesterday. */
+function factFor(report: DayReport): FactId | null {
+  if (report.finished.length > 0) return MISSION_FACTS[report.finished[0]]
+  if (report.storm && report.response === 'shelter') return 'shelter'
+  if (report.call === 'false-alarm') return 'fraction'
+  if (report.storm) return 'panels'
+  return null
 }
 
 /** True when at least one astronaut is set to do this job today and really can. */
@@ -191,61 +429,16 @@ function Meter({ icon, label, value, detail, tone }: { icon: string; label: stri
         <span className="meter-label">{label}</span>
         <strong>{value}</strong>
       </span>
-      <span className="meter-detail">{detail}</span>
+      {detail && <span className="meter-detail">{detail}</span>}
     </div>
   )
 }
 
-/** The morning message from Mission Control. It only arrives if the radio was on yesterday. */
-function SunReport({ info, game, radioOn }: { info: ScenarioInfo; game: GameState; radioOn: boolean }) {
-  const yesterday = yesterdayOf(info.scenario, game.day)
-  const activity = sunActivity(yesterday)
-  return (
-    <section className="panel control">
-      <h2>📡 Mission Control, Athlone</h2>
-      {game.radioYesterday ? (
-        <p>
-          <strong>Sun report.</strong> Yesterday ({longDate(yesterday.date)}) the Sun fired{' '}
-          {yesterday.flareCount === 0 ? 'no flares' : plural(yesterday.flareCount, 'flare')}
-          {yesterday.strongestFlare ? `, the biggest was ${yesterday.strongestFlare}` : ''}. The Sun is{' '}
-          <strong className={`activity-${activity.replace(' ', '-')}`}>{activity}</strong>.{' '}
-          {activity === 'quiet' ? 'A good day for work outside.' : 'Keep the Radio Dish on so we can warn you.'}
-        </p>
-      ) : (
-        <p>
-          <strong>No Sun report.</strong> The Radio Dish was off yesterday, so nothing came through this morning.
-        </p>
-      )}
-      <p className="hint">
-        {radioOn ? '📡 Radio on: we will call if the Sun fires a big flare today.' : '📡 Radio off: we cannot warn you today.'}{' '}
-        Records: NASA DONKI.
-      </p>
-    </section>
-  )
-}
-
-interface CardProps {
-  astronaut: Astronaut
-  game: GameState
-  plan: Plan
-  open: boolean
-  onSelect: () => void
-  onAssign: (job: Job) => void
-}
-
-function CrewCard({ astronaut, game, plan, open, onSelect, onAssign }: CardProps) {
-  const info = crewInfo(astronaut.id)
-  const state = condition(astronaut)
-  const job = plan.jobs[astronaut.id]
-  const problem = job ? jobProblem(game, plan, astronaut.id, job) : null
-  const away = astronaut.away
-
-  const jobLabel = away
-    ? `🚙 ${TRIPS[away.trip].name} (${plural(away.daysLeft, 'day')} left)`
-    : job
-      ? `${JOB_ICONS[job.kind]} ${job.kind === 'trip' && job.trip ? TRIPS[job.trip].name : JOBS[job.kind].name}`
-      : 'Rest'
-
+/** The list of jobs that opens beside an astronaut's card. */
+function JobMenu({ astronautId, game, plan, onAssign, onClose }: { astronautId: string; game: GameState; plan: Plan; onAssign: (job: Job) => void; onClose: () => void }) {
+  const info = crewInfo(astronautId)
+  const astronaut = game.crew.find((member) => member.id === astronautId)
+  const current = plan.jobs[astronautId]
   const choices: { job: Job; label: string; does: string }[] = []
   for (const kind of JOB_IDS) {
     if (kind === 'trip') {
@@ -256,67 +449,31 @@ function CrewCard({ astronaut, game, plan, open, onSelect, onAssign }: CardProps
       choices.push({ job: { kind }, label: JOBS[kind].name, does: JOBS[kind].does })
     }
   }
-  // Working several days in a row costs mood: warn before it happens.
-  const plannedWork = away ? true : !!job && JOBS[job.kind].work && !problem
-  const willBeTired = plannedWork && astronaut.streak + 1 >= RULES.tiredAfter
-  const isChosen = (candidate: Job) => job?.kind === candidate.kind && job?.trip === candidate.trip
-  const lovesJob = (kind: JobId) => info.loves.includes(kind)
-
-  // When the card opens, bring its whole job list into view.
-  const card = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (open) card.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [open])
-
+  const willBeTired = !!astronaut && astronaut.streak + 1 >= RULES.tiredAfter
   return (
-    <div ref={card} className={`crew-card${open ? ' open' : ''} state-${state}`}>
-      <button type="button" className="crew-head" onClick={onSelect} disabled={!!away} aria-expanded={open}>
-        <Token id={astronaut.id} />
-        <span className="crew-main">
-          <span className="crew-top">
-            <span className="crew-name">
-              {info.name} <span className="crew-loves">loves {info.lovesText}</span>
-            </span>
-            <span className="crew-stats">
-              <Pips label="Health" icon="♥" value={astronaut.health} max={RULES.maxStat} tone="health" />
-              <Pips label="Mood" icon="☺" value={astronaut.mood} max={RULES.maxStat} tone="mood" />
-              <Pips label="Fed" icon="●" value={astronaut.fed} max={RULES.fullFed} tone="fed" />
-            </span>
-          </span>
-          <span className="crew-job">
-            <span className={problem ? 'job-now bad' : 'job-now'}>{jobLabel}</span>
-            {state !== 'well' && <span className={`tag tag-${state}`}>{CONDITION_WORDS[state]}</span>}
-            {willBeTired && <span className="tag tag-struggling">Tired after today</span>}
-            {!away && <span className="crew-change">{open ? 'Pick a job ▾' : 'Change ▸'}</span>}
-          </span>
-          {problem && !away && <span className="crew-problem">⚠ {problem} They will rest instead.</span>}
-        </span>
+    <div className="job-menu">
+      <button type="button" className="job-menu-close" onClick={onClose} aria-label="Close">
+        ✕
       </button>
-      {open && !away && (
-        <div className="job-grid">
-          {choices.map((choice) => {
-            const why = jobProblem(game, plan, astronaut.id, choice.job)
-            return (
-              <button
-                key={`${choice.job.kind}-${choice.job.trip ?? ''}`}
-                type="button"
-                className={`job${isChosen(choice.job) ? ' chosen' : ''}`}
-                disabled={!!why}
-                onClick={() => onAssign(choice.job)}
-              >
-                <span className="job-title">
-                  {JOB_ICONS[choice.job.kind]} {choice.label}
-                  {lovesJob(choice.job.kind) && <span className="heart" title={`${info.name} loves this`}> ♥</span>}
-                </span>
-                <span className="job-does">{why ?? choice.does}</span>
-              </button>
-            )
-          })}
-          <p className="hint about">
-            {info.about} {relationshipLine(astronaut.id, game)}
-          </p>
-        </div>
-      )}
+      <p className="job-menu-about">
+        <strong>{info.name}</strong> loves {info.lovesText}. {info.about} {relationshipLine(astronautId, game)}
+        {willBeTired && <span className="tired"> Has worked {astronaut?.streak} days in a row: one more and {info.name} is tired.</span>}
+      </p>
+      <div className="job-grid">
+        {choices.map((choice) => {
+          const why = jobProblem(game, plan, astronautId, choice.job)
+          const chosen = current?.kind === choice.job.kind && current?.trip === choice.job.trip
+          return (
+            <button key={`${choice.job.kind}-${choice.job.trip ?? ''}`} type="button" className={`job${chosen ? ' chosen' : ''}`} disabled={!!why} onClick={() => onAssign(choice.job)}>
+              <span className="job-title">
+                {JOB_ICONS[choice.job.kind]} {choice.label}
+                {info.loves.includes(choice.job.kind) && <span className="heart" title={`${info.name} loves this`}> ♥</span>}
+              </span>
+              <span className="job-does">{why ?? choice.does}</span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -326,11 +483,11 @@ function relationshipLine(id: string, game: GameState): string {
   const lines: string[] = []
   for (const [a, b] of FRIENDS) {
     const other = a === id ? b : b === id ? a : null
-    if (other && onCrew(other)) lines.push(`Happier when working beside ${crewInfo(other).name}.`)
+    if (other && onCrew(other)) lines.push(`Happier beside ${crewInfo(other).name}.`)
   }
   for (const [a, b] of CLASHES) {
     const other = a === id ? b : b === id ? a : null
-    if (other && onCrew(other)) lines.push(`Gets annoyed when stuck with ${crewInfo(other).name}.`)
+    if (other && onCrew(other)) lines.push(`Annoyed when stuck with ${crewInfo(other).name}.`)
   }
   return lines.join(' ')
 }

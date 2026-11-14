@@ -14,6 +14,10 @@ Built at HackAthlone 2026 (TUS Athlone, Ireland) for the NASA Space Apps Challen
 
 Each turn is one day, and a tour lasts ten days. Then the next crew arrives and you see how you did.
 
+You see the base from above. In the morning you give the orders: click the ⚡ switch under a module to give it power, click an astronaut and then the place where they should work. Then you press **Start the day** and watch it play out. The crew walks to work, puts on spacesuits to go outside, waters the plants, welds the telescope together, drives the rover away. If a flare alert comes in, the picture stops and waits for your decision. If a real storm arrives, you see it sweep over the base and hit whoever is not under cover.
+
+Real storm particles are far too small to see. The game draws them so that you can watch the storm arrive.
+
 **Every morning you plan the day:**
 
 1. **Share out the power.** The solar panels make about 7 units a day. Running everything would take 10. You choose which modules get power:
@@ -119,7 +123,9 @@ npm run build
   - `content.ts` holds the modules, jobs, crew and missions. `events.ts` holds the morning event cards.
   - `weather.ts` describes the real records the game reads.
 - `src/data/` holds the saved NASA records, the text for each mission and the sourced facts.
+- `src/scene/` holds the moving picture of the base, drawn on a canvas. `script.ts` turns the day's result into a list of timed cues (who walks where, what pops up, when the storm sweeps in). `world.ts` plays those cues and moves everyone. `draw.ts` paints. None of it changes the rules: the result of the day is worked out first, and the picture only shows it.
 - `src/components/` holds the screens. They only display things and report clicks.
+- The tests in `src/scene/script.test.ts` check that the film of a day ends on exactly the numbers the rules worked out, and that the storm is shown hitting exactly the people the rules say were hurt.
 - The tests in `src/game/outpost.test.ts` also guard the design. For example, they check that a commander who keeps everyone comfortable and ignores the missions earns at most one star, and that taking cover always costs some work.
 
 Built with TypeScript, React, Vite and Vitest. Deployed to GitHub Pages by GitHub Actions on every push to `main`.

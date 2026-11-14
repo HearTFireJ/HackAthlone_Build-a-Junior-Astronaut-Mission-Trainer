@@ -104,211 +104,134 @@ button:disabled { cursor: not-allowed; }
 .flare-cards strong { color: var(--power); font-size: 1.05rem; }
 
 /* ---------- the game screen ---------- */
-.game { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-.topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1.2rem; padding: 0.55rem 1rem; border-bottom: 1px solid var(--line); background: rgba(10, 15, 31, 0.8); }
-.topbar-day { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; }
-.topbar-day strong { font-size: 1.25rem; }
-.real-date { color: var(--power); font-size: 0.9rem; font-weight: 600; }
+.game { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem 1rem; padding: 0.45rem 0.9rem; border-bottom: 1px solid var(--line); background: rgba(10, 15, 31, 0.92); }
+.topbar-day { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+.topbar-day strong { font-size: 1.2rem; }
+.real-date { color: var(--power); font-size: 0.88rem; font-weight: 600; }
 .help { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); padding: 0.1rem 0.7rem; font-size: 0.8rem; font-weight: 600; }
-.help:hover { border-color: var(--info); color: var(--text); }
-.meters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.meter { display: flex; align-items: center; gap: 0.5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0.3rem 0.7rem; }
+.help:hover:not(:disabled) { border-color: var(--info); color: var(--text); }
+.help:disabled { opacity: 0.4; }
+.meters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.meter { display: flex; align-items: center; gap: 0.45rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0.25rem 0.65rem; }
 .meter-icon { font-size: 1.2rem; }
 .meter-main { display: grid; line-height: 1.1; }
-.meter-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-.meter-main strong { font-size: 1.1rem; }
-.meter-detail { font-size: 0.78rem; color: var(--muted); }
+.meter-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.meter-main strong { font-size: 1.15rem; }
+.meter-detail { font-size: 0.76rem; color: var(--muted); }
 .meter.tone-warn { border-color: var(--warn); }
 .meter.tone-warn .meter-detail { color: var(--warn); }
 .meter.tone-bad { border-color: var(--bad); background: rgba(255, 107, 122, 0.1); }
 .meter.tone-bad .meter-detail { color: var(--bad); font-weight: 700; }
 
-.game-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); gap: 0.9rem; padding: 0.8rem 1rem; min-height: 0; }
-.map-wrap { display: flex; flex-direction: column; gap: 0.45rem; min-height: 0; min-width: 0; }
-/* The map fills whatever room is left. It may stretch a little, but never into a strip or a tower. */
-.map-box { flex: 1 1 auto; min-height: 0; container-type: size; display: grid; place-items: center; }
-.mission-strip { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.4rem; }
-.chip { display: grid; gap: 0.1rem; align-content: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.35rem 0.5rem; font-size: 0.78rem; min-width: 0; }
-.chip.done { border-color: var(--good); background: rgba(95, 211, 141, 0.1); }
-.chip-head { display: flex; justify-content: space-between; gap: 0.3rem; font-weight: 700; }
-.chip.done .chip-head { color: var(--good); }
-.chip .bar { display: block; margin: 0.1rem 0; }
-.chip .bar-fill { display: block; }
-.chip-text { color: var(--muted); font-size: 0.72rem; line-height: 1.25; }
-.chip-reward { color: var(--power); font-size: 0.72rem; line-height: 1.25; font-weight: 600; }
-.chip.done .chip-reward { color: var(--good); }
-.note.next-step { flex-basis: 100%; color: #d7defa; }
-.side { display: grid; gap: 0.55rem; align-content: start; overflow-y: auto; min-height: 0; padding-right: 0.2rem; }
+/* The missions, as small progress bars under the crew. */
+.goals { list-style: none; padding: 0; margin: 0.2rem 0 0; display: grid; gap: 0.25rem; }
+.goal { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 0.4rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.2rem 0.5rem; font-size: 0.8rem; }
+.goal-name { font-weight: 700; }
+.goal-count { color: var(--muted); font-weight: 600; text-align: right; }
+.goal .bar { grid-column: 1 / -1; display: block; height: 5px; margin: 0.1rem 0 0; }
+.goal .bar-fill { display: block; }
+.goal.done { border-color: var(--good); background: rgba(95, 211, 141, 0.1); }
+.goal.done .goal-name, .goal.done .goal-count { color: var(--good); }
+.goal.done .bar-fill { background: var(--good); }
 
-.action-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.6rem 1rem; border-top: 1px solid var(--line); background: rgba(10, 15, 31, 0.92); }
-.action-notes { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; font-size: 0.85rem; color: var(--muted); min-width: 0; }
-.action-bar .primary { flex: none; white-space: nowrap; }
-.note.warn { color: var(--warn); }
-.note.bad { color: var(--bad); font-weight: 700; }
+.stage { display: grid; grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr); min-height: 0; }
 
-/* ---------- the map ---------- */
-.map {
-  position: relative; width: min(100cqw, 100cqh * 2.1); height: min(100cqh, 100cqw / 1.45); container-type: size;
-  border-radius: 20px; overflow: hidden; border: 1px solid #5b6076;
-  background:
-    radial-gradient(120% 90% at 12% 0%, rgba(255, 255, 255, 0.1), transparent 55%),
-    radial-gradient(90% 80% at 100% 100%, rgba(0, 0, 0, 0.35), transparent 60%),
-    linear-gradient(160deg, #54586a 0%, #434757 45%, #33364a 100%);
-  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.35);
-}
-.map-ground, .map-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
-.rim { fill: none; stroke: rgba(255, 255, 255, 0.28); stroke-width: 0.35; stroke-linecap: round; }
-/* A corridor is a tube: a dark edge with a lighter line on top. */
-.corridor-edge { stroke: #1c2033; stroke-width: 18px; vector-effect: non-scaling-stroke; stroke-linecap: round; }
-.corridor { stroke: #7c86ad; stroke-width: 11px; vector-effect: non-scaling-stroke; stroke-linecap: round; }
-.path { stroke: #c9cde0; stroke-width: 2px; stroke-dasharray: 2 8; vector-effect: non-scaling-stroke; stroke-linecap: round; opacity: 0.5; }
-.road { fill: none; stroke: #d9c78f; stroke-width: 3px; stroke-dasharray: 10 8; vector-effect: non-scaling-stroke; opacity: 0.75; }
-
-/* Every building is a box on the ground, with a dark edge so it stands out from the dust. */
-.spot {
-  position: absolute; display: flex; flex-direction: column; gap: 1px; padding: 0.4rem 0.55rem;
-  border-radius: 16px; border: 2px solid #8792bd; background: linear-gradient(180deg, #1d2547 0%, #121831 100%);
-  box-shadow: 0 0 0 3px rgba(12, 15, 28, 0.6), 0 8px 16px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  overflow: hidden; font-size: clamp(9px, min(1.72cqw, 3cqh), 1.2rem); line-height: 1.25;
-  transition: box-shadow 0.15s, border-color 0.15s, background 0.15s;
-}
-.spot-icon { font-size: 1.9em; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5)); }
-.spot-name { font-weight: 800; font-size: 1.08em; }
-.spot-status { color: var(--muted); }
-.spot-status.short { color: var(--warn); }
-.module .spot-icon { position: absolute; right: 0.45rem; top: 0.35rem; }
-.module .spot-name { padding-right: 2.2em; }
-.module.off { border-color: #59618a; background: linear-gradient(180deg, #151b33 0%, #0d1224 100%); }
-.module.off .spot-name { color: #b9c1e0; }
-.module.off .spot-icon { filter: grayscale(0.85) opacity(0.55); }
-.module.on {
-  border-color: var(--power); background: linear-gradient(180deg, #4a3d16 0%, #232a4c 70%);
-  box-shadow: 0 0 0 3px rgba(12, 15, 28, 0.6), 0 0 0 5px rgba(255, 209, 102, 0.2), 0 0 28px rgba(255, 209, 102, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-.module.on .spot-status { color: #ffe9b0; }
-/* The Greenhouse glows green when its lamps are on, with rows of plants. */
-.module-farm.on {
-  background:
-    repeating-linear-gradient(90deg, transparent 0 11px, rgba(95, 211, 141, 0.16) 11px 15px),
-    linear-gradient(180deg, #1f5a3a 0%, #17323a 75%);
-}
-.module-farm.on .spot-status { color: #c9f5d9; }
-.module.broken { border-color: var(--bad); background: repeating-linear-gradient(135deg, rgba(255, 107, 122, 0.2) 0 10px, #131831 10px 20px); }
-.spot.target { outline: 3px dashed var(--info); outline-offset: -3px; cursor: pointer; animation: beckon 1s ease-in-out infinite alternate; }
-@keyframes beckon { from { outline-color: rgba(108, 184, 255, 0.45); } to { outline-color: rgba(108, 184, 255, 1); } }
-
-.switch {
-  margin-top: auto; align-self: flex-start; border-radius: 999px; padding: 0.15rem 0.65rem; font-weight: 800; font-size: 0.95em;
-  border: 2px solid #7a86ba; background: #0e1427; color: #dbe2ff; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
-}
-.switch:hover:not(:disabled) { border-color: var(--power); color: var(--power); }
-.switch.on { background: linear-gradient(180deg, #ffe08a, var(--power)); border-color: #fff0c2; color: #1c1400; }
-.switch:disabled { opacity: 0.4; box-shadow: none; }
-
-/* The crew quarters: a big dome in the middle. */
-.habitat {
-  border-radius: 50%; align-items: center; justify-content: center; text-align: center; border: 3px solid #a9b4e6;
-  background: radial-gradient(circle at 50% 38%, #46549a 0%, #232c58 55%, #161d3c 100%);
-  box-shadow: 0 0 0 3px rgba(12, 15, 28, 0.6), 0 10px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 7px rgba(255, 255, 255, 0.05), inset 0 0 0 8px rgba(160, 175, 235, 0.3), inset 0 8px 18px rgba(255, 255, 255, 0.1);
-}
-.habitat .tokens { position: static; margin-top: 0.3rem; justify-content: center; }
-/* The solar panels lie flat on the ground: no walls. */
-.panels { background: rgba(14, 18, 34, 0.5); border: 2px dashed rgba(201, 205, 224, 0.4); box-shadow: none; align-items: center; justify-content: center; text-align: center; }
-.panel-row { display: flex; gap: 4px; margin: 0.25rem 0; flex-wrap: wrap; justify-content: center; }
-.cell {
-  width: 2.1em; height: 1.5em; border-radius: 3px; border: 1px solid #a8cdff;
-  background: linear-gradient(90deg, transparent 48%, rgba(168, 205, 255, 0.55) 48% 52%, transparent 52%), linear-gradient(135deg, #4b8ae6, #1d4fa3);
-  box-shadow: 0 0 8px rgba(108, 184, 255, 0.5), 0 2px 3px rgba(0, 0, 0, 0.5);
-}
-.cell.dead { background: #33384c; border-color: #575d76; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
-.panels .spot-status { color: #e4e8fa; }
-/* The storm shelter is dug in under a heap of Moon soil. */
-.shelter { border: 2px dashed #b9a877; background: radial-gradient(circle at 50% 40%, #5a5240 0%, #3b3628 100%); }
-.shelter .spot-status { color: #e8dfc4; }
-.shelter.shielded { border-style: solid; border-color: var(--good); box-shadow: 0 0 0 3px rgba(12, 15, 28, 0.6), 0 0 0 6px rgba(95, 211, 141, 0.25), 0 8px 16px rgba(0, 0, 0, 0.45); }
-.site { background: rgba(18, 22, 40, 0.62); border-style: dashed; border-color: #b79cff; box-shadow: none; }
-.dish-row { display: flex; gap: 3px; margin: 0.15rem 0; flex-wrap: wrap; }
-.mast { width: 0.6em; height: 1em; border-radius: 2px 2px 0 0; background: #454d70; }
-.mast.up { background: var(--violet); box-shadow: 0 0 6px rgba(183, 156, 255, 0.7); }
-.crater {
-  border-radius: 46% 54% 50% 50%; border: 2px solid #23263a; padding: 0.3rem;
-  background: radial-gradient(circle at 42% 38%, #07090f 0 42%, #161a28 70%, #3a3e50 100%);
-  box-shadow: inset 4px 6px 16px rgba(0, 0, 0, 0.85), 2px 3px 0 rgba(255, 255, 255, 0.12);
-  justify-content: center; text-align: center; align-items: center;
-}
-.crater .spot-status { color: #cfd6f3; }
-.far-crew { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.1rem 0.25rem; font-size: 0.92em; color: #fff; margin-top: 0.15rem; }
-.far-crew > span:last-child { flex-basis: 100%; }
-
-.tokens { position: absolute; right: 0.4rem; bottom: 0.35rem; display: flex; gap: 2px; flex-wrap: wrap; justify-content: flex-end; }
-.token-button { border: 0; background: none; padding: 0; line-height: 0; border-radius: 50%; }
-.token-button:hover:not(:disabled) .token { transform: scale(1.12); }
-/* An astronaut seen from above: a white helmet around a face in their own colour. */
-.token {
-  --token: #fff; display: inline-grid; place-items: center; width: 2.4rem; height: 2.4rem; flex: none; border-radius: 50%;
-  background: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.7), transparent 42%), var(--token);
-  border: 3px solid #f4f6ff; color: #0b1020; font-weight: 900; font-size: 1.05rem;
-  box-shadow: 0 2px 0 #9aa3c7, 0 4px 8px rgba(0, 0, 0, 0.55); transition: transform 0.12s;
-}
-.token.small { width: 1.75rem; height: 1.75rem; font-size: 0.8rem; border-width: 2px; }
-.map .token.small { width: min(3.7cqw, 6.4cqh); height: min(3.7cqw, 6.4cqh); font-size: min(1.75cqw, 3cqh); }
-.token.selected { box-shadow: 0 0 0 3px var(--info), 0 0 16px var(--info); }
-
-/* ---------- the side panel ---------- */
-.control { padding: 0.6rem 0.9rem; }
-.control > h2 { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--power); margin-bottom: 0.2rem; }
-.control p { font-size: 0.93rem; }
-.control p.hint { font-size: 0.8rem; }
-.control p + p { margin-top: 0.2rem; }
-.activity-quiet { color: var(--good); }
-.activity-active { color: var(--warn); }
-.activity-very-active { color: var(--bad); }
-
-.crew-list { display: grid; gap: 0.4rem; }
-.crew-card { border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); overflow: hidden; }
-.crew-card.open { border-color: var(--info); box-shadow: 0 0 0 2px rgba(108, 184, 255, 0.25); }
+/* The crew, down the left side. */
+.crew-col { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.55rem; overflow-y: auto; min-height: 0; background: rgba(10, 15, 31, 0.92); border-right: 1px solid var(--line); }
+.crew-card { position: relative; border: 2px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+.crew-card.picked { border-color: var(--info); box-shadow: 0 0 0 3px rgba(108, 184, 255, 0.25); }
 .crew-card.state-unable { border-color: rgba(255, 107, 122, 0.6); }
-.crew-head { display: flex; gap: 0.6rem; align-items: center; width: 100%; text-align: left; background: none; border: 0; padding: 0.4rem 0.6rem; }
-.crew-head:hover:not(:disabled) { background: rgba(255, 255, 255, 0.04); }
-.crew-main { display: grid; gap: 0.1rem; min-width: 0; flex: 1; }
-.crew-name { font-weight: 800; }
-.crew-loves { font-weight: 500; color: var(--muted); font-size: 0.82rem; margin-left: 0.25rem; }
-.crew-stats { display: flex; flex-wrap: wrap; gap: 0.1rem 0.6rem; }
-.pips { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.84rem; }
-.pips-label { color: var(--muted); font-size: 0.74rem; }
-/* In the crew list the marks have no words beside them: the key is in the heading. */
-.crew-card .pips-label { display: none; }
-.crew-title { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
-.crew-key { display: flex; gap: 0.7rem; font-size: 0.74rem; font-weight: 500; color: var(--muted); }
-.crew-top { display: flex; justify-content: space-between; align-items: baseline; gap: 0.2rem 0.6rem; flex-wrap: wrap; }
-.crew-change { margin-left: auto; color: var(--info); font-size: 0.78rem; font-weight: 600; }
+.crew-head { display: flex; gap: 0.5rem; align-items: center; width: 100%; text-align: left; background: none; border: 0; padding: 0.35rem 0.5rem; border-radius: 12px; }
+.crew-head:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); }
+.crew-head:disabled { cursor: default; }
+.avatar { flex: none; }
+.crew-main { display: grid; gap: 0.05rem; min-width: 0; flex: 1; }
+.crew-name { font-weight: 800; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+.crew-stats { display: flex; flex-wrap: wrap; gap: 0 0.5rem; }
+.pips { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; letter-spacing: -0.02em; }
+.pips-label { display: none; }
 .pip { color: #3a4470; margin-right: 1px; }
 .tone-health .pip.on { color: #ff7b8a; }
 .tone-mood .pip.on { color: var(--power); }
 .tone-fed .pip.on { color: var(--good); }
-.crew-job { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; font-size: 0.88rem; }
-.job-now { font-weight: 700; color: #dfe6ff; }
-.job-now.bad { color: var(--bad); text-decoration: line-through; }
-.crew-problem { color: var(--bad); font-size: 0.8rem; }
-.job-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.3rem; padding: 0.1rem 0.6rem 0.55rem; }
-.job { display: grid; gap: 0.05rem; align-content: start; text-align: left; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); padding: 0.32rem 0.45rem; }
+.crew-job { font-size: 0.8rem; font-weight: 600; color: #cfd6f3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* The list of jobs opens beside the card, over the edge of the picture. */
+.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: min(25rem, 60vw); background: var(--surface); border: 2px solid var(--info); border-radius: 14px; padding: 0.55rem; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); display: grid; gap: 0.4rem; }
+.job-menu-about { font-size: 0.82rem; color: #d7defa; padding-right: 1.6rem; }
+.job-menu-close { position: absolute; right: 0.4rem; top: 0.35rem; border: 0; background: none; color: var(--muted); font-size: 1rem; padding: 0.1rem 0.4rem; border-radius: 8px; }
+.job-menu-close:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+.power-row { display: none; }
+.power-chip { border: 2px solid #7a86ba; border-radius: 999px; background: #0e1427; color: #dbe2ff; padding: 0.25rem 0.6rem; font-weight: 700; font-size: 0.8rem; }
+.power-chip.on { background: linear-gradient(180deg, #ffe08a, var(--power)); border-color: #fff0c2; color: #1c1400; }
+.job-menu-about .tired { color: var(--warn); }
+.job-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.3rem; }
+.job { display: grid; gap: 0.05rem; align-content: start; text-align: left; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); padding: 0.3rem 0.45rem; }
 .job:hover:not(:disabled) { border-color: var(--info); }
 .job.chosen { border-color: var(--power); background: rgba(255, 209, 102, 0.12); }
 .job:disabled { opacity: 0.5; }
-.job-title { font-weight: 700; font-size: 0.82rem; line-height: 1.2; }
-.job-does { font-size: 0.72rem; line-height: 1.2; color: var(--muted); }
+.job-title { font-weight: 700; font-size: 0.84rem; line-height: 1.2; }
+.job-does { font-size: 0.74rem; line-height: 1.2; color: var(--muted); }
 .job .heart { color: #ff7b8a; }
-.about { grid-column: 1 / -1; }
-.job-grid .about { background: none; border: 0; padding: 0.1rem 0 0; }
 
-.missions { list-style: none; padding: 0; display: grid; gap: 0.55rem; }
-.mission-head { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 700; font-size: 0.92rem; }
-.mission-count { color: var(--muted); font-weight: 600; }
-.mission.done .mission-head { color: var(--good); }
-.mission-text { color: var(--muted); font-size: 0.8rem; }
+/* Messages from Mission Control, under the crew. */
+.radio { margin-top: auto; display: grid; gap: 0.35rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0.5rem 0.6rem; font-size: 0.82rem; color: #d7defa; }
+.radio h2 { font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--power); }
+.radio-log { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+.radio-log li { border-left: 3px solid var(--line); padding-left: 0.45rem; }
+.radio-log li.radio-when { border: 0; padding: 0; color: var(--muted); font-weight: 700; }
+.radio-log li.tone-good { border-color: var(--good); }
+.radio-log li.tone-warn { border-color: var(--warn); }
+.radio-log li.tone-bad { border-color: var(--bad); }
+.radio .fact { font-size: 0.78rem; }
+.radio .hint { font-size: 0.72rem; }
+.activity-quiet { color: var(--good); }
+.activity-active { color: var(--warn); }
+.activity-very-active { color: var(--bad); }
+
+/* The picture of the base, and the few things laid over it. */
+.scene-wrap { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: #6f7383; }
+.scene { display: block; width: 100%; height: 100%; touch-action: manipulation; }
+.subtitle {
+  position: absolute; left: 50%; bottom: 0.7rem; transform: translateX(-50%); max-width: min(46rem, calc(100% - 22rem));
+  background: rgba(8, 11, 24, 0.86); border: 2px solid var(--line); border-radius: 14px; padding: 0.4rem 0.9rem;
+  font-size: 1rem; font-weight: 700; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); animation: rise 0.25s ease-out;
+}
+.subtitle.plain { font-weight: 600; font-size: 0.9rem; color: #d7defa; }
+.subtitle.tone-good { border-color: var(--good); }
+.subtitle.tone-warn { border-color: var(--warn); color: #ffe3b0; }
+.subtitle.tone-bad { border-color: var(--bad); color: #ffd6db; }
+@keyframes rise { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.toast {
+  position: absolute; left: 50%; top: 0.8rem; transform: translateX(-50%); max-width: min(34rem, 90%);
+  background: rgba(8, 11, 24, 0.94); border: 2px solid var(--warn); border-radius: 12px; padding: 0.4rem 0.8rem;
+  font-size: 0.92rem; font-weight: 600; color: #ffe3b0; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); animation: drop 0.2s ease-out;
+}
+@keyframes drop { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.dock { position: absolute; right: 0.8rem; bottom: 0.7rem; display: grid; justify-items: end; gap: 0.4rem; max-width: 19rem; }
+.warnings { display: grid; gap: 0.2rem; justify-items: end; }
+.note { background: rgba(8, 11, 24, 0.86); border: 1px solid var(--line); border-radius: 999px; padding: 0.12rem 0.6rem; font-size: 0.78rem; color: #d7defa; text-align: right; }
+.note.warn { color: var(--warn); border-color: rgba(255, 180, 84, 0.5); }
+.note.bad { color: var(--bad); font-weight: 700; border-color: rgba(255, 107, 122, 0.6); }
+.dock .primary { font-size: 1.15rem; padding: 0.8rem 1.6rem; }
+.clock { display: flex; align-items: center; gap: 0.6rem; background: rgba(8, 11, 24, 0.86); border: 2px solid var(--line); border-radius: 999px; padding: 0.3rem 0.4rem 0.3rem 0.9rem; }
+.clock-label { font-weight: 800; color: var(--power); }
+.speed { border: 0; border-radius: 999px; padding: 0.35rem 0.9rem; font-weight: 800; background: var(--surface-2); color: var(--text); }
+.speed:hover { background: #2a376b; }
+
 .bar { height: 7px; border-radius: 999px; background: #0d1326; overflow: hidden; margin: 0.25rem 0; }
 .bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--info), var(--violet)); transition: width 0.3s; }
-.mission.done .bar-fill { background: var(--good); }
+
+/* An initial in a circle, for an astronaut: used on the end screen. */
+.token {
+  --token: #fff; display: inline-grid; place-items: center; width: 2.4rem; height: 2.4rem; flex: none; border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.7), transparent 42%), var(--token);
+  border: 3px solid #f4f6ff; color: #0b1020; font-weight: 900; font-size: 1.05rem;
+  box-shadow: 0 2px 0 #9aa3c7, 0 4px 8px rgba(0, 0, 0, 0.55);
+}
+.token.small { width: 1.75rem; height: 1.75rem; font-size: 0.8rem; border-width: 2px; }
+.about { grid-column: 1 / -1; }
 
 /* ---------- pop-up cards ---------- */
 .overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 1rem; background: rgba(5, 8, 18, 0.72); backdrop-filter: blur(3px); }
@@ -364,25 +287,20 @@ button:disabled { cursor: not-allowed; }
 .report-list { padding-left: 1.2rem; display: grid; gap: 0.2rem; font-size: 0.92rem; }
 .report-list .win { color: var(--good); font-weight: 700; }
 
-/* ---------- small screens: one column, the page scrolls ---------- */
+/* ---------- small screens: the picture on top, the crew underneath ---------- */
 @media (max-width: 900px) {
-  .game { height: auto; min-height: 100dvh; }
-  .game-body { grid-template-columns: 1fr; }
-  .mission-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .side { overflow: visible; }
-  .map-box { flex: none; container-type: inline-size; display: block; }
-  .map { width: 100%; height: auto; aspect-ratio: 5 / 6; container-type: inline-size; }
-  .spot { font-size: 0.66rem; padding: 0.25rem 0.35rem; }
-  .map .token.small { width: 1.4rem; height: 1.4rem; font-size: 0.68rem; }
-  .spot-status { display: none; }
-  .module .spot-icon { position: static; }
-  .action-bar { position: sticky; bottom: 0; flex-direction: column; align-items: stretch; }
-  .action-bar .primary { width: 100%; }
-  /* On a phone the bar at the bottom stays small: only warnings, no how-to line. */
-  .note.next-step { display: none; }
-  .action-notes { font-size: 0.78rem; gap: 0.15rem 0.6rem; }
-  .action-bar { gap: 0.4rem; padding: 0.45rem 0.8rem; }
-  .token.small { width: 1.4rem; height: 1.4rem; font-size: 0.68rem; }
-  .job-grid { grid-template-columns: 1fr 1fr; }
-  .report-missions { grid-template-columns: 1fr 1fr; }
+  .game { height: auto; min-height: 100dvh; grid-template-rows: auto auto; }
+  .stage { grid-template-columns: 1fr; }
+  .scene-wrap { order: -1; overflow: visible; display: grid; }
+  .scene { height: 70vw; min-height: 250px; }
+  .crew-col { border-right: 0; overflow: visible; }
+  .job-menu { position: static; width: auto; margin: 0.4rem; }
+  .subtitle { position: static; transform: none; max-width: none; margin: 0.4rem; font-size: 0.85rem; animation: none; }
+  .subtitle.plain { display: none; }
+  .toast { position: fixed; top: auto; bottom: 4.5rem; z-index: 8; }
+  .dock { position: static; max-width: none; justify-items: stretch; margin: 0.4rem; }
+  .dock .primary { width: 100%; }
+  .warnings { justify-items: start; }
+  .power-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.4rem; }
+  .clock { justify-content: space-between; }
 }

@@ -3,11 +3,13 @@ import { EndScreen } from './components/EndScreen.tsx'
 import { GameScreen } from './components/GameScreen.tsx'
 import { type Modal, Modals } from './components/Modals.tsx'
 import { StartScreen } from './components/StartScreen.tsx'
+import { longDate } from './components/words.ts'
 import { EVENT_FACTS } from './data/facts.ts'
 import type { ScenarioInfo } from './data/scenarios.ts'
 import { MODULES, MODULE_IDS, type ModuleId } from './game/content.ts'
-import { EVENTS } from './game/events.ts'
+import { EVENTS, type EventId } from './game/events.ts'
 import {
+  type DayReport,
   type GameState,
   type Job,
   type Plan,
@@ -22,13 +24,34 @@ import {
   poweredModules,
   resolveDay,
 } from './game/outpost.ts'
+import type { PlaceId } from './scene/layout.ts'
+import type { SceneEffect } from './scene/Scene.tsx'
+import { MORNING, type Cue, later, morningScript, restScript } from './scene/script.ts'
 
 // The app is always on exactly one of these screens.
 // All the rules live in src/game/. This file only moves between screens and
 // passes the player's clicks to the rules.
 type Screen =
   | { name: 'start' }
-  | { name: 'game'; info: ScenarioInfo; game: GameState; plan: Plan; modal: Modal; selected: string | null }
+  | {
+      name: 'game'
+      info: ScenarioInfo
+      game: GameState
+      plan: Plan
+      modal: Modal
+      selected: string | null
+      /** 'plan': giving orders. 'play': watching the day play out. */
+      phase: 'plan' | 'play'
+      /** Goes up by one each morning. */
+      dayKey: number
+      /** The film of the day that the picture is playing. */
+      script: Cue[] | null
+      /** The day's result, worked out by the rules, waiting for the film to finish. */
+      pending: { state: GameState; report: DayReport } | null
+      lastReport: DayReport | null
+      speed: number
+      effect: SceneEffect | null
+    }
   | { name: 'end'; info: ScenarioInfo; game: GameState }
 
 type Playing = Extract<Screen, { name: 'game' }>
@@ -60,6 +83,24 @@ function seedFromClock(): number {
   return Math.floor(Math.random() * 1_000_000) + 1
 }
 
+/** The film for everything after the morning, from the result the rules worked out. */
+function restOfDay(before: GameState, result: { state: GameState; report: DayReport }): Cue[] {
+  const { report } = result
+  const link = report.storm ? { href: report.storm.link, label: "See NASA's record" } : null
+  return restScript(before, result.state, report, link, longDate(report.date))
+}
+
+/** What the picture shows when an event card has been answered. */
+const EVENT_EFFECTS: Partial<Record<EventId, { fx: SceneEffect['fx']; place?: PlaceId; onlyOption?: number }>> = {
+  rock: { fx: 'smoke', place: 'farm' },
+  dust: { fx: 'dust', place: 'panels' },
+  pump: { fx: 'smoke', place: 'life' },
+  quake: { fx: 'shake' },
+  birthday: { fx: 'confetti', place: 'habitat', onlyOption: 0 },
+  school: { fx: 'confetti', place: 'habitat', onlyOption: 0 },
+  box: { fx: 'confetti', place: 'habitat' },
+}
+
 function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'start' })
 
@@ -72,7 +113,21 @@ function App() {
       <StartScreen
         onPick={(info) => {
           const game = createGame(info.scenario.id, seedFromClock())
-          setScreen({ name: 'game', info, game, plan: emptyPlan(game), modal: { kind: 'intro' }, selected: null })
+          setScreen({
+            name: 'game',
+            info,
+            game,
+            plan: emptyPlan(game),
+            modal: { kind: 'intro' },
+            selected: null,
+            phase: 'plan',
+            dayKey: 1,
+            script: null,
+            pending: null,
+            lastReport: null,
+            speed: 1,
+            effect: null,
+          })
         }}
       />
     )
@@ -82,12 +137,6 @@ function App() {
     return <EndScreen info={screen.info} game={screen.game} onAgain={() => setScreen({ name: 'start' })} />
   }
 
-  const finishDay = (response: Response) =>
-    update((current) => {
-      const { state, report } = resolveDay(current.game, current.info.scenario, current.plan, response)
-      return { ...current, game: state, modal: { kind: 'report', report }, selected: null }
-    })
-
   return (
     <>
       <GameScreen
@@ -95,9 +144,17 @@ function App() {
         game={screen.game}
         plan={screen.plan}
         selected={screen.selected}
-        onSelect={(id) => update((current) => ({ ...current, selected: current.selected === id ? null : id }))}
+        phase={screen.phase}
+        dayKey={screen.dayKey}
+        script={screen.script}
+        speed={screen.speed}
+        effect={screen.effect}
+        lastReport={screen.lastReport}
+        onSelect={(id) => update((current) => ({ ...current, selected: id }))}
+        onSpeed={() => update((current) => ({ ...current, speed: current.speed > 1 ? 1 : 3 }))}
         onTogglePower={(module) =>
           update((current) => {
+            if (current.phase !== 'plan') return current
             const turningOn = !current.plan.power[module]
             const spare = powerAvailable(current.game) - poweredModules(current.game, current.plan).reduce((sum, id) => sum + MODULES[id].power, 0)
             if (turningOn && (MODULES[module].power > spare || !canRun(current.game, module))) return current
@@ -106,6 +163,7 @@ function App() {
         }
         onAssign={(astronautId: string, job: Job) =>
           update((current) => {
+            if (current.phase !== 'plan') return current
             const jobs = { ...current.plan.jobs, [astronautId]: job }
             // One rover: giving someone a trip takes it away from anyone else.
             if (job.kind === 'trip') {
@@ -116,15 +174,41 @@ function App() {
             return { ...current, plan: { ...current.plan, jobs } }
           })
         }
-        onHelp={() => update((current) => (current.modal ? current : { ...current, modal: { kind: 'intro' } }))}
+        onHelp={() => update((current) => (current.modal || current.phase !== 'plan' ? current : { ...current, modal: { kind: 'intro' } }))}
         onStart={() =>
           update((current) => {
-            // A card is open (an event to answer, a report to read): the day cannot start yet.
-            if (current.modal) return current
+            // A card is open (an event to answer): the day cannot start yet.
+            if (current.modal || current.phase !== 'plan') return current
             const alert = alertFor(current.game, current.info.scenario, current.plan)
-            if (alert) return { ...current, modal: { kind: 'alert', alert }, selected: null }
-            const { state, report } = resolveDay(current.game, current.info.scenario, current.plan, 'carry')
-            return { ...current, game: state, modal: { kind: 'report', report }, selected: null }
+            // The day as it goes if nobody is called in. With no alert, that is simply the day.
+            const calm = resolveDay(current.game, current.info.scenario, current.plan, 'carry')
+            const morning = morningScript(current.game, calm.report, alert !== null)
+            if (alert) return { ...current, phase: 'play', script: morning, pending: null, selected: null }
+            return { ...current, phase: 'play', script: [...morning, ...later(restOfDay(current.game, calm), MORNING)], pending: calm, selected: null }
+          })
+        }
+        onAlert={() =>
+          update((current) => {
+            const alert = alertFor(current.game, current.info.scenario, current.plan)
+            return alert ? { ...current, modal: { kind: 'alert', alert } } : current
+          })
+        }
+        onDayEnd={() =>
+          update((current) => {
+            if (!current.pending) return current
+            const { state, report } = current.pending
+            if (state.status !== 'playing') return { name: 'end', info: current.info, game: state }
+            return {
+              ...current,
+              game: state,
+              plan: planForNewDay(state, current.plan),
+              modal: state.event ? { kind: 'event' } : null,
+              phase: 'plan',
+              dayKey: current.dayKey + 1,
+              script: null,
+              pending: null,
+              lastReport: report,
+            }
           })
         }
       />
@@ -142,25 +226,29 @@ function App() {
             if (!pending) return { ...current, modal: null }
             const card = EVENTS[pending.id]
             const { state, result } = answerEvent(current.game, option)
+            const found = EVENT_EFFECTS[pending.id]
+            const reaction = found && (found.onlyOption === undefined || found.onlyOption === option) ? { fx: found.fx, place: found.place } : undefined
             return {
               ...current,
               game: state,
               // The answer may have cost power: make sure the plan still fits.
               plan: fitToPower(state, current.plan),
-              modal: { kind: 'event-result', icon: card.icon, title: card.title, text: result, fact: EVENT_FACTS[pending.id] },
+              modal: { kind: 'event-result', icon: card.icon, title: card.title, text: result, fact: EVENT_FACTS[pending.id], reaction },
             }
           })
         }
-        onCloseEventResult={() => update((current) => ({ ...current, modal: null }))}
-        onRespond={finishDay}
-        onNextDay={() =>
+        onCloseEventResult={() =>
           update((current) => {
-            if (current.game.status !== 'playing') return { name: 'end', info: current.info, game: current.game }
-            return {
-              ...current,
-              plan: planForNewDay(current.game, current.plan),
-              modal: current.game.event ? { kind: 'event' } : null,
-            }
+            // Now that the card is out of the way, the picture shows what happened.
+            const reaction = current.modal?.kind === 'event-result' ? current.modal.reaction : undefined
+            return { ...current, modal: null, effect: reaction ? { key: (current.effect?.key ?? 0) + 1, ...reaction } : current.effect }
+          })
+        }
+        onRespond={(response: Response) =>
+          update((current) => {
+            // The commander has answered the alert: now the rules can work out the day.
+            const result = resolveDay(current.game, current.info.scenario, current.plan, response)
+            return { ...current, modal: null, pending: result, script: restOfDay(current.game, result) }
           })
         }
       />

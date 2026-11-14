@@ -146,7 +146,25 @@ export interface CrewReport {
   moodAfter: number
   ate: boolean
   notes: string[]
+  // The fields below are for the moving picture of the day. They add nothing to the rules.
+  /** The job they really did (a job that was not possible turns into rest). */
+  job: JobId | 'trip-away'
+  trip: TripId | null
+  /** How much work counted today. */
+  points: number
+  /** Called back from a rover trip by the commander. */
+  recalled: boolean
+  /** Health lost to today's storm. */
+  hurt: number
+  /** Came home from a rover trip today with what they went for. */
+  cameHome: boolean
+  /** Was away this morning, and had to give up the trip and drive home. */
+  gaveUp: boolean
+  /** Short reasons for today's change of mood, for the picture to show over their head. */
+  why: Why[]
 }
+
+export type Why = 'loves' | 'tired' | 'friend' | 'rival' | 'bored' | 'hungry' | 'called' | 'cheer'
 
 export type CallResult = 'saved' | 'hit' | 'false-alarm' | 'calm' | 'surprise' | null
 
@@ -166,6 +184,8 @@ export interface DayReport {
   crew: CrewReport[]
   notes: string[]
   finished: MissionId[]
+  /** Food the plants did not make today because a storm hurt them. */
+  cropLoss: number
   /** Mission progress at the start and at the end of the day, to show what the day's work added. */
   missions: { before: Missions; after: Missions }
 }
@@ -397,6 +417,8 @@ interface Doing {
   recalled: boolean
   /** Hearts this person would lose to today's storm if the commander had carried on. */
   riskIfCarriedOn: number
+  cameHome: boolean
+  gaveUp: boolean
 }
 
 export function resolveDay(
@@ -432,12 +454,15 @@ export function resolveDay(
       notes: [],
       recalled: false,
       riskIfCarriedOn: 0,
+      cameHome: false,
+      gaveUp: false,
     }
     if (astronaut.away) {
       if (condition(astronaut) === 'unable') {
         astronaut.away = null
         entry.job = astronaut.health <= 1 ? 'sickbay' : 'rest'
         entry.notes.push('Too poorly to carry on: drove home early. The trip has to start again.')
+        entry.gaveUp = true
         return entry
       }
       entry.job = 'trip-away'
@@ -514,6 +539,7 @@ export function resolveDay(
           entry.notes.push('Brought home a glassy kind of Moon soil for the Lab: the shield research jumps ahead.')
         }
         astronaut.away = null
+        entry.cameHome = true
         if (trip === 'pod') {
           next.pod = false
           next.food += RULES.podFood
@@ -538,12 +564,14 @@ export function resolveDay(
   }
 
   // The storm.
+  let cropLoss = 0
   if (storm) {
     next.solarLoss += 1
     notes.push('The storm wore down the solar panels: 1 less power until someone repairs them.')
     if (!hasShield && foodMade > 0) {
       const lost = Math.min(foodMade, RULES.stormCropLoss)
       foodMade -= lost
+      cropLoss = lost
       notes.push(`The storm hurt the plants: ${lost} less food today.`)
     }
   }
@@ -594,6 +622,7 @@ export function resolveDay(
     let health = astronaut.health
     let mood = astronaut.mood
     const lines = [...entry.notes]
+    const why: Why[] = []
 
     const hurt = stormDamage.get(astronaut.id) ?? 0
     if (hurt > 0) {
@@ -605,6 +634,7 @@ export function resolveDay(
         lines.push('Safe in the shelter while the storm passed.')
       } else {
         mood -= 1
+        why.push('bored')
         lines.push('A long, dull day squeezed into the shelter for nothing.')
       }
     } else if (storm) {
@@ -622,6 +652,7 @@ export function resolveDay(
       mood += 1
     } else if (job === 'call') {
       mood += 3
+      why.push('called')
       lines.push('Talked to family on Earth.')
     }
 
@@ -632,22 +663,26 @@ export function resolveDay(
       const realJob: JobId = job === 'trip-away' ? 'trip' : job
       if (info.loves.includes(realJob)) {
         mood += 1
+        why.push('loves')
         lines.push(`Loves ${info.lovesText}.`)
       }
     }
     if (tired) {
       mood -= 1
+      why.push('tired')
       lines.push('Tired: needs a day off.')
     }
 
     const friend = pairedWith(entry, FRIENDS)
     if (friend) {
       mood += 1
+      why.push('friend')
       lines.push(`Spent the day with ${crewInfo(friend.astronaut.id).name}, a good friend.`)
     }
     const rival = pairedWith(entry, CLASHES)
     if (rival) {
       mood -= 1
+      why.push('rival')
       lines.push(`Got annoyed with ${crewInfo(rival.astronaut.id).name}.`)
     }
 
@@ -657,6 +692,7 @@ export function resolveDay(
       astronaut.fed = Math.max(0, astronaut.fed - 1)
       mood -= 1
       if (astronaut.fed === 0) health -= 1
+      why.push('hungry')
       lines.push('Went hungry.')
     }
 
@@ -679,6 +715,14 @@ export function resolveDay(
       moodAfter: astronaut.mood,
       ate: ate.has(astronaut.id),
       notes: lines,
+      job,
+      trip: entry.trip,
+      points: entry.points,
+      recalled: entry.recalled,
+      hurt,
+      cameHome: entry.cameHome,
+      gaveUp: entry.gaveUp,
+      why,
     }
   })
 
@@ -694,6 +738,7 @@ export function resolveDay(
         const line = crewReports.find((entry) => entry.id === astronaut.id)
         if (line) {
           line.moodAfter = astronaut.mood
+          line.why.push('cheer')
           line.notes.push('Cheered when the radio telescope was finished.')
         }
       }
@@ -726,6 +771,7 @@ export function resolveDay(
     crew: crewReports,
     notes,
     finished,
+    cropLoss,
     missions: { before: { ...state.missions }, after: { ...next.missions } },
   }
 
