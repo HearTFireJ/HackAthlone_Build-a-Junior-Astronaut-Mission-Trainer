@@ -43,8 +43,8 @@ Each turn is one day, and a tour lasts ten days. Then the next crew arrives and 
 **When the Sun fires a big flare, Mission Control calls** (if the Radio Dish has power). You have three answers:
 
 - **Carry on.** All the work gets done. If a particle storm follows, people outside are hurt badly and people inside a little.
-- **Call the outside crew in.** They only finish half their work, and a rover trip has to start again.
-- **Everyone to the storm shelter.** Nobody is hurt, and everyone only gets half a day's work done.
+- **Call the outside crew in.** They get half their work done at most, and a rover trip has to start again.
+- **Everyone to the storm shelter.** Nobody is hurt, and everyone gets half a day's work done at most.
 
 Most flares bring no storm. The game then tells you what really happened that day, with a link to NASA's record.
 
@@ -120,7 +120,7 @@ npm run build
   - `weather.ts` describes the real records the game reads.
 - `src/data/` holds the saved NASA records, the text for each mission and the sourced facts.
 - `src/components/` holds the screens. They only display things and report clicks.
-- The tests in `src/game/outpost.test.ts` also guard the design. For example, they check that a commander who keeps everyone comfortable and ignores the missions earns at most one star.
+- The tests in `src/game/outpost.test.ts` also guard the design. For example, they check that a commander who keeps everyone comfortable and ignores the missions earns at most one star, and that taking cover always costs some work.
 
 Built with TypeScript, React, Vite and Vitest. Deployed to GitHub Pages by GitHub Actions on every push to `main`.
 
@@ -129,7 +129,7 @@ Built with TypeScript, React, Vite and Vitest. Deployed to GitHub Pages by GitHu
 AI tools were used heavily in this project, and this section says where.
 
 - **Code and tests:** written almost entirely by an AI coding assistant (Anthropic's Claude, through Claude Code), directed, reviewed and play-tested by the author. The commit history records this: AI-written commits carry a `Co-Authored-By` line.
-- **Code review:** a second AI model (OpenAI Codex) was asked to review the first version of the rules for bugs.
+- **Code review:** a second AI model (OpenAI Codex) was asked to review the rules for bugs and loopholes, once for each version of the game. It only read the code. Its findings were checked and fixed by the first assistant.
 - **Game design:** the challenge sets the frame: an outpost, the five kinds of decision, real NASA data. The author decided what kind of game it is: an outpost to run, with a crew that has missions, moods and friendships, and with no deaths. The author threw away the first version after playing it. The AI assistant proposed the details (modules, numbers, event cards) and wrote them up.
 - **Research:** the AI assistant searched NASA's pages for the "Real life" facts and recorded a quote and a link for each one.
 - **Text in the game:** drafted by the AI assistant.
