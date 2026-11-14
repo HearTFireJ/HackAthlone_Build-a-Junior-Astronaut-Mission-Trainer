@@ -26,9 +26,11 @@ import {
   handoverReady,
   jobProblem,
   missionDone,
+  panelsFixed,
   powerAvailable,
   powerUsed,
   poweredModules,
+  workPoints,
 } from '../game/outpost.ts'
 import { sunActivity, weatherOn, yesterdayOf } from '../game/weather.ts'
 import type { PlaceId } from '../scene/layout.ts'
@@ -118,6 +120,23 @@ const PLACE_WORDS: Record<PlaceId, [name: string, purpose: string]> = {
   shelter: ['Storm shelter', 'The safest place when a storm comes.'],
   panels: ['Solar panels', "Make all of the base's power."],
   site: ['Radio telescope', 'A mission: it is built here, piece by piece.'],
+}
+
+/**
+ * What one day of this job makes when this astronaut does it, in a few characters: "+2 🥕".
+ * It is shown at the moment of choosing, so nobody has to remember the rules.
+ */
+function jobOutput(game: GameState, astronautId: string, job: Job): string | null {
+  const astronaut = game.crew.find((member) => member.id === astronautId)
+  if (!astronaut) return null
+  const points = workPoints(astronaut, job.kind)
+  if (points === 0) return null
+  if (job.kind === 'garden') return `+${points} 🥕`
+  if (job.kind === 'lab') return `+${points} ${MISSION_ICONS.shield}`
+  if (job.kind === 'build') return `+${points} ${MISSION_ICONS.dish}`
+  // A repair mends a broken module first; only with none broken does it bring panels back.
+  if (job.kind === 'repair' && game.broken.length === 0) return `+${panelsFixed(game.solarLoss, points)} ⚡`
+  return null
 }
 
 /** What the base still lacks for a good handover to the next crew, as a few short words each. */
@@ -236,7 +255,8 @@ export function GameScreen(props: Props) {
     if (job && selected) {
       const problem = jobProblem(game, plan, selected, job)
       const work = job.kind === 'trip' && job.trip ? TRIPS[job.trip].name : JOBS[job.kind].name
-      hover = problem ? [crewInfo(selected).name, problem] : [`${crewInfo(selected).name} →`, work]
+      const out = jobOutput(game, selected, job)
+      hover = problem ? [crewInfo(selected).name, problem] : [`${crewInfo(selected).name} →`, out ? `${work}  ${out}` : work]
     }
   } else if (hovered?.kind === 'pawn' && planning) {
     const who = crewInfo(hovered.id)
@@ -508,9 +528,11 @@ function JobMenu({ astronautId, game, plan, onAssign, onClose }: { astronautId: 
         {choices.map((choice) => {
           const why = jobProblem(game, plan, astronautId, choice.job)
           const chosen = current?.kind === choice.job.kind && current?.trip === choice.job.trip
+          const out = why ? null : jobOutput(game, astronautId, choice.job)
           return (
             <button key={`${choice.job.kind}-${choice.job.trip ?? ''}`} type="button" className={`job${chosen ? ' chosen' : ''}`} disabled={!!why} onClick={() => onAssign(choice.job)}>
               <span className="job-title">
+                {out && <span className="job-out">{out}</span>}
                 {JOB_ICONS[choice.job.kind]} {choice.label}
                 {info.loves.includes(choice.job.kind) && <span className="heart" title={`${info.name} loves this`}> ♥</span>}
               </span>

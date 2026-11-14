@@ -165,7 +165,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
           </button>
           <button type="button" className="choice" disabled={names.length === 0} onClick={() => onRespond('inside')}>
             <strong>Call outside crew in</strong>
-            <span>{names.length > 0 ? `${names.join(', ')} ${names.length === 1 ? 'stops' : 'stop'} early. A rover trip is cancelled and must start again.` : 'Nobody is outside.'}</span>
+            <span>{names.length > 0 ? `${names.join(', ')} ${names.length === 1 ? 'stops' : 'stop'} early and ${names.length === 1 ? 'gets' : 'get'} half a day's work done at most. A rover trip is cancelled and must start again.` : 'Nobody is outside.'}</span>
           </button>
           <button type="button" className="choice" onClick={() => onRespond('shelter')}>
             <strong>Everyone to the storm shelter</strong>

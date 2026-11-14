@@ -223,6 +223,11 @@ export function workPoints(astronaut: Astronaut, job: JobId): number {
   return crewInfo(astronaut.id).loves.includes(job) ? 3 : 2
 }
 
+/** How many worn-out solar panels a day of repair brings back. */
+export function panelsFixed(solarLoss: number, points: number): number {
+  return Math.min(solarLoss, points >= 2 ? 2 : 1)
+}
+
 export function solarToday(state: GameState): number {
   return Math.max(0, state.solar - state.solarLoss - state.powerPenalty)
 }
@@ -525,7 +530,7 @@ export function resolveDay(
       if (fixed) {
         entry.notes.push(`Fixed the ${MODULES[fixed].name}.`)
       } else {
-        const panels = Math.min(next.solarLoss, points >= 2 ? 2 : 1)
+        const panels = panelsFixed(next.solarLoss, points)
         next.solarLoss -= panels
         entry.notes.push(`Got the solar panels back to work (+${panels} power).`)
       }

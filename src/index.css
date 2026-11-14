@@ -172,7 +172,7 @@ button:disabled { cursor: not-allowed; }
 .crew-job { font-size: 0.8rem; font-weight: 600; color: #cfd6f3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* The list of jobs opens beside the card, over the edge of the picture. */
-.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: min(25rem, 60vw); background: var(--surface); border: 2px solid var(--info); border-radius: 14px; padding: 0.55rem; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); display: grid; gap: 0.4rem; }
+.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: min(30rem, 62vw); background: var(--surface); border: 2px solid var(--info); border-radius: 14px; padding: 0.55rem; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); display: grid; gap: 0.4rem; }
 .job-menu-about { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.4rem; margin: 0; font-size: 0.8rem; color: #d7defa; padding-right: 1.6rem; }
 .job-menu-about strong { font-size: 1rem; margin-right: 0.15rem; }
 .trait { border: 1px solid var(--line); border-radius: 999px; padding: 0.05rem 0.5rem; white-space: nowrap; }
@@ -193,6 +193,7 @@ button:disabled { cursor: not-allowed; }
 .job-title { font-weight: 700; font-size: 0.84rem; line-height: 1.2; }
 .job-does { font-size: 0.74rem; line-height: 1.2; color: var(--muted); }
 .job .heart { color: #ff7b8a; }
+.job-out { float: right; margin-left: 0.4rem; color: var(--good); font-weight: 800; white-space: nowrap; }
 
 /* Messages from Mission Control, under the crew. */
 .radio { margin-top: auto; display: grid; gap: 0.35rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0.5rem 0.6rem; font-size: 0.82rem; color: #d7defa; }
