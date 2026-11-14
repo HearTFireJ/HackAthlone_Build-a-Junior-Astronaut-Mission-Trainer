@@ -2,6 +2,7 @@ import { type ScenarioInfo, SCENARIOS } from '../data/scenarios.ts'
 import { SETUPS } from '../game/content.ts'
 import { RULES } from '../game/outpost.ts'
 import { AboutData } from './AboutData.tsx'
+import { HeroArt } from './HeroArt.tsx'
 import { plural } from './words.ts'
 
 interface Props {
@@ -12,13 +13,16 @@ interface Props {
 export function StartScreen({ onPick }: Props) {
   return (
     <main className="screen start">
-      <header className="start-head">
-        <p className="eyebrow">Mission Control · Athlone, Ireland</p>
-        <h1>Junior Astronaut Mission Trainer</h1>
-        <p className="lead">
-          You are the commander of a Moon outpost. Your crew has missions to do, not enough power for everything, and
-          a Sun that does exactly what the real Sun did.
-        </p>
+      <header className="start-head hero">
+        <div className="hero-text">
+          <p className="eyebrow">Mission Control · Athlone, Ireland</p>
+          <h1>Junior Astronaut Mission Trainer</h1>
+          <p className="lead">
+            You are the commander of a Moon outpost. Your crew has missions to do, not enough power for everything, and
+            a Sun that does exactly what the real Sun did.
+          </p>
+        </div>
+        <HeroArt />
       </header>
 
       <section aria-labelledby="pick-title">

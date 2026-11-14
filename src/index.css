@@ -62,6 +62,12 @@ button:disabled { cursor: not-allowed; }
 /* ---------- start and end screens ---------- */
 .screen { max-width: 1060px; margin: 0 auto; padding: clamp(1rem, 3vw, 2.2rem); display: grid; gap: 1.4rem; }
 .start-head, .end-head { display: grid; gap: 0.7rem; justify-items: start; }
+.hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: 1.5rem; }
+.hero-text { display: grid; gap: 0.7rem; }
+.hero-art { width: 100%; height: auto; border-radius: 20px; border: 1px solid var(--line); background: radial-gradient(circle at 80% 20%, #1c2450 0%, #080c1a 70%); }
+@media (max-width: 700px) {
+  .hero { grid-template-columns: 1fr; }
+}
 .mission-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.9rem; margin-top: 0.7rem; }
 .mission-card {
   text-align: left; display: grid; gap: 0.35rem; align-content: start; justify-items: start;
