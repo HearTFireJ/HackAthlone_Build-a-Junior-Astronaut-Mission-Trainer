@@ -58,7 +58,7 @@ export function StartScreen({ onPick, saved, onContinue }: Props) {
                   <span><Icon name="air" /> {setup.air} air</span>
                   <span><Icon name="food" /> {setup.food} food</span>
                 </span>
-                <span className="mission-go">Take command <Icon name="play" /></span>
+                <span className="mission-go">Choose your crew <Icon name="play" /></span>
               </button>
             )
           })}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import raw from '../data/scenarios.json'
-import { MISSIONS, MODULE_IDS, PROJECT_IDS, SETUPS, START_IDS, type ModuleId } from './content.ts'
+import { CLASHES, CREW, FRIENDS, MISSIONS, MODULE_IDS, PROJECT_IDS, SETUPS, START_IDS, type ModuleId } from './content.ts'
 import { EVENTS, EVENT_IDS } from './events.ts'
 import {
   RULES,
@@ -14,6 +14,8 @@ import {
   availableTrips,
   calmPreview,
   createGame,
+  crewSeats,
+  validCrew,
   drawStart,
   missionDone,
   emptyPlan,
@@ -625,5 +627,46 @@ describe('what the last crew left behind', () => {
     expect(drawStart(42)).toBe(drawStart(42))
     const seen = new Set(Array.from({ length: 200 }, (_, seed) => drawStart(seed + 1)))
     expect(seen.size).toBe(START_IDS.length)
+  })
+})
+
+describe('choosing the crew', () => {
+  it('lands the people the commander chose', () => {
+    const game = createGame('sep-2017', 1, null, ['oisin', 'saoirse', 'tadhg'])
+    expect(game.crew.map((astronaut) => astronaut.id)).toEqual(['oisin', 'saoirse', 'tadhg'])
+  })
+
+  it('takes exactly as many people as the mission has seats', () => {
+    expect(crewSeats('quiet-2019')).toBe(4)
+    expect(crewSeats('sep-2017')).toBe(3)
+    expect(validCrew('sep-2017', ['aoife', 'cian'])).toBe(false)
+    expect(validCrew('sep-2017', ['aoife', 'cian', 'niamh', 'oisin'])).toBe(false)
+    expect(validCrew('sep-2017', ['aoife', 'aoife', 'cian'])).toBe(false)
+    expect(validCrew('sep-2017', ['aoife', 'cian', 'nobody'])).toBe(false)
+    expect(() => createGame('sep-2017', 1, null, ['aoife'])).toThrow()
+  })
+
+  it('gives every astronaut one friend and one rival, so nobody is simply the better pick', () => {
+    for (const member of CREW) {
+      expect([member.id, FRIENDS.filter((pair) => pair.includes(member.id)).length]).toEqual([member.id, 1])
+      expect([member.id, CLASHES.filter((pair) => pair.includes(member.id)).length]).toEqual([member.id, 1])
+    }
+  })
+
+  it('never lets anyone love every job another astronaut loves, plus more', () => {
+    for (const a of CREW) {
+      for (const b of CREW) {
+        if (a.id === b.id) continue
+        const more = b.loves.every((job) => a.loves.includes(job)) && a.loves.length > b.loves.length
+        expect([a.id, b.id, more]).toEqual([a.id, b.id, false])
+      }
+    }
+  })
+
+  it('still offers one more astronaut by cargo flight, someone who is not on the crew', () => {
+    const game = createGame('sep-2017', 1, null, ['niamh', 'saoirse', 'tadhg'])
+    game.event = { id: 'newcrew', who: null }
+    const { state } = answerEvent(game, 0)
+    expect(state.arriving).toBe('aoife')
   })
 })

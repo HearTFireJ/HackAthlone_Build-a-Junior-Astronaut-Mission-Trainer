@@ -3,6 +3,7 @@ import { EndScreen } from './components/EndScreen.tsx'
 import { GameScreen } from './components/GameScreen.tsx'
 import { type Modal, Modals } from './components/Modals.tsx'
 import { StartScreen } from './components/StartScreen.tsx'
+import { CrewPicker } from './components/CrewPicker.tsx'
 import { FieldGuide } from './components/FieldGuide.tsx'
 import { EVENT_FACTS, MISSION_FACTS, type FactId } from './data/facts.ts'
 import { type ScenarioInfo, SCENARIOS } from './data/scenarios.ts'
@@ -45,6 +46,8 @@ export interface LogLine {
 // passes the player's clicks to the rules.
 type Screen =
   | { name: 'start' }
+  /** A mission is chosen: now choose who goes. */
+  | { name: 'crew'; info: ScenarioInfo }
   | {
       name: 'game'
       info: ScenarioInfo
@@ -188,10 +191,21 @@ function App() {
             log: saved.log,
           })
         }}
-        onPick={(info) => {
+        onPick={(info) => setScreen({ name: 'crew', info })}
+      />
+    )
+  }
+
+  if (screen.name === 'crew') {
+    const info = screen.info
+    return (
+      <CrewPicker
+        info={info}
+        onBack={() => setScreen({ name: 'start' })}
+        onGo={(crew) => {
           // The seed decides both the event cards and what the last crew left behind.
           const seed = seedFromClock()
-          const game = createGame(info.scenario.id, seed, drawStart(seed))
+          const game = createGame(info.scenario.id, seed, drawStart(seed), crew)
           const left = game.start ? STARTS[game.start] : null
           setScreen({
             name: 'game',

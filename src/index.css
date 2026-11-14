@@ -114,6 +114,24 @@ button:disabled { cursor: not-allowed; }
 @media (max-width: 700px) {
   .hero { grid-template-columns: 1fr; }
 }
+/* Choosing the crew: one card each, a big face and three short tags. */
+.crew-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+/* Six people: two even rows of three on a wide screen. */
+@media (min-width: 760px) { .crew-cards { grid-template-columns: repeat(3, 1fr); } }
+.crew-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.35rem; text-align: center; font-family: var(--body); color: var(--ink); background: var(--paper); border: var(--edge); border-color: var(--ink-deep); border-radius: 22px; padding: 1rem 0.7rem 0.95rem; box-shadow: 0 5px 0 var(--ink-deep); transition: transform 0.08s, box-shadow 0.08s, background 0.08s; }
+.crew-card:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 0 var(--ink-deep); }
+.crew-card:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink-deep); }
+.crew-card.on { background: var(--yellow); }
+.crew-card:disabled { opacity: 0.45; box-shadow: none; cursor: default; }
+.crew-card-name { font-family: var(--display); font-size: 1.35rem; font-weight: 600; line-height: 1.1; }
+.crew-card .trait { font-size: 0.86rem; }
+.crew-card-tick { position: absolute; top: 0.55rem; right: 0.6rem; width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: 50%; border: 2.5px solid var(--ink); background: #fff; font-family: var(--display); font-weight: 700; font-size: 1.15rem; }
+/* The buttons stay in reach at the bottom of a short screen. */
+.crew-pick-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; position: sticky; bottom: 0; padding: 0.9rem 0 0.8rem; margin-top: -0.6rem; background: linear-gradient(transparent, var(--sky) 38%); }
+.crew-count { font-family: var(--display); font-size: 1.2rem; font-weight: 600; color: var(--yellow); }
+.back { font-size: 1rem; font-weight: 600; color: var(--ink); background: var(--paper); border: var(--edge); border-color: var(--ink-deep); border-radius: 999px; padding: 0.45rem 1.1rem; box-shadow: 0 3px 0 var(--ink-deep); }
+.back:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink-deep); }
+.primary:disabled { opacity: 0.5; cursor: default; }
 .mission-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 0.7rem; }
 .mission-card {
   text-align: left; display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; font-family: var(--body);

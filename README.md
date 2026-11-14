@@ -14,6 +14,8 @@ Built at HackAthlone 2026 (TUS Athlone, Ireland) for the NASA Space Apps Challen
 
 Each turn is one day, and a tour lasts ten days. Then the next crew arrives and you see how you did.
 
+**You choose your crew.** There are six astronauts and the rocket has three seats (four on the easy mission). Each astronaut loves one kind of work and does it better, has one friend and one person who gets on their nerves. Two love plants and two love experiments: taking both gets that job done twice as fast, but those two are the ones who argue. With three seats you cannot bring someone for everything.
+
 No two tours begin the same way. The crew before you always leaves one good thing and one bad thing behind, drawn at random from six pairs: a full battery but two dusty solar panels, extra food but less air, a radio telescope already started but a crew feeling low, and so on. This part is made up for the game.
 
 You see the base from above. In the morning you give the orders: click the ⚡ switch under a module to give it power, click an astronaut and then the place where they should work. Then you press **Start the day** and watch it play out. The crew walks to work, puts on spacesuits to go outside, waters the plants, welds the telescope together, drives the rover away. If a flare alert comes in, the picture stops and waits for your decision. If a real storm arrives, you see it sweep over the base and hit whoever is not under cover.
@@ -35,7 +37,7 @@ While you play, the game does not lecture. The real records and the real-life fa
    | Lab | 2 | Lets the crew do research |
    | Rover Bay | 2 | Charges the rover for a trip |
 
-2. **Give each astronaut a job.** Tend the plants, do research, build the radio telescope outside, repair the solar panels, drive the rover, rest, go to the sick bay, or call home. Each astronaut has health, mood and hunger. Each one loves a different job and does it better; the one who loves driving does a two-day rover trip in one day, and the one who loves fixing things mends three worn solar panels in a day instead of two. Some are friends, and two get on each other's nerves. Three days of work in a row makes anyone tired, and then only a day off helps.
+2. **Give each astronaut a job.** Tend the plants, do research, build the radio telescope outside, repair the solar panels, drive the rover, rest, go to the sick bay, or call home. Each astronaut has health, mood and hunger. Each one loves a job and does it better; the one who loves driving does a two-day rover trip in one day, and the one who loves fixing things mends three worn solar panels in a day instead of two. Friends cheer each other up when they spend the day in the same place, and rivals get on each other's nerves. Three days of work in a row makes anyone tired, and then only a day off helps.
 
 3. **Work on your three missions.** They are why the crew is there, and each one changes the base when it is finished:
 

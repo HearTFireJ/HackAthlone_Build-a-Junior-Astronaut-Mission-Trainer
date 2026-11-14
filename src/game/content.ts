@@ -98,10 +98,19 @@ export const MAX_CREW = 4
 export const FRIENDS: [string, string][] = [
   ['aoife', 'cian'],
   ['niamh', 'oisin'],
+  ['saoirse', 'tadhg'],
 ]
 
-/** Pairs who get on each other's nerves when they spend the day in the same place. */
-export const CLASHES: [string, string][] = [['cian', 'niamh']]
+/**
+ * Pairs who get on each other's nerves when they spend the day in the same place.
+ * The two who love the same job are rivals: taking both gets that job done twice as fast,
+ * and costs some peace.
+ */
+export const CLASHES: [string, string][] = [
+  ['cian', 'niamh'],
+  ['oisin', 'saoirse'],
+  ['aoife', 'tadhg'],
+]
 
 /** The missions the crew came to do. Each one that is finished earns a star. */
 export const MISSION_IDS = ['ice', 'dish', 'sun'] as const
@@ -156,6 +165,7 @@ export interface Setup {
   solar: number
   air: number
   food: number
+  /** How many seats the mission has, and who goes if the commander does not choose. */
   crew: string[]
 }
 

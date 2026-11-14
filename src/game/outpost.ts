@@ -10,6 +10,7 @@
 
 import {
   CLASHES,
+  CREW,
   FRIENDS,
   ICE_TRIPS,
   JOBS,
@@ -358,9 +359,25 @@ export function drawStart(seed: number): StartId {
   return START_IDS[Math.floor(pick * START_IDS.length)]
 }
 
-export function createGame(scenarioId: string, seed = 1, start: StartId | null = null): GameState {
+/** How many astronauts this mission takes. */
+export function crewSeats(scenarioId: string): number {
+  return SETUPS[scenarioId]?.crew.length ?? 0
+}
+
+/** A crew is right when every seat is filled, by different people the game knows. */
+export function validCrew(scenarioId: string, crew: string[]): boolean {
+  return (
+    crew.length === crewSeats(scenarioId) &&
+    new Set(crew).size === crew.length &&
+    crew.every((id) => CREW.some((member) => member.id === id))
+  )
+}
+
+export function createGame(scenarioId: string, seed = 1, start: StartId | null = null, crew?: string[]): GameState {
   const setup = SETUPS[scenarioId]
   if (!setup) throw new Error(`No setup for scenario: ${scenarioId}`)
+  const team = crew ?? setup.crew
+  if (!validCrew(scenarioId, team)) throw new Error(`Not a crew for ${scenarioId}: ${team.join(', ')}`)
   const left = start ? STARTS[start] : null
   return {
     scenarioId,
@@ -376,7 +393,7 @@ export function createGame(scenarioId: string, seed = 1, start: StartId | null =
     broken: [],
     offToday: [],
     weakLifeDays: 0,
-    crew: setup.crew.map((id) => {
+    crew: team.map((id) => {
       const astronaut = newAstronaut(id)
       return { ...astronaut, mood: clamp(astronaut.mood + (left?.mood ?? 0), RULES.maxStat) }
     }),
