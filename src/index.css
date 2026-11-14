@@ -22,6 +22,10 @@
   color-scheme: dark;
 }
 
+@media (min-width: 901px) {
+  :root { font-size: clamp(13px, min(1.25vw, 2.2vh), 26px); }
+}
+
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 body { background: radial-gradient(1200px 600px at 70% -10%, #1a2550 0%, var(--bg) 60%) fixed; }
@@ -112,7 +116,9 @@ button:disabled { cursor: not-allowed; }
 .meter.tone-bad .meter-detail { color: var(--bad); font-weight: 700; }
 
 .game-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); gap: 0.9rem; padding: 0.8rem 1rem; min-height: 0; }
-.map-wrap { display: grid; grid-template-rows: auto auto auto; gap: 0.45rem; min-height: 0; align-content: start; }
+.map-wrap { display: flex; flex-direction: column; gap: 0.45rem; min-height: 0; min-width: 0; }
+/* The map fills whatever room is left. It may stretch a little, but never into a strip or a tower. */
+.map-box { flex: 1 1 auto; min-height: 0; container-type: size; display: grid; place-items: center; }
 .mission-strip { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.4rem; }
 .chip { display: grid; gap: 0.1rem; align-content: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.35rem 0.5rem; font-size: 0.78rem; min-width: 0; }
 .chip.done { border-color: var(--good); background: rgba(95, 211, 141, 0.1); }
@@ -123,7 +129,7 @@ button:disabled { cursor: not-allowed; }
 .chip-text { color: var(--muted); font-size: 0.72rem; line-height: 1.25; }
 .chip-reward { color: var(--power); font-size: 0.72rem; line-height: 1.25; font-weight: 600; }
 .chip.done .chip-reward { color: var(--good); }
-.map-hint { color: var(--muted); font-size: 0.85rem; text-align: center; }
+.note.next-step { flex-basis: 100%; color: #d7defa; }
 .side { display: grid; gap: 0.55rem; align-content: start; overflow-y: auto; min-height: 0; padding-right: 0.2rem; }
 
 .action-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.6rem 1rem; border-top: 1px solid var(--line); background: rgba(10, 15, 31, 0.92); }
@@ -133,7 +139,7 @@ button:disabled { cursor: not-allowed; }
 
 /* ---------- the map ---------- */
 .map {
-  position: relative; width: 100%; max-height: 100%; aspect-ratio: 16 / 10; margin: 0 auto;
+  position: relative; width: min(100cqw, 100cqh * 2.1); height: min(100cqh, 100cqw / 1.45); container-type: size;
   border-radius: 20px; overflow: hidden; border: 1px solid #5b6076;
   background:
     radial-gradient(120% 90% at 12% 0%, rgba(255, 255, 255, 0.1), transparent 55%),
@@ -154,7 +160,7 @@ button:disabled { cursor: not-allowed; }
   position: absolute; display: flex; flex-direction: column; gap: 1px; padding: 0.4rem 0.55rem;
   border-radius: 16px; border: 2px solid #8792bd; background: linear-gradient(180deg, #1d2547 0%, #121831 100%);
   box-shadow: 0 0 0 3px rgba(12, 15, 28, 0.6), 0 8px 16px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  overflow: hidden; font-size: clamp(0.62rem, 0.95vw, 0.8rem); line-height: 1.25;
+  overflow: hidden; font-size: clamp(9px, min(1.72cqw, 3cqh), 1.2rem); line-height: 1.25;
   transition: box-shadow 0.15s, border-color 0.15s, background 0.15s;
 }
 .spot-icon { font-size: 1.9em; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5)); }
@@ -235,6 +241,7 @@ button:disabled { cursor: not-allowed; }
   box-shadow: 0 2px 0 #9aa3c7, 0 4px 8px rgba(0, 0, 0, 0.55); transition: transform 0.12s;
 }
 .token.small { width: 1.75rem; height: 1.75rem; font-size: 0.8rem; border-width: 2px; }
+.map .token.small { width: min(3.7cqw, 6.4cqh); height: min(3.7cqw, 6.4cqh); font-size: min(1.75cqw, 3cqh); }
 .token.selected { box-shadow: 0 0 0 3px var(--info), 0 0 16px var(--info); }
 
 /* ---------- the side panel ---------- */
@@ -351,8 +358,10 @@ button:disabled { cursor: not-allowed; }
   .game-body { grid-template-columns: 1fr; }
   .mission-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .side { overflow: visible; }
-  .map { aspect-ratio: 5 / 6; max-height: none; }
+  .map-box { flex: none; container-type: inline-size; display: block; }
+  .map { width: 100%; height: auto; aspect-ratio: 5 / 6; container-type: inline-size; }
   .spot { font-size: 0.66rem; padding: 0.25rem 0.35rem; }
+  .map .token.small { width: 1.4rem; height: 1.4rem; font-size: 0.68rem; }
   .spot-status { display: none; }
   .module .spot-icon { position: static; }
   .action-bar { position: sticky; bottom: 0; flex-direction: column; align-items: stretch; }

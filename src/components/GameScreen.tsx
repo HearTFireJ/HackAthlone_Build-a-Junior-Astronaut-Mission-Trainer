@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { ScenarioInfo } from '../data/scenarios.ts'
 import {
   CLASHES,
@@ -71,7 +72,9 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
 
       <div className="game-body">
         <section className="map-wrap" aria-label="The base, seen from above">
-          <BaseMap game={game} plan={plan} selected={selected} onTogglePower={onTogglePower} onAssign={onAssign} onSelect={onSelect} />
+          <div className="map-box">
+            <BaseMap game={game} plan={plan} selected={selected} onTogglePower={onTogglePower} onAssign={onAssign} onSelect={onSelect} />
+          </div>
           <ul className="mission-strip" aria-label="Missions">
             {MISSION_IDS.map((id) => {
               const done = missionDone(game.missions, id)
@@ -104,11 +107,6 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
               <span className="chip-reward">{handoverReady(game) ? '✓ Ready right now' : 'Not ready yet'}</span>
             </li>
           </ul>
-          <p className="map-hint">
-            {selected
-              ? `Now click where ${crewInfo(selected).name} should go, or pick a job in the list.`
-              : 'Click ⚡ on a module to switch it on. Click an astronaut to give them a job.'}
-          </p>
         </section>
 
         <aside className="side">
@@ -146,6 +144,11 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
 
       <footer className="action-bar">
         <div className="action-notes">
+          <span className="note next-step">
+            {selected
+              ? `👉 Now click where ${crewInfo(selected).name} should go on the map, or pick a job in the list.`
+              : '👉 Click ⚡ on a module to give it power. Click an astronaut to give them a job. Then start the day.'}
+          </span>
           {!on.includes('comms') && <span className="note warn">📡 Radio Dish is off: no storm alerts today, no Sun report tomorrow.</span>}
           {preview.air.left < game.crew.length && <span className="note bad">💨 The air will run low tomorrow.</span>}
           {preview.food.left < game.crew.length && <span className="note bad">🥕 Not enough food for tomorrow.</span>}
@@ -254,8 +257,14 @@ function CrewCard({ astronaut, game, plan, open, onSelect, onAssign }: CardProps
   const isChosen = (candidate: Job) => job?.kind === candidate.kind && job?.trip === candidate.trip
   const lovesJob = (kind: JobId) => info.loves.includes(kind)
 
+  // When the card opens, bring its whole job list into view.
+  const card = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (open) card.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [open])
+
   return (
-    <div className={`crew-card${open ? ' open' : ''} state-${state}`}>
+    <div ref={card} className={`crew-card${open ? ' open' : ''} state-${state}`}>
       <button type="button" className="crew-head" onClick={onSelect} disabled={!!away} aria-expanded={open}>
         <Token id={astronaut.id} />
         <span className="crew-main">
