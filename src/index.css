@@ -383,8 +383,9 @@ button:disabled { cursor: not-allowed; }
   .game { height: auto; min-height: 100dvh; grid-template-rows: auto auto; background: #6f7383; }
   .topbar { flex-wrap: wrap; gap: 0.4rem 0.8rem; }
   .topbar-day { flex-wrap: wrap; }
-  .meters { flex-wrap: wrap; }
-  .meter-detail { min-width: 0; }
+  .meters { flex: 1 1 100%; flex-wrap: wrap; }
+  .meter { flex: 1 1 auto; padding-right: 0.5rem; }
+  .meter-detail { min-width: 0; font-size: 0.7rem; }
   .scene-wrap { overflow: visible; display: grid; align-content: start; }
   .scene { height: max(70vw, 250px); }
   .scene-safe { left: 0; right: 0; top: 0; bottom: auto; height: max(70vw, 250px); }
@@ -396,7 +397,7 @@ button:disabled { cursor: not-allowed; }
   .dock { order: 4; position: static; justify-items: stretch; margin: 0.4rem; }
   .left-float, .goals { order: 5; position: static; width: auto; margin: 0.4rem; pointer-events: auto; }
   .log { max-height: 11rem; }
-  .crew-strip { grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr)); }
+  .crew-strip { grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
   .toast { position: fixed; top: auto; bottom: 4.5rem; z-index: 8; }
   .dock .primary { width: 100%; justify-content: center; }
   .warnings { justify-items: start; }
