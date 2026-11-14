@@ -512,7 +512,7 @@ export class World {
         break
       case 'lander':
         for (let i = 0; i < 50; i++) {
-          this.particles.push({ x: 1090 + rand(-30, 30), y: 250 + rand(-10, 20), vx: rand(-120, 120), vy: rand(-10, 60), age: -rand(0, 0.5), life: rand(0.8, 1.8), r: rand(6, 14), colour: 'rgba(210,206,198,0.45)', gravity: 0 })
+          this.particles.push({ x: 316 + rand(-30, 30), y: 716 + rand(-10, 20), vx: rand(-120, 120), vy: rand(-40, 60), age: -rand(0, 0.5), life: rand(0.8, 1.8), r: rand(6, 14), colour: 'rgba(210,206,198,0.45)', gravity: 0 })
         }
         break
     }

@@ -162,6 +162,9 @@ export interface CrewReport {
   gaveUp: boolean
   /** Short reasons for today's change of mood, for the picture to show over their head. */
   why: Why[]
+  /** Who they were happy to be beside today, and who got on their nerves. */
+  friend: string | null
+  rival: string | null
 }
 
 export type Why = 'loves' | 'tired' | 'friend' | 'rival' | 'bored' | 'hungry' | 'called' | 'cheer'
@@ -232,9 +235,12 @@ export function tripDays(astronautId: string, trip: TripId): number {
   return crewInfo(astronautId).loves.includes('trip') ? Math.max(1, days - 1) : days
 }
 
-/** How many worn-out solar panels a day of repair brings back. */
+/**
+ * How many worn-out solar panels a day of repair brings back: two, three for someone
+ * who loves fixing things, and only one for someone who is not feeling well.
+ */
 export function panelsFixed(solarLoss: number, points: number): number {
-  return Math.min(solarLoss, points >= 2 ? 2 : 1)
+  return Math.min(solarLoss, points >= 3 ? 3 : points >= 2 ? 2 : 1)
 }
 
 export function solarToday(state: GameState): number {
@@ -737,6 +743,8 @@ export function resolveDay(
       cameHome: entry.cameHome,
       gaveUp: entry.gaveUp,
       why,
+      friend: friend ? friend.astronaut.id : null,
+      rival: rival ? rival.astronaut.id : null,
     }
   })
 

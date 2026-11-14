@@ -75,6 +75,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
           and a healthy, happy crew.
         </p>
         <p>📖 The Field guide fills up with the real records and facts behind what you see. Look at it whenever you like.</p>
+        <p className="hint">⌨️ Keys: Space starts the day or pauses it, F plays faster, 1 to 5 pick an astronaut.</p>
         <button type="button" className="primary" onClick={onCloseIntro}>
           {game.day === 1 && game.history.length === 0 ? 'Take command ▶' : 'Back to the base ▶'}
         </button>

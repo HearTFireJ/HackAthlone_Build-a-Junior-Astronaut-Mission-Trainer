@@ -24,6 +24,7 @@ import {
   poweredModules,
   resolveDay,
 } from './game/outpost.ts'
+import { crewInfo } from './game/content.ts'
 import type { PlaceId } from './scene/layout.ts'
 import type { SceneEffect } from './scene/Scene.tsx'
 import { MORNING, type Cue, type Tone, later, morningScript, restScript } from './scene/script.ts'
@@ -184,6 +185,7 @@ function App() {
         script={screen.script}
         speed={screen.speed}
         effect={screen.effect}
+        locked={screen.modal !== null}
         log={screen.log}
         onLog={(text, tone) => update((current) => ({ ...current, log: [...current.log, { day: current.game.day, text, tone }] }))}
         guideNew={Math.max(0, guideEntries(screen.game, screen.facts) - screen.guideSeen)}
@@ -240,8 +242,11 @@ function App() {
             if (!current.pending) return current
             const { state, report } = current.pending
             if (state.status !== 'playing') return { name: 'end', info: current.info, game: state }
+            const landed = state.crew.filter((astronaut) => !current.game.crew.some((old) => old.id === astronaut.id))
             return {
               ...current,
+              effect: landed.length > 0 ? { key: (current.effect?.key ?? 0) + 1, fx: 'lander' } : current.effect,
+              log: [...current.log, ...landed.map((astronaut) => ({ day: state.day, text: `🚀 ${crewInfo(astronaut.id).name} has landed and joins the crew.`, tone: 'good' as const }))],
               game: state,
               plan: planForNewDay(state, current.plan),
               modal: state.event ? { kind: 'event' } : null,

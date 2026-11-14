@@ -258,7 +258,14 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
   for (const member of report.crew) {
     const mood = member.moodAfter - member.moodBefore
     const health = member.healthAfter - (member.healthBefore - member.hurt)
-    const why = member.why.map((reason) => WHY_WORDS[reason]).slice(0, 2).join(', ')
+    // Say who: "with a friend, annoyed" on one line tells the player nothing they can act on.
+    const words = (reason: Why) =>
+      reason === 'friend' && member.friend
+        ? `happy beside ${crewInfo(member.friend).name}`
+        : reason === 'rival' && member.rival
+          ? `grumpy beside ${crewInfo(member.rival).name}`
+          : WHY_WORDS[reason]
+    const why = member.why.map(words).slice(0, 3).join(', ')
     const parts: string[] = []
     if (mood !== 0 || why) parts.push(`☺ ${mood === 0 ? '±0' : signed(mood)}`)
     if (health !== 0) parts.push(`♥ ${signed(health)}`)

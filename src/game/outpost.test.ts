@@ -16,6 +16,7 @@ import {
   createGame,
   emptyPlan,
   handoverReady,
+  panelsFixed,
   tripDays,
   jobProblem,
   powerAvailable,
@@ -223,6 +224,13 @@ describe('rover trips', () => {
     expect(done.report.finished).toEqual(['ice'])
     const after = resolveDay(done.state, CALM, planOf(done.state, ['life']))
     expect(after.report.air.made).toBe(RULES.lifeAirWithIce)
+  })
+
+  it('someone who loves fixing things brings back one more solar panel', () => {
+    expect(panelsFixed(4, 3)).toBe(3)
+    expect(panelsFixed(4, 2)).toBe(2)
+    expect(panelsFixed(4, 1)).toBe(1)
+    expect(panelsFixed(1, 3)).toBe(1)
   })
 
   it('someone who loves driving does a two-day trip in one day', () => {

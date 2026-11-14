@@ -40,6 +40,7 @@ import type { PlaceId } from '../scene/layout.ts'
 import { Scene, type Anchor, type SceneEffect } from '../scene/Scene.tsx'
 import { hudOf, type Cue, type Hud, type Tone } from '../scene/script.ts'
 import type { Pick } from '../scene/world.ts'
+import { isMuted, play, setMuted } from '../sound.ts'
 import { Avatar } from './Avatar.tsx'
 import { Pips } from './bits.tsx'
 import { CONDITION_WORDS, JOB_ICONS, MISSION_ICONS, longDate, plural } from './words.ts'
@@ -55,6 +56,8 @@ interface Props {
   script: Cue[] | null
   speed: number
   effect: SceneEffect | null
+  /** A card is open over the game: the keyboard is not for the base right now. */
+  locked: boolean
   /** Everything that has happened so far, and a way to add a line to it. */
   log: LogLine[]
   onLog: (text: string, tone: Tone) => void
@@ -183,6 +186,10 @@ export function GameScreen(props: Props) {
   const [timeLabel, setTimeLabel] = useState('Morning')
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null)
   const [hovered, setHovered] = useState<Pick | null>(null)
+  const [quiet, setQuiet] = useState(isMuted())
+  // The day the player paused. Belonging to one day, it is forgotten when the next one starts.
+  const [heldDay, setHeldDay] = useState<number | null>(null)
+  const held = phase === 'play' && heldDay === dayKey
   // The row of the mission window the mouse is over.
   const [goalOver, setGoalOver] = useState<MissionId | 'handover' | null>(null)
 
@@ -210,17 +217,23 @@ export function GameScreen(props: Props) {
     if (cue.kind === 'caption') {
       setCaption({ text: cue.text, tone: cue.tone })
       props.onLog(cue.text, cue.tone)
+      if (cue.text.startsWith('⭐')) play('star')
+      else if (cue.text.includes('storm hits')) play('storm')
+      else if (cue.tone === 'bad') play('bad')
     } else if (cue.kind === 'note') {
       props.onLog(cue.text, cue.tone)
     } else if (cue.kind === 'float') {
       // The words that float up over a person or a place, with whose they are.
       const whose = typeof cue.at === 'string' ? PLACE_WORDS[cue.at][0] : crewInfo(cue.at.who).name
       props.onLog(`${whose}: ${cue.text}`, cue.tone)
+      play(cue.tone === 'bad' ? 'bad' : 'good')
     } else if (cue.kind === 'time') {
       setTimeLabel(cue.label)
+      if (cue.label === 'Evening') play('evening')
     } else if (cue.kind === 'hud') {
       setPlayed((current) => ({ day: dayKey, hud: { ...(current && current.day === dayKey ? current.hud : hudOf(game)), ...cue.patch } }))
     } else if (cue.kind === 'alert') {
+      play('alert')
       props.onAlert()
     } else if (cue.kind === 'end') {
       props.onDayEnd()
@@ -234,15 +247,46 @@ export function GameScreen(props: Props) {
       if (!canRun(game, module)) return say(`The ${MODULES[module].name} cannot run today.`)
       if (MODULES[module].power > available - used) return say(`Not enough power left for the ${MODULES[module].name}. Switch something else off first.`)
     }
+    play(turningOn ? 'on' : 'off')
     props.onTogglePower(module)
   }
 
   const assign = (id: string, job: Job) => {
     const problem = choiceProblem(game, plan, id, job)
     if (problem) return say(problem)
+    play('assign')
     props.onAssign(id, job)
     props.onSelect(null)
   }
+
+  const start = () => {
+    play('start')
+    props.onStart()
+  }
+
+  // The keyboard: Space starts the day or pauses it, F is faster, 1 to 5 pick an astronaut,
+  // Escape lets go of them. Keys do nothing while a card is open.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (props.locked || event.ctrlKey || event.metaKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      const typing = target && ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'SELECT'].includes(target.tagName)
+      if (event.code === 'Space' && !typing) {
+        event.preventDefault()
+        if (planning) start()
+        else setHeldDay(held ? null : dayKey)
+      } else if (event.key === 'f' || event.key === 'F') {
+        if (!planning) props.onSpeed()
+      } else if (event.key === 'Escape') {
+        props.onSelect(null)
+      } else if (planning && /^[1-9]$/.test(event.key)) {
+        const astronaut = game.crew[Number(event.key) - 1]
+        if (astronaut && !astronaut.away) props.onSelect(selected === astronaut.id ? null : astronaut.id)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   const onPick = (pick: Pick | null) => {
     if (!planning) return
@@ -314,6 +358,18 @@ export function GameScreen(props: Props) {
           <button type="button" className="help" onClick={props.onHelp} disabled={!planning}>
             ? How to play
           </button>
+          <button
+            type="button"
+            className="help"
+            aria-label={quiet ? 'Turn the sound on' : 'Turn the sound off'}
+            onClick={() => {
+              setMuted(!quiet)
+              setQuiet(!quiet)
+              if (quiet) play('click')
+            }}
+          >
+            {quiet ? '🔇' : '🔊'}
+          </button>
           <button type="button" className={guideNew > 0 ? 'help guide-button fresh' : 'help guide-button'} onClick={props.onGuide} disabled={!planning}>
             📖 Field guide
             {guideNew > 0 && <span className="guide-new">{guideNew} new</span>}
@@ -343,7 +399,7 @@ export function GameScreen(props: Props) {
 
       {/* The picture is the game. Everything else floats over it. */}
       <section className="scene-wrap">
-        <Scene game={game} plan={plan} dayKey={dayKey} script={script} speed={speed} selected={planning ? selected : null} targets={targets} effect={effect} onPick={onPick} onHover={setHovered} onCue={onCue} onAnchor={setAnchor} />
+        <Scene game={game} plan={plan} dayKey={dayKey} script={script} speed={held ? 0 : speed} selected={planning ? selected : null} targets={targets} effect={effect} onPick={onPick} onHover={setHovered} onCue={onCue} onAnchor={setAnchor} />
 
         <div className="left-float">
         {/* The crew, as small portraits. Clicking one picks that astronaut, just like clicking
@@ -470,13 +526,16 @@ export function GameScreen(props: Props) {
                     <span className="note">🔋 The battery only saves {RULES.batteryCap}. {available - used - RULES.batteryCap} power will be wasted.</span>
                   )}
                 </div>
-                <button type="button" className="primary" onClick={props.onStart}>
+                <button type="button" className="primary" onClick={start}>
                   Start day {game.day} ▶
                 </button>
               </>
             ) : (
               <div className="clock">
-                <span className="clock-label">{timeLabel}</span>
+                <span className="clock-label">{held ? 'Paused' : timeLabel}</span>
+                <button type="button" className="speed" onClick={() => setHeldDay(held ? null : dayKey)}>
+                  {held ? '▶ Resume' : '⏸ Pause'}
+                </button>
                 <button type="button" className="speed" onClick={props.onSpeed}>
                   {speed > 1 ? '▶ Normal speed' : '⏩ Faster'}
                 </button>
