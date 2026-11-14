@@ -3,9 +3,10 @@
 CLAUDE.local.md
 01-复盘.md
 
-# 给 agent 的工作说明：只在本机用，不进仓库
+# 给 agent 的工作说明和中文工作笔记：只在本机用，不进仓库
 AGENTS.md
 CLAUDE.md
+docs/
 
 # 依赖和构建产物
 node_modules/
