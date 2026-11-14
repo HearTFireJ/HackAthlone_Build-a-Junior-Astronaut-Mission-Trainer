@@ -137,42 +137,41 @@ button:disabled { cursor: not-allowed; }
 .meter.tone-bad { border-color: var(--bad); background: rgba(255, 107, 122, 0.1); }
 .meter.tone-bad .meter-detail { color: var(--bad); font-weight: 700; }
 
-/* The missions, as small progress bars under the crew. */
-.goals { list-style: none; padding: 0; margin: 0.2rem 0 0; display: grid; gap: 0.25rem; }
-.goal { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 0.4rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.2rem 0.5rem; font-size: 0.8rem; }
-.goal-name { font-weight: 700; }
+/* The missions: a small window floating in the top right corner of the picture. */
+.goals {
+  position: absolute; right: 0.6rem; top: 0.6rem; z-index: 2; width: 13.6rem; list-style: none; margin: 0; padding: 0.45rem 0.6rem;
+  display: grid; gap: 0.35rem; background: rgba(8, 11, 24, 0.82); border: 1px solid var(--line); border-radius: 14px; backdrop-filter: blur(3px);
+}
+.goal { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 0.4rem; font-size: 0.78rem; }
+.goal-name { font-weight: 700; white-space: nowrap; }
 .goal-count { color: var(--muted); font-weight: 600; text-align: right; }
-.goal .bar { grid-column: 1 / -1; display: block; height: 5px; margin: 0.1rem 0 0; }
+.goal .bar { grid-column: 1 / -1; display: block; height: 4px; margin: 0.12rem 0 0; }
 .goal .bar-fill { display: block; }
-.goal-needs { grid-column: 1 / -1; color: var(--muted); font-size: 0.74rem; line-height: 1.25; }
-.goal.done { border-color: var(--good); background: rgba(95, 211, 141, 0.1); }
+.goal-needs { grid-column: 1 / -1; color: var(--muted); font-size: 0.72rem; line-height: 1.25; }
 .goal.done .goal-name, .goal.done .goal-count { color: var(--good); }
 .goal.done .bar-fill { background: var(--good); }
 
-.stage { display: grid; grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr); min-height: 0; }
-
-/* The crew, down the left side. */
-.crew-col { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.55rem; overflow-y: auto; min-height: 0; background: rgba(10, 15, 31, 0.92); border-right: 1px solid var(--line); }
-.crew-card { position: relative; border: 2px solid var(--line); border-radius: 14px; background: var(--surface-2); }
-.crew-card.picked { border-color: var(--info); box-shadow: 0 0 0 3px rgba(108, 184, 255, 0.25); }
-.crew-card.state-unable { border-color: rgba(255, 107, 122, 0.6); }
-.crew-head { display: flex; gap: 0.5rem; align-items: center; width: 100%; text-align: left; background: none; border: 0; padding: 0.35rem 0.5rem; border-radius: 12px; }
-.crew-head:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); }
-.crew-head:disabled { cursor: default; }
+/* The crew: small portraits floating down the left edge. They show, they are not buttons. */
+.crew-strip { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 2; width: 13.6rem; list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; pointer-events: none; }
+.crew-chip { display: flex; gap: 0.45rem; align-items: center; background: rgba(8, 11, 24, 0.82); border: 1px solid var(--line); border-radius: 999px 14px 14px 999px; padding: 0.18rem 0.6rem 0.18rem 0.2rem; backdrop-filter: blur(3px); }
+.crew-chip.picked { border-color: var(--info); box-shadow: 0 0 0 2px rgba(108, 184, 255, 0.25); }
+.crew-chip.state-unable { border-color: rgba(255, 107, 122, 0.6); }
 .avatar { flex: none; }
-.crew-main { display: grid; gap: 0.05rem; min-width: 0; flex: 1; }
-.crew-name { font-weight: 800; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
-.crew-stats { display: flex; flex-wrap: wrap; gap: 0 0.5rem; }
-.pips { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; letter-spacing: -0.02em; }
+.crew-main { display: grid; min-width: 0; flex: 1; line-height: 1.15; }
+.crew-name { font-weight: 800; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+.crew-name .tag { padding: 0 0.4rem; font-size: 0.64rem; }
+.crew-away { color: var(--muted); font-weight: 600; font-size: 0.7rem; }
+.crew-stats { display: flex; gap: 0 0.4rem; white-space: nowrap; }
+.crew-note { background: rgba(8, 11, 24, 0.74); border: 1px solid var(--line); border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.74rem; color: #d7defa; }
+.pips { display: inline-flex; align-items: center; font-size: 0.72rem; letter-spacing: -0.02em; }
 .pips-label { display: none; }
 .pip { color: #3a4470; margin-right: 1px; }
 .tone-health .pip.on { color: #ff7b8a; }
 .tone-mood .pip.on { color: var(--power); }
 .tone-fed .pip.on { color: var(--good); }
-.crew-job { font-size: 0.8rem; font-weight: 600; color: #cfd6f3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* The list of jobs opens beside the card, over the edge of the picture. */
-.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: min(30rem, 62vw); background: var(--surface); border: 2px solid var(--info); border-radius: 14px; padding: 0.55rem; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); display: grid; gap: 0.4rem; }
+/* The list of jobs opens beside the astronaut, on the picture. */
+.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: 288px; overflow-y: auto; background: rgba(15, 21, 43, 0.96); border: 2px solid var(--info); border-radius: 14px; padding: 0.5rem; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); display: grid; gap: 0.35rem; align-content: start; }
 .job-menu-about { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.4rem; margin: 0; font-size: 0.8rem; color: #d7defa; padding-right: 1.6rem; }
 .job-menu-about strong { font-size: 1rem; margin-right: 0.15rem; }
 .trait { border: 1px solid var(--line); border-radius: 999px; padding: 0.05rem 0.5rem; white-space: nowrap; }
@@ -185,8 +184,8 @@ button:disabled { cursor: not-allowed; }
 .trait.friend { border-color: var(--good); }
 .trait.clash { border-color: var(--warn); }
 .job-menu-about .tired { color: var(--warn); border-color: var(--warn); }
-.job-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.3rem; }
-.job { display: grid; gap: 0.05rem; align-content: start; text-align: left; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); padding: 0.3rem 0.45rem; }
+.job-list { display: grid; gap: 0.2rem; }
+.job { display: grid; gap: 0; align-content: start; text-align: left; border-radius: 9px; border: 1px solid transparent; background: var(--surface-2); padding: 0.22rem 0.5rem; }
 .job:hover:not(:disabled) { border-color: var(--info); }
 .job.chosen { border-color: var(--power); background: rgba(255, 209, 102, 0.12); }
 .job:disabled { opacity: 0.5; }
@@ -195,26 +194,17 @@ button:disabled { cursor: not-allowed; }
 .job .heart { color: #ff7b8a; }
 .job-out { float: right; margin-left: 0.4rem; color: var(--good); font-weight: 800; white-space: nowrap; }
 
-/* Messages from Mission Control, under the crew. */
-.radio { margin-top: auto; display: grid; gap: 0.35rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0.5rem 0.6rem; font-size: 0.82rem; color: #d7defa; }
-.radio h2 { font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--power); }
-.radio-log { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
-.radio-log li { border-left: 3px solid var(--line); padding-left: 0.45rem; }
-.radio-log li.radio-when { border: 0; padding: 0; color: var(--muted); font-weight: 700; }
-.radio-log li.tone-good { border-color: var(--good); }
-.radio-log li.tone-warn { border-color: var(--warn); }
-.radio-log li.tone-bad { border-color: var(--bad); }
-.radio .fact { font-size: 0.78rem; }
-.radio .hint { font-size: 0.72rem; }
 .activity-quiet { color: var(--good); }
 .activity-active { color: var(--warn); }
 .activity-very-active { color: var(--bad); }
 
-/* The picture of the base, and the few things laid over it. */
+/* The picture of the base fills the screen under the top bar. The rest floats over it. */
 .scene-wrap { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: #6f7383; }
 .scene { display: block; width: 100%; height: 100%; touch-action: manipulation; }
+/* The part of the picture that nothing floats over: the base is fitted into this box. */
+.scene-safe { position: absolute; left: 14rem; right: 14rem; top: 0.3rem; bottom: 1.4rem; visibility: hidden; pointer-events: none; }
 .subtitle {
-  position: absolute; left: 50%; bottom: 0.7rem; transform: translateX(-50%); max-width: min(46rem, calc(100% - 22rem));
+  position: absolute; left: 50%; bottom: 0.7rem; transform: translateX(-50%); max-width: min(46rem, calc(100% - 26rem)); z-index: 3;
   background: rgba(8, 11, 24, 0.86); border: 2px solid var(--line); border-radius: 14px; padding: 0.4rem 0.9rem;
   font-size: 1rem; font-weight: 700; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); animation: rise 0.25s ease-out;
 }
@@ -226,12 +216,12 @@ button:disabled { cursor: not-allowed; }
 .subtitle.tone-bad { border-color: var(--bad); color: #ffd6db; }
 @keyframes rise { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .toast {
-  position: absolute; left: 50%; top: 0.8rem; transform: translateX(-50%); max-width: min(34rem, 90%);
+  z-index: 7; position: absolute; left: 50%; top: 0.8rem; transform: translateX(-50%); max-width: min(34rem, 90%);
   background: rgba(8, 11, 24, 0.94); border: 2px solid var(--warn); border-radius: 12px; padding: 0.4rem 0.8rem;
   font-size: 0.92rem; font-weight: 600; color: #ffe3b0; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); animation: drop 0.2s ease-out;
 }
 @keyframes drop { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
-.dock { position: absolute; right: 0.8rem; bottom: 0.7rem; display: grid; justify-items: end; gap: 0.4rem; max-width: 19rem; }
+.dock { z-index: 3; position: absolute; right: 0.8rem; bottom: 0.7rem; display: grid; justify-items: end; gap: 0.4rem; max-width: 19rem; }
 .warnings { display: grid; gap: 0.2rem; justify-items: end; }
 .note { background: rgba(8, 11, 24, 0.86); border: 1px solid var(--line); border-radius: 999px; padding: 0.12rem 0.6rem; font-size: 0.78rem; color: #d7defa; text-align: right; }
 .note.warn { color: var(--warn); border-color: rgba(255, 180, 84, 0.5); }
@@ -309,16 +299,20 @@ button:disabled { cursor: not-allowed; }
 .report-list { padding-left: 1.2rem; display: grid; gap: 0.2rem; font-size: 0.92rem; }
 .report-list .win { color: var(--good); font-weight: 700; }
 
-/* ---------- small screens: the picture on top, the crew underneath ---------- */
+/* ---------- small screens: the picture on top, the rest underneath ---------- */
 @media (max-width: 900px) {
   .game { height: auto; min-height: 100dvh; grid-template-rows: auto auto; }
-  .stage { grid-template-columns: 1fr; }
-  .scene-wrap { order: -1; overflow: visible; display: grid; }
-  .scene { height: 70vw; min-height: 250px; }
-  .crew-col { border-right: 0; overflow: visible; }
-  .job-menu { position: static; width: auto; margin: 0.4rem; }
-  .subtitle { position: static; transform: none; max-width: none; margin: 0.4rem; font-size: 0.85rem; animation: none; }
-  .subtitle.plain { display: none; }
+  .scene-wrap { overflow: visible; display: grid; align-content: start; }
+  .scene { height: max(70vw, 250px); }
+  .scene-safe { left: 0; right: 0; top: 0; bottom: auto; height: max(70vw, 250px); }
+  /* Under the picture, in the order they are needed: what is said, the jobs, the switches,
+     the start button, and then the crew and the missions. */
+  .subtitle { order: 1; position: static; transform: none; max-width: none; margin: 0.4rem; font-size: 0.85rem; animation: none; white-space: normal; }
+  .job-menu { order: 2; position: relative; left: auto !important; top: auto !important; width: auto; margin: 0.4rem; max-height: none !important; }
+  .power-row { order: 3; }
+  .dock { order: 4; }
+  .crew-strip, .goals { order: 5; position: static; width: auto; margin: 0.4rem; pointer-events: auto; }
+  .crew-strip { grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr)); }
   .toast { position: fixed; top: auto; bottom: 4.5rem; z-index: 8; }
   .dock { position: static; max-width: none; justify-items: stretch; margin: 0.4rem; }
   .dock .primary { width: 100%; }

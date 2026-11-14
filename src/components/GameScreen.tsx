@@ -34,7 +34,7 @@ import {
 } from '../game/outpost.ts'
 import { sunActivity, weatherOn, yesterdayOf } from '../game/weather.ts'
 import type { PlaceId } from '../scene/layout.ts'
-import { Scene, type SceneEffect } from '../scene/Scene.tsx'
+import { Scene, type Anchor, type SceneEffect } from '../scene/Scene.tsx'
 import { hudOf, type Cue, type Hud, type Tone } from '../scene/script.ts'
 import type { Pick } from '../scene/world.ts'
 import { Avatar } from './Avatar.tsx'
@@ -161,7 +161,8 @@ export function GameScreen(props: Props) {
   const [played, setPlayed] = useState<{ day: number; hud: Hud } | null>(null)
   const hud = played && played.day === dayKey ? played.hud : null
   const [caption, setCaption] = useState<LogLine | null>(null)
-  const [log, setLog] = useState<LogLine[]>([])
+  // Where the picked astronaut stands on the picture: the job menu opens beside them.
+  const [anchor, setAnchor] = useState<Anchor | null>(null)
   const [timeLabel, setTimeLabel] = useState('Morning')
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null)
   const [hovered, setHovered] = useState<Pick | null>(null)
@@ -188,12 +189,9 @@ export function GameScreen(props: Props) {
 
   const onCue = (cue: Cue) => {
     if (cue.kind === 'caption') {
-      const line = { text: cue.text, tone: cue.tone }
-      setCaption(line)
-      setLog((lines) => [...lines, line])
+      setCaption({ text: cue.text, tone: cue.tone })
     } else if (cue.kind === 'time') {
       setTimeLabel(cue.label)
-      if (cue.label === 'Morning') setLog([])
     } else if (cue.kind === 'hud') {
       setPlayed((current) => ({ day: dayKey, hud: { ...(current && current.day === dayKey ? current.hud : hudOf(game)), ...cue.patch } }))
     } else if (cue.kind === 'alert') {
@@ -305,119 +303,93 @@ export function GameScreen(props: Props) {
         </div>
       </header>
 
-      <div className="stage">
-        <aside className="crew-col">
+      {/* The picture is the game. Everything else floats over it. */}
+      <section className="scene-wrap">
+        <Scene game={game} plan={plan} dayKey={dayKey} script={script} speed={speed} selected={planning ? selected : null} targets={targets} effect={effect} onPick={onPick} onHover={setHovered} onCue={onCue} onAnchor={setAnchor} />
+
+        {/* The crew, as small portraits. They only show how everyone is: orders are given on the picture. */}
+        <ul className="crew-strip" aria-label="Crew">
           {game.crew.map((astronaut) => {
             const stats = shown.crew[astronaut.id] ?? astronaut
             const state = condition({ ...astronaut, health: stats.health, mood: stats.mood })
-            const job = plan.jobs[astronaut.id]
-            const problem = job && !astronaut.away ? jobProblem(game, plan, astronaut.id, job) : null
             const away = astronaut.away
             const picked = planning && selected === astronaut.id
-            const real: Job | undefined = problem ? { kind: astronaut.health <= 1 ? 'sickbay' : 'rest' } : job
-            const jobLabel = away
-              ? `🚙 ${TRIPS[away.trip].name} · ${plural(away.daysLeft, 'day')} left`
-              : real
-                ? `${JOB_ICONS[real.kind]} ${real.kind === 'trip' && real.trip ? TRIPS[real.trip].name : JOBS[real.kind].name}`
-                : '🛋️ Rest'
             return (
-              <div key={astronaut.id} className={`crew-card state-${state}${picked ? ' picked' : ''}`}>
-                <button type="button" className="crew-head" disabled={!!away || !planning} onClick={() => props.onSelect(picked ? null : astronaut.id)} aria-expanded={picked}>
-                  <Avatar id={astronaut.id} />
-                  <span className="crew-main">
-                    <span className="crew-name">
-                      {crewInfo(astronaut.id).name}
-                      {state !== 'well' && <span className={`tag tag-${state}`}>{CONDITION_WORDS[state]}</span>}
-                    </span>
-                    <span className="crew-stats">
-                      <Pips label="Health" icon="♥" value={stats.health} max={RULES.maxStat} tone="health" />
-                      <Pips label="Mood" icon="☺" value={stats.mood} max={RULES.maxStat} tone="mood" />
-                      <Pips label="Fed" icon="●" value={stats.fed} max={RULES.fullFed} tone="fed" />
-                    </span>
-                    <span className="crew-job">{jobLabel}</span>
+              <li key={astronaut.id} className={`crew-chip state-${state}${picked ? ' picked' : ''}`}>
+                <Avatar id={astronaut.id} size={34} />
+                <span className="crew-main">
+                  <span className="crew-name">
+                    {crewInfo(astronaut.id).name}
+                    {away ? <span className="crew-away">🚙 {plural(away.daysLeft, 'day')} left</span> : state !== 'well' && <span className={`tag tag-${state}`}>{CONDITION_WORDS[state]}</span>}
                   </span>
-                </button>
-              </div>
+                  <span className="crew-stats">
+                    <Pips label="Health" icon="♥" value={stats.health} max={RULES.maxStat} tone="health" />
+                    <Pips label="Mood" icon="☺" value={stats.mood} max={RULES.maxStat} tone="mood" />
+                    <Pips label="Fed" icon="●" value={stats.fed} max={RULES.fullFed} tone="fed" />
+                  </span>
+                </span>
+              </li>
             )
           })}
-          {game.arriving && <p className="hint">🚀 {crewInfo(game.arriving).name} lands tomorrow morning.</p>}
+          {game.arriving && <li className="crew-note">🚀 {crewInfo(game.arriving).name} lands tomorrow.</li>}
+        </ul>
 
-          <ul className="goals" aria-label="Missions">
-            {MISSION_IDS.map((id) => {
-              const done = missionDone(shown.missions, id)
-              return (
-                <li key={id} className={done ? 'goal done' : 'goal'} title={`${MISSIONS[id].how} Reward: ${MISSIONS[id].reward}`}>
-                  <span className="goal-name">
-                    {done ? '✅' : MISSION_ICONS[id]} {MISSIONS[id].name}
-                  </span>
-                  <span className="bar">
-                    <span className="bar-fill" style={{ width: `${Math.min(100, (100 * shown.missions[id]) / MISSIONS[id].goal)}%` }} />
-                  </span>
-                  <span className="goal-count">
-                    {Math.min(shown.missions[id], MISSIONS[id].goal)}/{MISSIONS[id].goal}
-                  </span>
-                </li>
-              )
-            })}
-            <li className={handoverReady(game) ? 'goal done' : 'goal'}>
-              <span className="goal-name">🤝 Hand over the base</span>
-              <span className="goal-count">{handoverReady(game) ? 'ready now' : 'not yet'}</span>
-              {/* The fifth star. Say what is still missing, so it is never a surprise at the end. */}
-              {!handoverReady(game) && <span className="goal-needs">Needs {handoverNeeds(game).join(', ')}.</span>}
-            </li>
-          </ul>
-
-          <section className="radio" aria-label="Messages from Mission Control">
-            <h2>📡 Mission Control</h2>
-            {planning && (
-              <p>
-                {game.radioYesterday ? (
-                  <>
-                    Yesterday the Sun fired {yesterday.flareCount === 0 ? 'no flares' : plural(yesterday.flareCount, 'flare')}
-                    {yesterday.strongestFlare ? ` (biggest: ${yesterday.strongestFlare})` : ''}. The Sun is{' '}
-                    <strong className={`activity-${activity.replace(' ', '-')}`}>{activity}</strong>.
-                  </>
-                ) : (
-                  <>No Sun report: the Radio Dish was off yesterday.</>
-                )}{' '}
-                {on.includes('comms') ? 'Radio on: we will call if there is a big flare.' : 'Radio off: we cannot warn you today.'}
-              </p>
-            )}
-            {log.length > 0 && (
-              <ul className="radio-log">
-                {planning && <li className="radio-when">Yesterday:</li>}
-                {log.map((line, index) => (
-                  <li key={index} className={`tone-${line.tone}`}>
-                    {line.text}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </aside>
-
-        <section className="scene-wrap">
-          <Scene game={game} plan={plan} dayKey={dayKey} script={script} speed={speed} selected={planning ? selected : null} targets={targets} effect={effect} onPick={onPick} onHover={setHovered} onCue={onCue} />
-
-          {hover ? (
-            <div className="subtitle info">
-              <strong>{hover[0]}</strong> {hover[1]}
-            </div>
-          ) : planning ? (
-            <div className="subtitle plain">
-              {selected
-                ? `👉 Now click where ${crewInfo(selected).name} should go.`
-                : '👉 Share out the power, give everyone a job, then start the day.'}
-            </div>
-          ) : (
-            caption && (
-              <div className={`subtitle tone-${caption.tone}`} key={caption.text}>
-                {caption.text}
-              </div>
+        {/* The missions, and the fifth star. */}
+        <ul className="goals" aria-label="Missions">
+          {MISSION_IDS.map((id) => {
+            const done = missionDone(shown.missions, id)
+            return (
+              <li key={id} className={done ? 'goal done' : 'goal'} title={`${MISSIONS[id].how} Reward: ${MISSIONS[id].reward}`}>
+                <span className="goal-name">
+                  {done ? '✅' : MISSION_ICONS[id]} {MISSIONS[id].name}
+                </span>
+                <span className="goal-count">
+                  {Math.min(shown.missions[id], MISSIONS[id].goal)}/{MISSIONS[id].goal}
+                </span>
+                <span className="bar">
+                  <span className="bar-fill" style={{ width: `${Math.min(100, (100 * shown.missions[id]) / MISSIONS[id].goal)}%` }} />
+                </span>
+              </li>
             )
-          )}
+          })}
+          <li className={handoverReady(game) ? 'goal done' : 'goal'}>
+            <span className="goal-name">🤝 Hand over the base</span>
+            <span className="goal-count">{handoverReady(game) ? 'ready' : 'not yet'}</span>
+            {/* The fifth star. Say what is still missing, so it is never a surprise at the end. */}
+            {!handoverReady(game) && <span className="goal-needs">Needs {handoverNeeds(game).join(', ')}.</span>}
+          </li>
+        </ul>
 
-          {planning && selected && <JobMenu astronautId={selected} game={game} plan={plan} onAssign={(choice) => assign(selected, choice)} onClose={() => props.onSelect(null)} />}
+        {/* One line at the bottom: what is under the mouse, or what Mission Control says right now. */}
+        {hover ? (
+          <div className="subtitle info">
+            <strong>{hover[0]}</strong> {hover[1]}
+          </div>
+        ) : planning ? (
+          <div className="subtitle plain">
+            {selected ? (
+              `👉 Pick a job for ${crewInfo(selected).name}, or click a place.`
+            ) : game.day === 1 ? (
+              '👉 Click an astronaut to give them a job. Click a ⚡ switch to share out the power.'
+            ) : game.radioYesterday ? (
+              <>
+                📡 Yesterday the Sun fired {yesterday.flareCount === 0 ? 'no flares' : plural(yesterday.flareCount, 'flare')}
+                {yesterday.strongestFlare ? ` (biggest: ${yesterday.strongestFlare})` : ''}. The Sun is{' '}
+                <strong className={`activity-${activity.replace(' ', '-')}`}>{activity}</strong>.
+              </>
+            ) : (
+              '📡 No Sun report: the Radio Dish was off yesterday.'
+            )}
+          </div>
+        ) : (
+          caption && (
+            <div className={`subtitle tone-${caption.tone}`} key={caption.text}>
+              {caption.text}
+            </div>
+          )
+        )}
+
+        {planning && selected && <JobMenu astronautId={selected} game={game} plan={plan} anchor={anchor} onAssign={(choice) => assign(selected, choice)} onClose={() => props.onSelect(null)} />}
 
           {/* On a small screen the switches in the picture are too small to tap: big ones go here. */}
           {planning && (
@@ -436,7 +408,7 @@ export function GameScreen(props: Props) {
             </div>
           )}
 
-          <div className="dock">
+        <div className="dock">
             {planning ? (
               <>
                 <div className="warnings">
@@ -461,9 +433,8 @@ export function GameScreen(props: Props) {
                 </button>
               </div>
             )}
-          </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   )
 }
@@ -490,8 +461,15 @@ function Meter({ icon, label, value, detail, tone, gold = false }: { icon: strin
   )
 }
 
-/** The list of jobs that opens beside an astronaut's card. */
-function JobMenu({ astronautId, game, plan, onAssign, onClose }: { astronautId: string; game: GameState; plan: Plan; onAssign: (job: Job) => void; onClose: () => void }) {
+const MENU_WIDTH = 288
+const MENU_HEIGHT = 400
+
+/**
+ * The list of jobs. It opens on the picture, just left of the crew quarters where the
+ * astronaut stands. That way it covers none of the crew, and the places people are sent
+ * to (greenhouse, lab, building site, rover bay) stay in view and can still be clicked.
+ */
+function JobMenu({ astronautId, game, plan, anchor, onAssign, onClose }: { astronautId: string; game: GameState; plan: Plan; anchor: Anchor | null; onAssign: (job: Job) => void; onClose: () => void }) {
   const info = crewInfo(astronautId)
   const astronaut = game.crew.find((member) => member.id === astronautId)
   const current = plan.jobs[astronautId]
@@ -506,8 +484,18 @@ function JobMenu({ astronautId, game, plan, onAssign, onClose }: { astronautId: 
     }
   }
   const willBeTired = !!astronaut && astronaut.streak + 1 >= RULES.tiredAfter
+
+  let place: { left: number; top: number; maxHeight: number } | undefined
+  if (anchor) {
+    const edge = Math.min(anchor.x - 44, anchor.roomLeft - 10)
+    const left = edge - MENU_WIDTH >= 8 ? edge - MENU_WIDTH : Math.max(8, Math.min(anchor.x + 44, anchor.width - MENU_WIDTH - 8))
+    const maxHeight = Math.min(MENU_HEIGHT, anchor.height - 16)
+    const top = Math.max(8, Math.min(anchor.y - maxHeight * 0.8, anchor.height - maxHeight - 8))
+    place = { left, top, maxHeight }
+  }
+
   return (
-    <div className="job-menu">
+    <div className="job-menu" style={place}>
       <button type="button" className="job-menu-close" onClick={onClose} aria-label="Close">
         ✕
       </button>
@@ -524,11 +512,13 @@ function JobMenu({ astronautId, game, plan, onAssign, onClose }: { astronautId: 
         ))}
         {willBeTired && <span className="trait tired">😴 Tired: needs a day off</span>}
       </p>
-      <div className="job-grid">
+      <div className="job-list">
         {choices.map((choice) => {
           const why = jobProblem(game, plan, astronautId, choice.job)
           const chosen = current?.kind === choice.job.kind && current?.trip === choice.job.trip
           const out = why ? null : jobOutput(game, astronautId, choice.job)
+          // The number already says what the job makes: only "Outside!" is still worth a line.
+          const note = why ?? (out ? (JOBS[choice.job.kind].outside ? 'Outside!' : null) : choice.does)
           return (
             <button key={`${choice.job.kind}-${choice.job.trip ?? ''}`} type="button" className={`job${chosen ? ' chosen' : ''}`} disabled={!!why} onClick={() => onAssign(choice.job)}>
               <span className="job-title">
@@ -536,7 +526,7 @@ function JobMenu({ astronautId, game, plan, onAssign, onClose }: { astronautId: 
                 {JOB_ICONS[choice.job.kind]} {choice.label}
                 {info.loves.includes(choice.job.kind) && <span className="heart" title={`${info.name} loves this`}> ♥</span>}
               </span>
-              <span className="job-does">{why ?? choice.does}</span>
+              {note && <span className="job-does">{note}</span>}
             </button>
           )
         })}

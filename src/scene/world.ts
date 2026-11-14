@@ -24,6 +24,7 @@ import {
   type Rect,
   type Spot,
   type Step,
+  HAB,
 } from './layout.ts'
 import { hudOf, type Cue, type Hud, type Tone } from './script.ts'
 
@@ -612,6 +613,18 @@ export class World {
     return { x: p.x * this.view.scale + this.view.ox, y: p.y * this.view.scale + this.view.oy }
   }
 
+  /**
+   * Where an astronaut is on the canvas, in screen pixels: the middle of the figure.
+   * `roomLeft` is the left edge of the crew quarters, where everyone waits in the morning:
+   * a menu that stays left of it covers none of the crew.
+   */
+  anchorOf(id: string): (Pt & { roomLeft: number }) | null {
+    const actor = this.actors.get(id)
+    if (!actor) return null
+    const at = this.toScreen({ x: actor.x, y: actor.y - 30 * PAWN_SCALE })
+    return { ...at, roomLeft: this.toScreen({ x: HAB.x - HAB.r, y: HAB.y }).x }
+  }
+
   /** What is under this point of the canvas (in screen pixels)? */
   pick(x: number, y: number): Pick | null {
     const p = this.toWorld(x, y)
@@ -646,15 +659,19 @@ export class World {
 
   // ---------------------------------------------------------------- painting
 
-  draw(ctx: Ctx, width: number, height: number, dpr: number) {
+  /**
+   * `safe` is the part of the canvas that nothing floats over. The ground is painted
+   * across the whole canvas, but the base itself is fitted into the safe part.
+   */
+  draw(ctx: Ctx, width: number, height: number, dpr: number, safe?: { x: number; y: number; w: number; h: number }) {
     if (!this.game || !this.plan) return
-    // Fit the whole base into the window, with a little room around it.
-    const scale = Math.min(width / VIEW.w, height / VIEW.h)
-    const ox = (width - VIEW.w * scale) / 2 - VIEW.x * scale
-    const oy = (height - VIEW.h * scale) / 2 - VIEW.y * scale
+    const area = safe && safe.w > 80 && safe.h > 80 ? safe : { x: 0, y: 0, w: width, h: height }
+    const scale = Math.min(area.w / VIEW.w, area.h / VIEW.h)
+    const ox = area.x + (area.w - VIEW.w * scale) / 2 - VIEW.x * scale
+    const oy = area.y + (area.h - VIEW.h * scale) / 2 - VIEW.y * scale
     this.view = { scale, ox, oy }
 
-    const key = `${Math.round(width * dpr)}x${Math.round(height * dpr)}`
+    const key = `${Math.round(width * dpr)}x${Math.round(height * dpr)}@${Math.round(ox)},${Math.round(oy)},${scale.toFixed(4)}`
     if (!this.ground || this.groundKey !== key) {
       this.ground = document.createElement('canvas')
       this.ground.width = Math.round(width * dpr)

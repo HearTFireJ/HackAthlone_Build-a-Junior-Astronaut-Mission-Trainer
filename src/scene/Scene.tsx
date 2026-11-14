@@ -21,6 +21,18 @@ interface Props {
   /** Called when the mouse moves onto something else (or onto nothing). */
   onHover: (pick: Pick | null) => void
   onCue: (cue: Cue) => void
+  /** Where the picked astronaut is on the canvas, so a menu can open beside them. */
+  onAnchor: (at: Anchor | null) => void
+}
+
+/** A point on the canvas, and how big the canvas is, all in screen pixels. */
+export interface Anchor {
+  x: number
+  y: number
+  /** The left edge of the crew quarters. */
+  roomLeft: number
+  width: number
+  height: number
 }
 
 /**
@@ -28,8 +40,12 @@ interface Props {
  * sixty times a second by the World, which is plain TypeScript. That keeps the moving
  * picture fast, and keeps it apart from the rules.
  */
-export function Scene({ game, plan, dayKey, script, speed, selected, targets, effect, onPick, onHover, onCue }: Props) {
+export function Scene({ game, plan, dayKey, script, speed, selected, targets, effect, onPick, onHover, onCue, onAnchor }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null)
+  // An invisible box laid out by the stylesheet: the part of the picture nothing floats over.
+  const safe = useRef<HTMLDivElement>(null)
+  const anchorCall = useRef(onAnchor)
+  const lastAnchor = useRef('')
   // What the mouse was over last time, as a short word, so the page only hears about changes.
   const lastHover = useRef('')
   const hoverChanged = (pick: Pick | null) => {
@@ -58,6 +74,7 @@ export function Scene({ game, plan, dayKey, script, speed, selected, targets, ef
     world.selected = selected
     world.targets = new Set(targets)
     world.onCue = onCue
+    anchorCall.current = onAnchor
   })
   useEffect(() => {
     if (effect) getWorld().effect(effect.fx, effect.place)
@@ -86,7 +103,15 @@ export function Scene({ game, plan, dayKey, script, speed, selected, targets, ef
           element.height = h
         }
         world.update(dt)
-        world.draw(ctx, width, height, dpr)
+        const box = safe.current
+        world.draw(ctx, width, height, dpr, box ? { x: box.offsetLeft, y: box.offsetTop, w: box.offsetWidth, h: box.offsetHeight } : undefined)
+        // Tell the page where the picked astronaut is, but only when that changes.
+        const at = world.selected ? world.anchorOf(world.selected) : null
+        const key = at ? `${Math.round(at.x)},${Math.round(at.y)},${width},${height}` : ''
+        if (key !== lastAnchor.current) {
+          lastAnchor.current = key
+          anchorCall.current(at ? { ...at, width, height } : null)
+        }
       }
       frame = requestAnimationFrame(tick)
     }
@@ -102,6 +127,7 @@ export function Scene({ game, plan, dayKey, script, speed, selected, targets, ef
   }
 
   return (
+    <>
     <canvas
       ref={canvas}
       className="scene"
@@ -120,5 +146,7 @@ export function Scene({ game, plan, dayKey, script, speed, selected, targets, ef
       }}
       onClick={(event) => onPick(pickAt(event))}
     />
+    <div ref={safe} className="scene-safe" aria-hidden="true" />
+    </>
   )
 }
