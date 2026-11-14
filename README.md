@@ -86,7 +86,7 @@ AI tools were used heavily in this project, and this section says where.
 - **Game design:** the author chose the challenge and made the design decisions. The AI assistant proposed options and wrote them up.
 - **Text in the game:** drafted by the AI assistant, checked by the author.
 - **Images:** no AI-generated images are used.
-- **Working notes:** `AGENTS.md` and the files in `docs/` are the instructions and notes the author and the AI assistant worked from. They are written in Chinese.
+- **Working notes:** the files in `docs/` are the notes the author and the AI assistant worked from. They are written in Chinese.
 
 No NASA logos or other NASA branding are used anywhere in the project.
 
