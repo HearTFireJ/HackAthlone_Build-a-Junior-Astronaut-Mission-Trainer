@@ -491,9 +491,18 @@ function JobMenu({ astronautId, game, plan, onAssign, onClose }: { astronautId: 
       <button type="button" className="job-menu-close" onClick={onClose} aria-label="Close">
         ✕
       </button>
+      {/* Only what changes which job is the right one: what they love, who they get on
+          with, and whether they need a day off. Each one is a short tag, easy to scan. */}
       <p className="job-menu-about">
-        <strong>{info.name}</strong> loves {info.lovesText}. {info.about} {relationshipLine(astronautId, game)}
-        {willBeTired && <span className="tired"> Has worked {astronaut?.streak} days in a row: one more and {info.name} is tired.</span>}
+        <strong>{info.name}</strong>
+        <span className="trait love">♥ Loves {info.lovesText}</span>
+        {companions(astronautId, FRIENDS, game).map((name) => (
+          <span key={name} className="trait friend">☺ Happier beside {name}</span>
+        ))}
+        {companions(astronautId, CLASHES, game).map((name) => (
+          <span key={name} className="trait clash">☹ Grumpy beside {name}</span>
+        ))}
+        {willBeTired && <span className="trait tired">😴 Tired: needs a day off</span>}
       </p>
       <div className="job-grid">
         {choices.map((choice) => {
@@ -514,16 +523,12 @@ function JobMenu({ astronautId, game, plan, onAssign, onClose }: { astronautId: 
   )
 }
 
-function relationshipLine(id: string, game: GameState): string {
-  const onCrew = (other: string) => game.crew.some((member) => member.id === other)
-  const lines: string[] = []
-  for (const [a, b] of FRIENDS) {
+/** The names of the people on the base who are paired with this one in a list of pairs. */
+function companions(id: string, pairs: [string, string][], game: GameState): string[] {
+  const names: string[] = []
+  for (const [a, b] of pairs) {
     const other = a === id ? b : b === id ? a : null
-    if (other && onCrew(other)) lines.push(`Happier beside ${crewInfo(other).name}.`)
+    if (other && game.crew.some((member) => member.id === other)) names.push(crewInfo(other).name)
   }
-  for (const [a, b] of CLASHES) {
-    const other = a === id ? b : b === id ? a : null
-    if (other && onCrew(other)) lines.push(`Annoyed when stuck with ${crewInfo(other).name}.`)
-  }
-  return lines.join(' ')
+  return names
 }

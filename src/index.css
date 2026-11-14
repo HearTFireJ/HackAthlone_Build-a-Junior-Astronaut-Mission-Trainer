@@ -173,13 +173,18 @@ button:disabled { cursor: not-allowed; }
 
 /* The list of jobs opens beside the card, over the edge of the picture. */
 .job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: min(25rem, 60vw); background: var(--surface); border: 2px solid var(--info); border-radius: 14px; padding: 0.55rem; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); display: grid; gap: 0.4rem; }
-.job-menu-about { font-size: 0.82rem; color: #d7defa; padding-right: 1.6rem; }
+.job-menu-about { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.4rem; margin: 0; font-size: 0.8rem; color: #d7defa; padding-right: 1.6rem; }
+.job-menu-about strong { font-size: 1rem; margin-right: 0.15rem; }
+.trait { border: 1px solid var(--line); border-radius: 999px; padding: 0.05rem 0.5rem; white-space: nowrap; }
 .job-menu-close { position: absolute; right: 0.4rem; top: 0.35rem; border: 0; background: none; color: var(--muted); font-size: 1rem; padding: 0.1rem 0.4rem; border-radius: 8px; }
 .job-menu-close:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
 .power-row { display: none; }
 .power-chip { border: 2px solid #7a86ba; border-radius: 999px; background: #0e1427; color: #dbe2ff; padding: 0.25rem 0.6rem; font-weight: 700; font-size: 0.8rem; }
 .power-chip.on { background: linear-gradient(180deg, #ffe08a, var(--power)); border-color: #fff0c2; color: #1c1400; }
-.job-menu-about .tired { color: var(--warn); }
+.trait.love { border-color: #ff8fa3; }
+.trait.friend { border-color: var(--good); }
+.trait.clash { border-color: var(--warn); }
+.job-menu-about .tired { color: var(--warn); border-color: var(--warn); }
 .job-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.3rem; }
 .job { display: grid; gap: 0.05rem; align-content: start; text-align: left; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); padding: 0.3rem 0.45rem; }
 .job:hover:not(:disabled) { border-color: var(--info); }
