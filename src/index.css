@@ -210,6 +210,7 @@ button:disabled { cursor: not-allowed; }
 .meter { display: flex; align-items: center; gap: 0.45rem; background: var(--paper); color: var(--ink); border-radius: 12px; padding: 0.2rem 0.7rem 0.2rem 0.5rem; box-shadow: 0 3px 0 var(--ink-deep); white-space: nowrap; }
 .meter-icon { font-size: 1.45rem; line-height: 1; display: inline-flex; }
 .meter-main { display: grid; line-height: 1.05; }
+.meter-line { display: flex; align-items: baseline; gap: 0.45rem; }
 .meter-label { font-family: var(--display); font-size: 0.66rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .meter-main strong { font-size: 1.25rem; font-weight: 700; min-width: 2ch; }
 .meter-detail { font-size: 0.76rem; font-weight: 700; color: var(--muted); min-width: 7.2em; }
@@ -275,7 +276,7 @@ button:disabled { cursor: not-allowed; }
 .log-bad { border-color: var(--bad); color: #a31f36; }
 
 /* The list of jobs opens beside the astronaut, on the picture. */
-.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: 288px; overflow: hidden auto; scrollbar-width: thin; background: var(--paper); color: var(--ink); border: var(--edge); border-radius: 16px; padding: 0.55rem; box-shadow: 0 5px 0 var(--ink), 0 14px 30px rgba(15, 20, 48, 0.35); display: grid; gap: 0.4rem; align-content: start; }
+.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: 316px; overflow: hidden auto; scrollbar-width: thin; background: var(--paper); color: var(--ink); border: var(--edge); border-radius: 16px; padding: 0.55rem; box-shadow: 0 5px 0 var(--ink), 0 14px 30px rgba(15, 20, 48, 0.35); display: grid; gap: 0.4rem; align-content: start; }
 .job-menu-about { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.35rem; margin: 0; font-size: 0.78rem; padding-right: 1.6rem; }
 .job-menu-about strong { font-size: 1.05rem; margin-right: 0.15rem; }
 .trait { display: inline-flex; align-items: center; gap: 0.25rem; border: 2px solid var(--ink); border-radius: 999px; padding: 0 0.5rem; white-space: nowrap; font-weight: 700; background: #fff; }
@@ -289,15 +290,18 @@ button:disabled { cursor: not-allowed; }
 .power-chip { display: inline-flex; align-items: center; gap: 0.25rem; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--paper); color: var(--ink); padding: 0.2rem 0.6rem; font-weight: 600; font-size: 0.8rem; box-shadow: 0 3px 0 var(--ink); }
 .power-chip.on { background: var(--yellow); }
 .job-list { display: grid; gap: 0.25rem; }
-.job { display: grid; gap: 0; align-content: start; text-align: left; font-family: var(--body); border-radius: 10px; border: 2px solid var(--paper-line); background: #fff; padding: 0.22rem 0.5rem; }
+/* One line for each job, so the whole list is in view at once with nothing to scroll. */
+.job { display: flex; align-items: center; gap: 0.15rem 0.4rem; flex-wrap: wrap; text-align: left; font-family: var(--body); border-radius: 10px; border: 2px solid var(--paper-line); background: #fff; padding: 0.24rem 0.5rem; }
 .job:hover:not(:disabled) { border-color: var(--ink); background: var(--yellow-soft); }
 .job.chosen { border-color: var(--ink); background: var(--yellow); }
 .job:disabled { opacity: 0.55; background: var(--paper-2); }
 .job-title { font-family: var(--display); font-weight: 600; font-size: 0.86rem; line-height: 1.25; }
-.job-does { font-size: 0.74rem; line-height: 1.2; color: var(--muted); }
+.job-title { white-space: nowrap; }
+.job-does { margin-left: auto; font-size: 0.74rem; line-height: 1.2; color: var(--muted); white-space: nowrap; }
+.job-outside { font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warn); border: 1.5px solid currentColor; border-radius: 999px; padding: 0 0.35rem; line-height: 1.35; }
 .job.chosen .job-does { color: var(--ink); }
 .job .heart { color: #ff5d7a; }
-.job-out { float: right; margin-left: 0.4rem; color: var(--good); font-weight: 700; white-space: nowrap; }
+.job-out { margin-left: auto; color: var(--good); font-weight: 700; font-size: 0.86rem; white-space: nowrap; }
 
 .activity-quiet { color: var(--good); }
 .activity-active { color: var(--warn); }
@@ -315,9 +319,9 @@ button:disabled { cursor: not-allowed; }
   animation: rise 0.25s ease-out;
 }
 .subtitle.plain { font-family: var(--body); font-weight: 700; font-size: 0.9rem; animation: none; }
-.subtitle.info { font-family: var(--body); font-weight: 700; font-size: 0.92rem; animation: none; width: max-content; }
-.subtitle.info strong { color: var(--warn); font-weight: 600; margin-right: 0.35rem; }
-.mission-chip { display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.5rem; border: 2px solid var(--ink); border-radius: 999px; padding: 0 0.55rem; font-size: 0.8rem; font-weight: 800; background: var(--info-soft); white-space: nowrap; }
+.subtitle.info { font-family: var(--body); font-weight: 700; font-size: 0.92rem; animation: none; width: max-content; display: flex; align-items: center; justify-content: center; gap: 0.1rem 0.35rem; flex-wrap: wrap; }
+.subtitle.info strong { color: var(--warn); font-weight: 600; }
+.mission-chip { display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.2rem; line-height: 1.5; border: 2px solid var(--ink); border-radius: 999px; padding: 0 0.55rem; font-size: 0.8rem; font-weight: 800; background: var(--info-soft); white-space: nowrap; }
 .subtitle.tone-good { background: var(--good-soft); }
 .subtitle.tone-warn { background: var(--warn-soft); }
 .subtitle.tone-bad { background: var(--bad-soft); }

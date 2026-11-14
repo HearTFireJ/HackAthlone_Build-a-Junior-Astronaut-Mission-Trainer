@@ -592,16 +592,36 @@ function Meter({ icon, label, value, detail, tone, gold = false }: { icon: IconN
   return (
     <div className={`meter tone-${tone}${gold ? ' gold' : ''}`}>
       <span className="meter-icon"><Icon name={icon} size="1em" /></span>
+      {/* The name on top; under it the number and its note, standing on the same line. */}
       <span className="meter-main">
         <span className="meter-label">{label}</span>
-        <strong>{value}</strong>
+        <span className="meter-line">
+          <strong>{value}</strong>
+          {detail && <span className="meter-detail">{detail}</span>}
+        </span>
       </span>
-      {detail && <span className="meter-detail">{detail}</span>}
     </div>
   )
 }
 
-const MENU_WIDTH = 288
+/** The reason a job cannot be given, in two or three words: the whole menu has to fit without scrolling. */
+function shortReason(why: string): string {
+  if (/needs power/.test(why)) return 'No power'
+  if (/Nothing needs fixing/.test(why)) return 'Nothing broken'
+  if (/is finished/.test(why)) return 'Finished'
+  if (/Too sick/.test(why)) return 'Too sick'
+  if (/Too unhappy/.test(why)) return 'Too unhappy'
+  if (/Not well enough/.test(why)) return 'Not well enough'
+  if (/only one rover/.test(why)) return 'Rover taken'
+  if (/Not enough days/.test(why)) return 'Too few days left'
+  if (/not possible today/.test(why)) return 'Not today'
+  return why
+}
+
+/** What the jobs that make nothing do, in two or three words. */
+const SHORT_DOES: Partial<Record<JobId, string>> = { rest: 'Mood, a little health', sickbay: 'Much better health', call: 'Much better mood' }
+
+const MENU_WIDTH = 316
 const MENU_HEIGHT = 520
 
 /**
@@ -617,7 +637,7 @@ function JobMenu({ astronautId, game, plan, anchor, onAssign, onClose }: { astro
   for (const kind of JOB_IDS) {
     if (kind === 'trip') {
       for (const trip of availableTrips(game)) {
-        choices.push({ job: { kind, trip }, label: `${TRIPS[trip].name} (${plural(tripDays(astronautId, trip), 'day')})`, does: `Brings: ${TRIPS[trip].brings}. Outside!` })
+        choices.push({ job: { kind, trip }, label: TRIPS[trip].name, does: `Brings: ${TRIPS[trip].brings}. Outside!` })
       }
     } else {
       choices.push({ job: { kind }, label: JOBS[kind].name, does: JOBS[kind].does })
@@ -643,29 +663,40 @@ function JobMenu({ astronautId, game, plan, anchor, onAssign, onClose }: { astro
           with, and whether they need a day off. Each one is a short tag, easy to scan. */}
       <p className="job-menu-about">
         <strong>{info.name}</strong>
-        <span className="trait love"><Icon name="heart" /> Loves {info.lovesText}</span>
+        <span className="trait love" title={`Loves ${info.lovesText}`}><Icon name="heart" /> {info.lovesText}</span>
         {companions(astronautId, FRIENDS, game).map((name) => (
-          <span key={name} className="trait friend"><Icon name="smile" /> Happier beside {name}</span>
+          <span key={name} className="trait friend" title={`Happier beside ${name}`}><Icon name="smile" /> {name}</span>
         ))}
         {companions(astronautId, CLASHES, game).map((name) => (
-          <span key={name} className="trait clash"><Icon name="sad" /> Grumpy beside {name}</span>
+          <span key={name} className="trait clash" title={`Grumpy beside ${name}`}><Icon name="sad" /> {name}</span>
         ))}
-        {willBeTired && <span className="trait tired"><Icon name="tired" /> Tired: needs a day off</span>}
+        {willBeTired && <span className="trait tired"><Icon name="tired" /> Needs a day off</span>}
       </p>
       <div className="job-list">
         {choices.map((choice) => {
           const why = choiceProblem(game, plan, astronautId, choice.job)
           const chosen = current?.kind === choice.job.kind && current?.trip === choice.job.trip
           const out = why ? null : jobOutput(game, astronautId, choice.job)
-          // The number already says what the job makes: only "Outside!" is still worth a line.
-          const note = why ?? (out ? (JOBS[choice.job.kind].outside ? 'Outside!' : null) : choice.does)
+          // One line each: the job on the left; on the right what it makes, or why it cannot be done.
+          const outside = JOBS[choice.job.kind].outside
+          // A rover trip shows how long it takes: everyone knows a drive across the Moon is outside.
+          const trip = choice.job.trip
+          const note = why ? shortReason(why) : trip ? plural(tripDays(astronautId, trip), 'day') : out ? null : (SHORT_DOES[choice.job.kind] ?? null)
           return (
-            <button key={`${choice.job.kind}-${choice.job.trip ?? ''}`} type="button" className={`job${chosen ? ' chosen' : ''}`} disabled={!!why} onClick={() => onAssign(choice.job)}>
+            <button
+              key={`${choice.job.kind}-${choice.job.trip ?? ''}`}
+              type="button"
+              className={`job${chosen ? ' chosen' : ''}`}
+              disabled={!!why}
+              title={why ?? choice.does}
+              onClick={() => onAssign(choice.job)}
+            >
               <span className="job-title">
-                {out && <span className="job-out"><Rich text={out} /></span>}
                 <Rich text={JOB_ICONS[choice.job.kind]} /> {choice.label}
                 {info.loves.includes(choice.job.kind) && <span className="heart" title={`${info.name} loves this`}> <Icon name="heart" size="0.95em" /></span>}
               </span>
+              {!why && outside && !trip && <span className="job-outside">Outside</span>}
+              {out && <span className="job-out"><Rich text={out} /></span>}
               {note && <span className="job-does">{note}</span>}
             </button>
           )

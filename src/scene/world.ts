@@ -142,6 +142,8 @@ export class World {
   private wiltGoal = 0
   private hud: Hud | null = null
   private switchAreas: { module: ModuleId; area: Rect }[] = []
+  /** Where the knob of each power switch is right now, from 0 (off) to 1 (on). */
+  private slides = new Map<ModuleId, number>()
   private ground: HTMLCanvasElement | null = null
   private groundKey = ''
   private ambient = 0
@@ -234,6 +236,16 @@ export class World {
 
   update(dt: number) {
     this.time += dt
+    // The knobs of the power switches slide to where they belong.
+    if (this.game && this.plan) {
+      const on = poweredModules(this.game, this.plan)
+      for (const module of MODULE_IDS) {
+        const target = on.includes(module) ? 1 : 0
+        const now = this.slides.get(module) ?? target
+        const step = Math.min(Math.abs(target - now), dt * 4.5)
+        this.slides.set(module, now + Math.sign(target - now) * step)
+      }
+    }
     this.flare = Math.max(0, this.flare - dt)
     this.shake = Math.max(0, this.shake - dt * 1.6)
     if (this.paused) return
@@ -606,7 +618,7 @@ export class World {
         const module = place.module
         const running = on.includes(module)
         const cannot = !canRun(game, module) || (!running && MODULES[module].power > spare)
-        label.switch = { cost: MODULES[module].power, state: running ? 'on' : cannot ? 'cannot' : 'off' }
+        label.switch = { cost: MODULES[module].power, state: running ? 'on' : cannot ? 'cannot' : 'off', slide: this.slides.get(module) ?? (running ? 1 : 0) }
         label.hot = this.hover?.kind === 'switch' && this.hover.module === module
         if (game.broken.includes(module)) label.note = 'Broken: needs a repair'
         else if (!canRun(game, module)) label.note = 'Cannot run today'

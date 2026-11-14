@@ -1778,18 +1778,32 @@ export interface LabelDraw {
   name: string
   at: Pt
   note?: string
-  switch?: { cost: number; state: 'on' | 'off' | 'cannot' }
+  /** slide: where the knob is, from 0 (off) to 1 (on). It moves over a few frames after a click. */
+  switch?: { cost: number; state: 'on' | 'off' | 'cannot'; slide: number }
   hot?: boolean
 }
+
+/** The bolt of the power switch, about 14 wide and 20 tall, with its top-left corner at (0, 0). */
+function bolt(ctx: Ctx, fill: string, edge: string) {
+  ctx.beginPath()
+  for (const [px, py] of [[8.5, 0], [0, 11.5], [6, 11.5], [4.5, 20], [14, 8], [7.8, 8]]) ctx.lineTo(px, py)
+  ctx.closePath()
+  ctx.fillStyle = fill
+  ctx.fill()
+  ctx.strokeStyle = edge
+  ctx.lineWidth = 2.4
+  ctx.lineJoin = 'round'
+  ctx.stroke()
+}
+
+/** The switch is always this wide, on or off, so the label never changes size when it is clicked. */
+const TRACK = { w: 50, h: 22 }
 
 /** Draws a label and returns the area of its switch, so a click on it can be found. */
 export function drawLabel(ctx: Ctx, label: LabelDraw): Rect | null {
   ctx.font = '700 17px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
   const nameWidth = ctx.measureText(label.name).width
-  const switchText = label.switch ? `${label.switch.cost} ${label.switch.state === 'on' ? 'ON' : 'OFF'}` : ''
-  // Room for the little bolt in front of the number.
-  const BOLT = 15
-  const switchWidth = label.switch ? ctx.measureText(switchText).width + 20 + BOLT : 0
+  const switchWidth = label.switch ? TRACK.w + 6 : 0
   const total = nameWidth + 24 + switchWidth
   const x = label.at.x - total / 2
   const y = label.at.y - 14
@@ -1803,30 +1817,55 @@ export function drawLabel(ctx: Ctx, label: LabelDraw): Rect | null {
   ctx.textAlign = 'left'
   let area: Rect | null = null
   if (label.switch) {
-    const on = label.switch.state === 'on'
+    // A sliding switch, like the ones on a phone. The knob carries the bolt; the number
+    // beside it is the power this module uses. Off: knob on the left, pale track.
+    // On: the knob slides right and the track turns yellow.
     const cannot = label.switch.state === 'cannot'
-    box(ctx, x + 3, y + 3, switchWidth - 2, 22, 11)
-    ctx.fillStyle = on ? '#ffc93c' : label.hot ? '#ffe9a8' : cannot ? '#e4dcc8' : '#ffffff'
+    const slide = Math.min(1, Math.max(0, label.switch.slide))
+    // The knob overshoots a little and settles: it feels like a real switch.
+    const eased = 1 + 2.2 * Math.pow(slide - 1, 3) + 1.2 * Math.pow(slide - 1, 2)
+    const tx = x + 3
+    const ty = y + 3
+    box(ctx, tx, ty, TRACK.w, TRACK.h, TRACK.h / 2)
+    ctx.fillStyle = cannot ? '#e4dcc8' : '#efe7d2'
+    ctx.fill()
+    if (slide > 0) {
+      ctx.globalAlpha = slide
+      ctx.fillStyle = '#ffc93c'
+      ctx.fill()
+      ctx.globalAlpha = 1
+    }
+    ctx.strokeStyle = cannot ? '#a9a595' : EDGE
+    ctx.lineWidth = label.hot && !cannot ? 2.6 : 1.8
+    if (cannot) ctx.setLineDash([4, 3])
+    ctx.stroke()
+    ctx.setLineDash([])
+    // The number sits on the side the knob is not on, and swaps sides as the knob passes.
+    ctx.font = '800 15px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    const cost = String(label.switch.cost)
+    ctx.fillStyle = cannot ? '#8a8676' : EDGE
+    ctx.globalAlpha = (cannot ? 1 : 0.75) * (1 - slide)
+    ctx.fillText(cost, tx + TRACK.w - 13, ty + TRACK.h / 2 + 1)
+    ctx.globalAlpha = slide
+    ctx.fillText(cost, tx + 13, ty + TRACK.h / 2 + 1)
+    ctx.globalAlpha = 1
+    const r = TRACK.h / 2 - 1 + (label.hot && !cannot ? 1 : 0)
+    const kx = tx + TRACK.h / 2 + eased * (TRACK.w - TRACK.h)
+    const ky = ty + TRACK.h / 2
+    circle(ctx, kx, ky, r)
+    ctx.fillStyle = cannot ? '#f0eadb' : '#ffffff'
     ctx.fill()
     ctx.strokeStyle = cannot ? '#a9a595' : EDGE
     ctx.lineWidth = 1.8
     ctx.stroke()
-    // The bolt: the same one as in the top bar. Grey when the switch cannot be used.
     ctx.save()
-    ctx.translate(x + 8, y + 6.5)
-    ctx.scale(0.62, 0.62)
-    ctx.beginPath()
-    for (const [px, py] of [[13.5, 2], [5, 13.5], [11, 13.5], [9.5, 22], [19, 10], [12.8, 10]]) ctx.lineTo(px, py)
-    ctx.closePath()
-    ctx.fillStyle = on ? '#ffffff' : cannot ? '#c9c2ae' : '#ffc93c'
-    ctx.fill()
-    ctx.strokeStyle = cannot ? '#a9a595' : EDGE
-    ctx.lineWidth = 2.4
-    ctx.lineJoin = 'round'
-    ctx.stroke()
+    ctx.translate(kx - 4.6, ky - 6.5)
+    ctx.scale(0.66, 0.66)
+    bolt(ctx, cannot ? '#c9c2ae' : slide > 0.5 ? '#ffc93c' : '#cfc8b6', cannot ? '#a9a595' : EDGE)
     ctx.restore()
-    ctx.fillStyle = cannot ? '#8a8676' : EDGE
-    ctx.fillText(switchText, x + 11 + BOLT, y + 15)
+    ctx.font = '700 17px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
+    ctx.textAlign = 'left'
     area = { x: x - 4, y: y - 6, w: switchWidth + 10, h: 40 }
   }
   ctx.fillStyle = EDGE
