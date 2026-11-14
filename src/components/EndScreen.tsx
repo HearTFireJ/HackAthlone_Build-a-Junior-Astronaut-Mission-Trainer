@@ -2,7 +2,7 @@ import type { ScenarioInfo } from '../data/scenarios.ts'
 import { MISSIONS, MISSION_IDS, crewInfo } from '../game/content.ts'
 import { RULES, type DayReport, type GameState, handoverReady, missionDone, rate } from '../game/outpost.ts'
 import { AboutData } from './AboutData.tsx'
-import { Pips, Token } from './bits.tsx'
+import { FactLine, Pips, Token } from './bits.tsx'
 import { clock, longDate } from './words.ts'
 
 interface Props {
@@ -187,6 +187,18 @@ export function EndScreen({ info, game, onAgain }: Props) {
           </ul>
         </section>
       )}
+
+      <section className="panel facts">
+        <h2>The real science behind your outpost</h2>
+        <FactLine id="ice" />
+        <FactLine id="rover" />
+        <FactLine id="shield" />
+        <FactLine id="sun" />
+        <FactLine id="fraction" />
+        <FactLine id="dish" />
+        <FactLine id="hazards" />
+        <FactLine id="plants" />
+      </section>
 
       <AboutData />
     </main>

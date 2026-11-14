@@ -112,7 +112,15 @@ button:disabled { cursor: not-allowed; }
 .meter.tone-bad .meter-detail { color: var(--bad); font-weight: 700; }
 
 .game-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); gap: 0.9rem; padding: 0.8rem 1rem; min-height: 0; }
-.map-wrap { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 0.4rem; min-height: 0; align-content: start; }
+.map-wrap { display: grid; grid-template-rows: auto auto auto; gap: 0.45rem; min-height: 0; align-content: start; }
+.mission-strip { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.4rem; }
+.chip { display: grid; gap: 0.1rem; align-content: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.35rem 0.5rem; font-size: 0.78rem; min-width: 0; }
+.chip.done { border-color: var(--good); background: rgba(95, 211, 141, 0.1); }
+.chip-head { display: flex; justify-content: space-between; gap: 0.3rem; font-weight: 700; }
+.chip.done .chip-head { color: var(--good); }
+.chip .bar { display: block; margin: 0.1rem 0; }
+.chip .bar-fill { display: block; }
+.chip-text { color: var(--muted); font-size: 0.7rem; line-height: 1.25; }
 .map-hint { color: var(--muted); font-size: 0.85rem; text-align: center; }
 .side { display: grid; gap: 0.7rem; align-content: start; overflow-y: auto; min-height: 0; padding-right: 0.2rem; }
 
@@ -264,6 +272,9 @@ button:disabled { cursor: not-allowed; }
 .call.tone-good strong { color: var(--good); }
 .call.tone-bad strong { color: var(--bad); }
 .call.tone-calm strong { color: var(--info); }
+.fact { width: 100%; font-size: 0.86rem; color: #d7defa; border-left: 3px solid var(--info); padding: 0.25rem 0 0.25rem 0.6rem; background: rgba(108, 184, 255, 0.06); border-radius: 0 8px 8px 0; }
+.fact strong { color: var(--info); }
+.facts { display: grid; gap: 0.5rem; }
 .report-crew { list-style: none; padding: 0; width: 100%; display: grid; gap: 0.45rem; }
 .report-crew li { display: flex; gap: 0.6rem; align-items: flex-start; }
 .report-line { display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
@@ -280,6 +291,7 @@ button:disabled { cursor: not-allowed; }
 @media (max-width: 900px) {
   .game { height: auto; min-height: 100dvh; }
   .game-body { grid-template-columns: 1fr; }
+  .mission-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .side { overflow: visible; }
   .map { aspect-ratio: 5 / 6; max-height: none; }
   .spot { font-size: 0.66rem; padding: 0.25rem 0.35rem; }

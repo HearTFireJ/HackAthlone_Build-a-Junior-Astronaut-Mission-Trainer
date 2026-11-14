@@ -41,7 +41,11 @@ export function AboutData() {
           </li>
           <li>
             Power, air and food are counted in small made-up units. Health, mood and hunger are shown as simple marks.
-            How much a storm hurts, how it wears the solar panels and how it harms the plants are game rules.
+            How much a storm hurts people and how much it wears the solar panels are game rules.
+          </li>
+          <li>
+            In the game a storm spoils some of the day's crop. Scientists are still finding out what space radiation
+            does to plants, so that rule is a guess.
           </li>
         </ul>
         <h3>Made up</h3>

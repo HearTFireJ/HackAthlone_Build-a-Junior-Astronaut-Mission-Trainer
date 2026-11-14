@@ -3,6 +3,7 @@ import { EndScreen } from './components/EndScreen.tsx'
 import { GameScreen } from './components/GameScreen.tsx'
 import { type Modal, Modals } from './components/Modals.tsx'
 import { StartScreen } from './components/StartScreen.tsx'
+import { EVENT_FACTS } from './data/facts.ts'
 import type { ScenarioInfo } from './data/scenarios.ts'
 import { MODULES, MODULE_IDS, type ModuleId } from './game/content.ts'
 import { EVENTS } from './game/events.ts'
@@ -117,6 +118,8 @@ function App() {
         }
         onStart={() =>
           update((current) => {
+            // A card is open (an event to answer, a report to read): the day cannot start yet.
+            if (current.modal) return current
             const alert = alertFor(current.game, current.info.scenario, current.plan)
             if (alert) return { ...current, modal: { kind: 'alert', alert }, selected: null }
             const { state, report } = resolveDay(current.game, current.info.scenario, current.plan, 'carry')
@@ -143,7 +146,7 @@ function App() {
               game: state,
               // The answer may have cost power: make sure the plan still fits.
               plan: fitToPower(state, current.plan),
-              modal: { kind: 'event-result', icon: card.icon, title: card.title, text: result },
+              modal: { kind: 'event-result', icon: card.icon, title: card.title, text: result, fact: EVENT_FACTS[pending.id] },
             }
           })
         }

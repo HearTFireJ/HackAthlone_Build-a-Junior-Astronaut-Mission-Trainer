@@ -1,6 +1,6 @@
 // Small helpers that turn game values into words and symbols for the screen.
 
-import type { JobId, ModuleId } from '../game/content.ts'
+import type { JobId, MissionId, ModuleId } from '../game/content.ts'
 import type { Condition } from '../game/outpost.ts'
 
 export const MODULE_ICONS: Record<ModuleId, string> = {
@@ -10,6 +10,13 @@ export const MODULE_ICONS: Record<ModuleId, string> = {
   scope: '🔭',
   lab: '🧪',
   garage: '🚙',
+}
+
+export const MISSION_ICONS: Record<MissionId, string> = {
+  ice: '❄️',
+  shield: '🛡️',
+  dish: '🏗️',
+  sun: '🔭',
 }
 
 export const JOB_ICONS: Record<JobId, string> = {

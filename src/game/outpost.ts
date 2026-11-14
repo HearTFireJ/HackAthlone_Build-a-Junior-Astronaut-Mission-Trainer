@@ -698,8 +698,10 @@ export function resolveDay(
   next.powerPenalty = 0
   next.offToday = []
   next.weakLifeDays = Math.max(0, state.weakLifeDays - 1)
-  next.day = state.day + 1
   if (next.status === 'playing') {
+    // The day counter only moves on while the mission is still running, so it never
+    // points past the last day of real weather.
+    next.day = state.day + 1
     if (next.arriving) {
       next.crew.push(newAstronaut(next.arriving))
       next.arriving = null

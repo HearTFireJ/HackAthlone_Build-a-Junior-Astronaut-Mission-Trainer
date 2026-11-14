@@ -1,7 +1,21 @@
 // Small pieces of the screen that several components share.
 
 import type { CSSProperties } from 'react'
+import { FACTS, type FactId } from '../data/facts.ts'
 import { crewInfo } from '../game/content.ts'
+
+/** One real-life fact with a link to where it comes from. */
+export function FactLine({ id }: { id: FactId }) {
+  const fact = FACTS[id]
+  return (
+    <p className="fact">
+      <strong>🔎 Real life:</strong> {fact.text}{' '}
+      <a href={fact.url} target="_blank" rel="noreferrer">
+        {fact.source}
+      </a>
+    </p>
+  )
+}
 
 /** An astronaut seen from above: a round helmet in their own colour, with their initial. */
 export function Token({ id, small = false, selected = false }: { id: string; small?: boolean; selected?: boolean }) {

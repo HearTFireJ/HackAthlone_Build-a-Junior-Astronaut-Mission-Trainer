@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { MISSION_FACTS, type FactId } from '../data/facts.ts'
 import type { ScenarioInfo } from '../data/scenarios.ts'
 import { JOBS, MISSIONS, crewInfo } from '../game/content.ts'
 import { EVENTS } from '../game/events.ts'
@@ -12,13 +13,13 @@ import {
   jobProblem,
   missionDone,
 } from '../game/outpost.ts'
-import { Change, Token } from './bits.tsx'
+import { Change, FactLine, Token } from './bits.tsx'
 import { clock, longDate, spacecraftList } from './words.ts'
 
 export type Modal =
   | { kind: 'intro' }
   | { kind: 'event' }
-  | { kind: 'event-result'; icon: string; title: string; text: string }
+  | { kind: 'event-result'; icon: string; title: string; text: string; fact?: FactId }
   | { kind: 'alert'; alert: Alert }
   | { kind: 'report'; report: DayReport }
   | null
@@ -107,6 +108,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
           <span aria-hidden="true">{modal.icon}</span> {modal.title}
         </h2>
         <p>{modal.text}</p>
+        {modal.fact && <FactLine id={modal.fact} />}
         <button type="button" className="primary" onClick={onCloseEventResult}>
           OK
         </button>
@@ -154,9 +156,9 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
             </>
           )}
         </p>
+        <FactLine id="particles" />
         <p>
-          If fast particles are coming, they get here later today.{' '}
-          {names.length > 0 ? `Outside right now: ${names.join(', ')}.` : 'Nobody is outside right now.'}
+          <strong>{names.length > 0 ? `Outside right now: ${names.join(', ')}.` : 'Nobody is outside right now.'}</strong>
         </p>
         <div className="choices">
           <button type="button" className="choice" onClick={() => onRespond('carry')}>
@@ -223,6 +225,8 @@ function Report({ report, game, onNextDay }: { report: DayReport; game: GameStat
             </p>
           </>
         )}
+        {storm && report.response === 'shelter' && <FactLine id="shelter" />}
+        {call === 'false-alarm' && <FactLine id="fraction" />}
         {call && (
           <p className={`call tone-${CALL_WORDS[call].tone}`}>
             <strong>{CALL_WORDS[call].title}</strong>{' '}
@@ -266,6 +270,11 @@ function Report({ report, game, onNextDay }: { report: DayReport; game: GameStat
           ))}
         </ul>
       )}
+
+      {report.finished.map((id) => (
+        <FactLine key={id} id={MISSION_FACTS[id]} />
+      ))}
+      {storm && report.finished.length === 0 && report.response !== 'shelter' && <FactLine id="panels" />}
 
       <button type="button" className="primary" onClick={onNextDay}>
         {over ? 'See how the mission went ▶' : `Day ${report.day + 1} ▶`}

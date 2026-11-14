@@ -30,7 +30,7 @@ import {
 import { sunActivity, weatherOn, yesterdayOf } from '../game/weather.ts'
 import { BaseMap } from './BaseMap.tsx'
 import { Pips, Token } from './bits.tsx'
-import { CONDITION_WORDS, JOB_ICONS, longDate, plural } from './words.ts'
+import { CONDITION_WORDS, JOB_ICONS, MISSION_ICONS, longDate, plural } from './words.ts'
 
 interface Props {
   info: ScenarioInfo
@@ -72,6 +72,37 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
       <div className="game-body">
         <section className="map-wrap" aria-label="The base, seen from above">
           <BaseMap game={game} plan={plan} selected={selected} onTogglePower={onTogglePower} onAssign={onAssign} onSelect={onSelect} />
+          <ul className="mission-strip" aria-label="Missions">
+            {MISSION_IDS.map((id) => {
+              const done = missionDone(game.missions, id)
+              return (
+                <li key={id} className={done ? 'chip done' : 'chip'} title={`${MISSIONS[id].how} Reward: ${MISSIONS[id].reward}`}>
+                  <span className="chip-head">
+                    <span>{done ? '✅' : MISSION_ICONS[id]} {MISSIONS[id].name}</span>
+                    <span className="mission-count">
+                      {Math.min(game.missions[id], MISSIONS[id].goal)}/{MISSIONS[id].goal}
+                    </span>
+                  </span>
+                  <span className="bar">
+                    <span className="bar-fill" style={{ width: `${Math.min(100, (100 * game.missions[id]) / MISSIONS[id].goal)}%` }} />
+                  </span>
+                  <span className="chip-text">{done ? `Done! ${MISSIONS[id].reward}` : MISSIONS[id].how}</span>
+                </li>
+              )
+            })}
+            <li
+              className="chip"
+              title={`On the last day: at least ${RULES.handover.air} air and ${RULES.handover.food} food, and everyone at ${RULES.handover.stat} or more for health and mood.`}
+            >
+              <span className="chip-head">
+                <span>🤝 Ready for the next crew</span>
+              </span>
+              <span className="chip-text">
+                On the last day: {RULES.handover.air}+ air, {RULES.handover.food}+ food, everyone fit and happy. Right now:{' '}
+                {handoverReady(game) ? 'yes ✅' : 'not yet'}
+              </span>
+            </li>
+          </ul>
           <p className="map-hint">
             {selected
               ? `Now click where ${crewInfo(selected).name} should go, or pick a job in the list.`
@@ -102,39 +133,6 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
             </div>
           </section>
 
-          <section className="panel">
-            <h2>Missions</h2>
-            <ul className="missions">
-              {MISSION_IDS.map((id) => {
-                const done = missionDone(game.missions, id)
-                return (
-                  <li key={id} className={done ? 'mission done' : 'mission'}>
-                    <div className="mission-head">
-                      <span>{done ? '✅' : '⬜'} {MISSIONS[id].name}</span>
-                      <span className="mission-count">
-                        {Math.min(game.missions[id], MISSIONS[id].goal)}/{MISSIONS[id].goal}
-                      </span>
-                    </div>
-                    <div className="bar">
-                      <div className="bar-fill" style={{ width: `${Math.min(100, (100 * game.missions[id]) / MISSIONS[id].goal)}%` }} />
-                    </div>
-                    <p className="mission-text">
-                      {done ? `Done! ${MISSIONS[id].reward}` : `${MISSIONS[id].how} Reward: ${MISSIONS[id].reward}`}
-                    </p>
-                  </li>
-                )
-              })}
-              <li className={handoverReady(game) ? 'mission done' : 'mission'}>
-                <div className="mission-head">
-                  <span>{handoverReady(game) ? '✅' : '⬜'} Ready for the next crew</span>
-                </div>
-                <p className="mission-text">
-                  On the last day: at least {RULES.handover.air} air and {RULES.handover.food} food, and everyone healthy and
-                  happy enough to work.
-                </p>
-              </li>
-            </ul>
-          </section>
         </aside>
       </div>
 

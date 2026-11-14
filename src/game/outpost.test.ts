@@ -315,6 +315,7 @@ describe('how a mission ends', () => {
     const state = playOut(CALM, (current) => planOf(current, ['life', 'farm'], { aoife: { kind: 'garden' } }))
     expect(state.status).toBe('done')
     expect(state.history).toHaveLength(RULES.maxDays)
+    expect(state.day).toBe(RULES.maxDays)
     expect(rate(state).maxStars).toBe(5)
   })
 
