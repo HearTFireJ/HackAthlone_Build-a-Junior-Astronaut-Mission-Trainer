@@ -5,7 +5,7 @@
 //   1. Morning: maybe an event card. The commander picks one of two answers.
 //   2. Plan: which modules get power, and what each astronaut does.
 //   3. If the radio is on and the Sun fired a big flare (real NASA record), an alert
-//      arrives and the commander chooses: carry on, call people inside, or shelter.
+//      arrives and the commander chooses: carry on, or call the people outside in.
 //   4. resolveDay works out everything that happened and sets up tomorrow.
 
 import {
@@ -15,6 +15,7 @@ import {
   JOBS,
   MISSIONS,
   MISSION_IDS,
+  PROJECT_IDS,
   MODULES,
   MODULE_IDS,
   SETUPS,
@@ -22,6 +23,7 @@ import {
   crewInfo,
   type JobId,
   type MissionId,
+  type ProjectId,
   type ModuleId,
   type TripId,
 } from './content.ts'
@@ -47,9 +49,8 @@ export const RULES = {
   podAir: 3,
   /** Hearts lost in a storm: [normal storm, severe storm]. */
   stormOutside: [3, 4],
+  /** Indoors without the Moon-soil shield. With the shield, nobody indoors is hurt at all. */
   stormInside: [1, 2],
-  /** What the Moon-soil shield takes off the inside damage. */
-  shieldBlocks: 1,
   /** Food lost from the Greenhouse on a storm day without the shield. */
   stormCropLoss: 2,
   noAirDamage: 2,
@@ -72,7 +73,7 @@ export interface Astronaut {
   away: { trip: TripId; daysLeft: number; found?: boolean } | null
 }
 
-export type Missions = Record<MissionId, number>
+export type Missions = Record<ProjectId, number>
 
 export interface PendingEvent {
   id: EventId
@@ -133,13 +134,13 @@ export interface Plan {
 }
 
 /** How the commander answers a flare alert. */
-export type Response = 'carry' | 'inside' | 'shelter'
+export type Response = 'carry' | 'inside'
 
 export interface CrewReport {
   id: string
   /** What they ended up doing, as words for the screen. */
   did: string
-  where: 'inside' | 'outside' | 'shelter'
+  where: 'inside' | 'outside'
   healthBefore: number
   healthAfter: number
   moodBefore: number
@@ -170,7 +171,7 @@ export interface CrewReport {
   rival: string | null
 }
 
-export type Why = 'loves' | 'tired' | 'friend' | 'rival' | 'bored' | 'hungry' | 'called' | 'cheer'
+export type Why = 'loves' | 'tired' | 'friend' | 'rival' | 'hungry' | 'called' | 'cheer'
 
 export type CallResult = 'saved' | 'hit' | 'false-alarm' | 'calm' | 'surprise' | null
 
@@ -189,7 +190,7 @@ export interface DayReport {
   food: { made: number; eaten: number; left: number }
   crew: CrewReport[]
   notes: string[]
-  finished: MissionId[]
+  finished: ProjectId[]
   /** Food the plants did not make today because a storm hurt them. */
   cropLoss: number
   /** Mission progress at the start and at the end of the day, to show what the day's work added. */
@@ -208,7 +209,7 @@ function roll(seed: number): [number, number] {
   return [((r ^ (r >>> 14)) >>> 0) / 4294967296, next]
 }
 
-export function missionDone(missions: Missions, id: MissionId): boolean {
+export function missionDone(missions: Missions, id: ProjectId): boolean {
   return missions[id] >= MISSIONS[id].goal
 }
 
@@ -433,7 +434,7 @@ interface Doing {
   astronaut: Astronaut
   job: JobId | 'trip-away'
   trip: TripId | null
-  where: 'inside' | 'outside' | 'shelter'
+  where: 'inside' | 'outside'
   points: number
   notes: string[]
   /** Came back early because of the alert. */
@@ -518,10 +519,11 @@ export function resolveDay(
 
   // Storm damage if nobody had moved: used to tell the commander what a good call saved.
   const damageAt = (where: Doing['where']): number => {
-    if (!storm || where === 'shelter') return 0
+    if (!storm) return 0
     const level = storm.severe ? 1 : 0
     if (where === 'outside') return RULES.stormOutside[level]
-    return Math.max(0, RULES.stormInside[level] - (hasShield ? RULES.shieldBlocks : 0))
+    // The Moon-soil shield covers the whole base: under it, nobody indoors is hurt.
+    return hasShield ? 0 : RULES.stormInside[level]
   }
   for (const entry of doing) entry.riskIfCarriedOn = damageAt(entry.where)
 
@@ -529,8 +531,8 @@ export function resolveDay(
   const half = (points: number) => Math.floor(points / 2)
   for (const entry of doing) {
     const wasOutside = entry.where === 'outside'
-    if (answer === 'shelter' || (answer === 'inside' && wasOutside)) {
-      entry.where = answer === 'shelter' ? 'shelter' : 'inside'
+    if (answer === 'inside' && wasOutside) {
+      entry.where = 'inside'
       if (entry.job === 'trip' || entry.job === 'trip-away') {
         entry.astronaut.away = null
         entry.recalled = true
@@ -641,7 +643,6 @@ export function resolveDay(
   // Health and mood.
   const together = (a: Doing, b: Doing) =>
     a.astronaut.id !== b.astronaut.id &&
-    answer !== 'shelter' &&
     a.job !== 'trip' &&
     a.job !== 'trip-away' &&
     b.job !== 'trip' &&
@@ -668,16 +669,8 @@ export function resolveDay(
       health -= hurt
       mood -= 1
       lines.push(`Hit by the storm ${entry.where === 'outside' ? 'outside' : 'inside the base'}: -${hurt} health.`)
-    } else if (entry.where === 'shelter') {
-      if (storm) {
-        lines.push('Safe in the shelter while the storm passed.')
-      } else {
-        mood -= 1
-        why.push('bored')
-        lines.push('A long, dull day squeezed into the shelter for nothing.')
-      }
     } else if (storm) {
-      lines.push('The storm did not get through.')
+      lines.push('Safe under the Moon-soil shield while the storm passed.')
     }
     if (outOfAir) health -= RULES.noAirDamage
 
@@ -738,12 +731,7 @@ export function resolveDay(
     astronaut.health = clamp(health, RULES.maxStat)
     astronaut.mood = clamp(mood, RULES.maxStat)
 
-    const did =
-      entry.where === 'shelter' && !entry.recalled
-        ? `${describe(job, entry.trip)}, then the storm shelter`
-        : entry.recalled
-          ? 'Called back from the rover trip'
-          : describe(job, entry.trip)
+    const did = entry.recalled ? 'Called back from the rover trip' : describe(job, entry.trip)
     return {
       id: astronaut.id,
       did,
@@ -770,10 +758,10 @@ export function resolveDay(
   })
 
   // Finished missions pay off straight away.
-  const finished = MISSION_IDS.filter((id) => !missionDone(state.missions, id) && missionDone(next.missions, id))
+  const finished = PROJECT_IDS.filter((id) => !missionDone(state.missions, id) && missionDone(next.missions, id))
   for (const id of finished) {
     next.missions[id] = MISSIONS[id].goal
-    notes.push(`Mission complete: ${MISSIONS[id].name}! ${MISSIONS[id].reward}`)
+    notes.push(id === 'shield' ? `The Moon-soil shield is built! ${MISSIONS[id].reward}` : `Mission complete: ${MISSIONS[id].name}! ${MISSIONS[id].reward}`)
     if (id === 'ice') next.air = Math.min(RULES.airCap, next.air + RULES.iceBonusAir)
     if (id === 'dish') {
       for (const astronaut of next.crew) {
@@ -874,7 +862,7 @@ export interface Rating {
   maxStars: number
 }
 
-/** True once all four missions are done. From then on the commander may hand the base over early. */
+/** True once every mission is done. From then on the commander may hand the base over early. */
 export function allMissionsDone(state: GameState): boolean {
   return MISSION_IDS.every((id) => missionDone(state.missions, id))
 }

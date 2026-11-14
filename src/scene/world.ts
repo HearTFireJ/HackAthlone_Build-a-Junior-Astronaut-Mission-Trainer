@@ -615,7 +615,9 @@ export class World {
       }
       if (place.id === 'panels') label.note = `⚡ ${solarToday(game)} power today${game.battery > 0 ? ` + 🔋 ${game.battery} saved` : ''}`
       if (place.id === 'site') label.note = missionDone(hud.missions, 'dish') ? 'Listening to space!' : `${Math.min(hud.missions.dish, MISSIONS.dish.goal)} of ${MISSIONS.dish.goal} built`
-      if (place.id === 'shelter' && missionDone(hud.missions, 'shield')) label.note = 'Moon-soil shield built'
+      // The shield is a choice, not a mission: its progress shows on the Lab, and the result on the base.
+      if (place.id === 'lab' && !label.note && !missionDone(hud.missions, 'shield')) label.note = `🛡️ Shield: ${hud.missions.shield} of ${MISSIONS.shield.goal}`
+      if (place.id === 'habitat' && missionDone(hud.missions, 'shield')) label.note = '🛡️ Moon-soil shield built'
       return label
     })
   }
@@ -733,13 +735,17 @@ export class World {
       ctx.stroke()
     }
 
-    // While the storm is on, the shelter's thick roof glows: it is stopping the particles.
-    if (this.storm) {
-      const s = ROOMS.shelter
+    // While a storm is on, the Moon-soil shield glows: it is stopping the particles.
+    if (this.storm && this.game && missionDone((this.hud ?? hudOf(this.game)).missions, 'shield')) {
       ctx.strokeStyle = `rgba(95,211,141,${0.5 + Math.sin(this.time * 9) * 0.3})`
       ctx.lineWidth = 6
+      for (const r of Object.values(ROOMS)) {
+        ctx.beginPath()
+        ctx.roundRect(r.x - 30, r.y - 30, r.w + 60, r.h + 60, 50)
+        ctx.stroke()
+      }
       ctx.beginPath()
-      ctx.roundRect(s.x - 30, s.y - 28, s.w + 60, s.h + 56, 50)
+      ctx.arc(HAB.x, HAB.y, HAB.r + 30, 0, Math.PI * 2)
       ctx.stroke()
     }
 

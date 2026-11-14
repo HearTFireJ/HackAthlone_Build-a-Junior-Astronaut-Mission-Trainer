@@ -265,16 +265,34 @@ describe('flares, alerts and storms', () => {
     expect(alertFor(state, stormy, planOf(state, ['comms', 'scope']))?.cloudKnown).toBe(true)
   })
 
-  it('a storm hurts people outside most, people inside a little, and nobody in the shelter', () => {
+  it('a storm hurts people outside most and people indoors a little; calling them in saves the difference', () => {
     const state = createGame('sep-2017')
     const plan = planOf(state, ['comms'], { niamh: { kind: 'build' } })
     const carried = resolveDay(state, stormy, plan, 'carry').state
     expect(crew(carried, 'niamh').health).toBe(RULES.maxStat - RULES.stormOutside[0])
     expect(crew(carried, 'aoife').health).toBe(RULES.maxStat) // rest heals the one heart the storm took
-    const sheltered = resolveDay(state, stormy, plan, 'shelter')
-    expect(crew(sheltered.state, 'niamh').health).toBe(RULES.maxStat)
-    expect(sheltered.report.call).toBe('saved')
-    expect(sheltered.report.heartsSaved).toBeGreaterThan(0)
+    const called = resolveDay(state, stormy, plan, 'inside')
+    expect(called.report.crew.find((member) => member.id === 'niamh')?.hurt).toBe(RULES.stormInside[0])
+    expect(called.report.call).toBe('saved')
+    expect(called.report.heartsSaved).toBe(RULES.stormOutside[0] - RULES.stormInside[0])
+  })
+
+  it('under the Moon-soil shield nobody indoors is hurt, even by a severe storm', () => {
+    const state = createGame('sep-2017')
+    state.missions.shield = MISSIONS.shield.goal
+    const plan = planOf(state, ['comms'], { niamh: { kind: 'build' }, aoife: { kind: 'call' } })
+    const carried = resolveDay(state, severe, plan, 'carry').report
+    expect(carried.crew.find((member) => member.id === 'aoife')?.hurt).toBe(0)
+    expect(carried.crew.find((member) => member.id === 'niamh')?.hurt).toBe(RULES.stormOutside[1])
+    expect(resolveDay(state, severe, plan, 'inside').report.crew.every((member) => member.hurt === 0)).toBe(true)
+  })
+
+  it('the shield is a choice, not a mission: it earns no star and is not needed to hand over', () => {
+    const state = createGame('sep-2017')
+    expect(rate(state).maxStars).toBe(4)
+    state.missions = { ice: MISSIONS.ice.goal, shield: 0, dish: MISSIONS.dish.goal, sun: MISSIONS.sun.goal }
+    expect(allMissionsDone(state)).toBe(true)
+    expect(rate({ ...state, missions: { ...state.missions, shield: MISSIONS.shield.goal } }).stars).toBe(rate(state).stars)
   })
 
   it('a severe storm hurts more', () => {
@@ -285,12 +303,12 @@ describe('flares, alerts and storms', () => {
 
   it('with the radio off there is no warning and no choice', () => {
     const state = createGame('sep-2017')
-    const { state: next, report } = resolveDay(state, stormy, planOf(state, [], { niamh: { kind: 'build' } }), 'shelter')
+    const { state: next, report } = resolveDay(state, stormy, planOf(state, [], { niamh: { kind: 'build' } }), 'inside')
     expect(report.call).toBe('surprise')
     expect(crew(next, 'niamh').health).toBeLessThan(RULES.maxStat)
   })
 
-  it('taking cover costs work: sheltering halves it, and calling people in cancels a rover trip', () => {
+  it('taking cover costs work: coming in halves it, and cancels a rover trip', () => {
     const state = createGame('sep-2017')
     const plan = planOf(state, ['comms', 'garage'], { niamh: { kind: 'build' }, cian: { kind: 'trip', trip: 'scout' } })
     const carried = resolveDay(state, falseAlarm, plan, 'carry').state
@@ -305,10 +323,16 @@ describe('flares, alerts and storms', () => {
   it('taking cover always costs work, even for someone who is working slowly', () => {
     const state = createGame('sep-2017')
     crew(state, 'aoife').health = 2
+    const plan = planOf(state, ['comms'], { aoife: { kind: 'build' } })
+    expect(workPoints(crew(state, 'aoife'), 'build')).toBe(1)
+    expect(resolveDay(state, stormy, plan, 'carry').state.missions.dish).toBe(1)
+    expect(resolveDay(state, stormy, plan, 'inside').state.missions.dish).toBe(0)
+  })
+
+  it('people working indoors are not called in: their work goes on', () => {
+    const state = createGame('sep-2017')
     const plan = planOf(state, ['comms', 'lab'], { aoife: { kind: 'lab' } })
-    expect(workPoints(crew(state, 'aoife'), 'lab')).toBe(1)
-    expect(resolveDay(state, stormy, plan, 'carry').state.missions.shield).toBe(1)
-    expect(resolveDay(state, stormy, plan, 'shelter').state.missions.shield).toBe(0)
+    expect(resolveDay(state, stormy, plan, 'inside').state.missions.shield).toBe(resolveDay(state, stormy, plan, 'carry').state.missions.shield)
   })
 
   it('calling a repairer in costs the repair: a broken module stays broken, and fewer panels are mended', () => {
@@ -316,28 +340,18 @@ describe('flares, alerts and storms', () => {
     state.broken = ['farm']
     const plan = planOf(state, ['comms'], { niamh: { kind: 'repair' } })
     expect(resolveDay(state, stormy, plan, 'carry').state.broken).toEqual([])
-    expect(resolveDay(state, stormy, plan, 'shelter').state.broken).toEqual(['farm'])
-    expect(resolveDay(state, stormy, plan, 'shelter').report.crew.find((member) => member.id === 'niamh')?.fixedModule).toBeNull()
+    expect(resolveDay(state, stormy, plan, 'inside').state.broken).toEqual(['farm'])
+    expect(resolveDay(state, stormy, plan, 'inside').report.crew.find((member) => member.id === 'niamh')?.fixedModule).toBeNull()
 
     // One worn panel: staying mends it, being called in does not. (The storm itself wears one more.)
     const worn = createGame('sep-2017')
     worn.solarLoss = 1
     const fixing = planOf(worn, ['comms'], { niamh: { kind: 'repair' } })
     const stayed = resolveDay(worn, stormy, fixing, 'carry')
-    const called = resolveDay(worn, stormy, fixing, 'shelter')
+    const called = resolveDay(worn, stormy, fixing, 'inside')
     expect(stayed.report.crew.find((member) => member.id === 'niamh')?.fixedPanels).toBe(1)
     expect(called.report.crew.find((member) => member.id === 'niamh')?.fixedPanels).toBe(0)
     expect(called.state.solarLoss).toBe(stayed.state.solarLoss + 1)
-  })
-
-  it('a day in the shelter for nothing costs mood; a day in the shelter during a storm does not', () => {
-    const state = createGame('sep-2017')
-    crew(state, 'cian').mood = 2
-    const plan = planOf(state, ['comms'], { aoife: { kind: 'call' } })
-    const moodAfter = (scenario: Scenario, response: Response) => crew(resolveDay(state, scenario, plan, response).state, 'cian').mood
-    // Cian rests (+2 mood) in every case, so the differences come from the shelter alone.
-    expect(moodAfter(falseAlarm, 'shelter')).toBe(moodAfter(falseAlarm, 'carry') - 1)
-    expect(moodAfter(stormy, 'shelter')).toBe(moodAfter(falseAlarm, 'carry'))
   })
 
   it('someone who gets too ill on a rover trip drives home with nothing', () => {
@@ -518,7 +532,7 @@ describe('how a mission ends', () => {
     const over = handOver(next)
     expect(over.status).toBe('done')
     expect(over.history).toHaveLength(1)
-    expect(rate(over).missions).toHaveLength(4)
+    expect(rate(over).missions).toHaveLength(3)
   })
 
   it('runs for ten days, then counts stars', () => {
@@ -526,7 +540,7 @@ describe('how a mission ends', () => {
     expect(state.status).toBe('done')
     expect(state.history).toHaveLength(RULES.maxDays)
     expect(state.day).toBe(RULES.maxDays)
-    expect(rate(state).maxStars).toBe(5)
+    expect(rate(state).maxStars).toBe(4)
   })
 
   it('doing nothing at all fails', () => {
@@ -536,7 +550,7 @@ describe('how a mission ends', () => {
 
   it('keeping everyone cosy and doing no missions earns one star at most: there is no free safe option', () => {
     for (const entry of REAL) {
-      const state = playOut(entry, (current) => planOf(current, ['life', 'farm', 'comms'], { aoife: { kind: 'garden' } }), 'shelter')
+      const state = playOut(entry, (current) => planOf(current, ['life', 'farm', 'comms'], { aoife: { kind: 'garden' } }), 'inside')
       expect(rate(state).stars).toBeLessThanOrEqual(1)
     }
   })

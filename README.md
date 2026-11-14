@@ -35,26 +35,26 @@ While you play, the game does not lecture. The real records and the real-life fa
 
 2. **Give each astronaut a job.** Tend the plants, do research, build the radio telescope outside, repair the solar panels, drive the rover, rest, go to the sick bay, or call home. Each astronaut has health, mood and hunger. Each one loves a different job and does it better; the one who loves driving does a two-day rover trip in one day, and the one who loves fixing things mends three worn solar panels in a day instead of two. Some are friends, and two get on each other's nerves. Three days of work in a row makes anyone tired, and then only a day off helps.
 
-3. **Work on your four missions.** They are why the crew is there, and each one changes the base when it is finished:
+3. **Work on your three missions.** They are why the crew is there, and each one changes the base when it is finished:
 
    | Mission | How | What it gives you |
    |---|---|---|
    | Find water ice | Three rover trips to a dark crater | Life Support makes much more air |
-   | Moon-soil shield | Research in the Lab | Storms hurt less inside the base |
    | Radio telescope | Build it outside, piece by piece | The whole crew cheers up |
    | Watch the Sun | Run the Sun Telescope for 5 days | Flare alerts always show whether a storm could follow |
 
+4. **Decide whether to build the Moon-soil shield.** It is not a mission and earns no star. Research in the Lab costs power and working days; once it is finished, soil is heaped over the whole base and storms can no longer hurt anyone indoors, or the plants. You can do it first and play safe, or skip it, take the hits and get the missions done sooner.
+
 **Most mornings something happens**: a pea-sized rock hits the Greenhouse, a school wants to call, a supply pod lands far away, someone misses home, the rover gets stuck in the dust. Every card is a choice between two answers.
 
-**When the Sun fires a big flare, Mission Control calls** (if the Radio Dish has power). You have three answers:
+**When the Sun fires a big flare, Mission Control calls** (if the Radio Dish has power). You have two answers:
 
-- **Carry on.** All the work gets done. If a particle storm follows, people outside are hurt badly and people inside a little.
+- **Carry on.** All the work gets done. If a particle storm follows, people outside are hurt badly, and people indoors a little unless the Moon-soil shield is built.
 - **Call the outside crew in.** They get half their work done at most, and a rover trip has to start again.
-- **Everyone to the storm shelter.** Nobody is hurt, and everyone gets half a day's work done at most. If no storm comes, the crew's mood drops: a day squeezed into the shelter for nothing is no fun.
 
 Most flares bring no storm. The game then tells you what really happened that day, with a link to NASA's record.
 
-The tour lasts ten days. Once all four missions are done you choose: hand the base over that morning, or stay and get it ready. At the end you earn up to five stars: one for each finished mission, and one for handing the next crew a base with air, food and a healthy, happy crew. Nobody dies in this game. If things go very wrong the crew flies home early and you can try again.
+The tour lasts ten days. Once every mission is done you choose: hand the base over that morning, or stay and get it ready. At the end you earn up to four stars: one for each finished mission, and one for handing the next crew a base with air, food and a healthy, happy crew. Nobody dies in this game. If things go very wrong the crew flies home early and you can try again.
 
 ### The decisions the challenge asks for
 

@@ -98,8 +98,17 @@ export const FRIENDS: [string, string][] = [
 /** Pairs who get on each other's nerves when they spend the day in the same place. */
 export const CLASHES: [string, string][] = [['cian', 'niamh']]
 
-export const MISSION_IDS = ['ice', 'shield', 'dish', 'sun'] as const
+/** The missions the crew came to do. Each one that is finished earns a star. */
+export const MISSION_IDS = ['ice', 'dish', 'sun'] as const
 export type MissionId = (typeof MISSION_IDS)[number]
+
+/**
+ * Everything the crew builds up over several days: the missions, and the Moon-soil shield.
+ * The shield is not a mission and earns no star. It is the commander's choice: spend power
+ * and working days on protection, or ride the storms out and get the missions done sooner.
+ */
+export const PROJECT_IDS = ['ice', 'shield', 'dish', 'sun'] as const
+export type ProjectId = (typeof PROJECT_IDS)[number]
 
 export interface MissionInfo {
   name: string
@@ -109,7 +118,7 @@ export interface MissionInfo {
   reward: string
 }
 
-export const MISSIONS: Record<MissionId, MissionInfo> = {
+export const MISSIONS: Record<ProjectId, MissionInfo> = {
   ice: {
     name: 'Find water ice',
     goal: 3,
@@ -120,7 +129,7 @@ export const MISSIONS: Record<MissionId, MissionInfo> = {
     name: 'Moon-soil shield',
     goal: 8,
     how: 'Research in the Lab.',
-    reward: 'Storms hurt less inside the base.',
+    reward: 'Storms can no longer hurt anyone indoors, or the plants.',
   },
   dish: {
     name: 'Radio telescope',

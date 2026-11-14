@@ -14,17 +14,16 @@ interface Props {
 const ANSWER_WORDS: Record<DayReport['response'], string> = {
   carry: 'Carried on',
   inside: 'Called crew inside',
-  shelter: 'Took shelter',
 }
 
-function verdict(stars: number, evacuated: boolean, outOfAir: boolean): string {
+function verdict(stars: number, maxStars: number, evacuated: boolean, outOfAir: boolean): string {
   if (evacuated && outOfAir) {
     return 'The air ran out two days in a row, so the crew flew home early. Everyone is safe. Next time, give Life Support power before the air gets low.'
   }
   if (evacuated) {
     return 'Everyone was too sick or too unhappy to work, so the crew flew home early. Everyone is safe. Next time, use rest, the sick bay and calls home sooner.'
   }
-  if (stars >= 5) return 'A perfect tour. The next commander will have a hard time beating this.'
+  if (stars >= maxStars) return 'A perfect tour. The next commander will have a hard time beating this.'
   if (stars >= 3) return 'A strong tour. The next crew takes over a working base and real results.'
   if (stars >= 1) return 'The base is still standing and you have something to show for it. Next time, push the missions harder.'
   return 'Everyone is safe, but the missions are still waiting. What would you do differently?'
@@ -51,7 +50,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
             </span>
           ))}
         </p>
-        <p className="lead">{verdict(rating.stars, evacuated, game.airOutDays >= 2)}</p>
+        <p className="lead">{verdict(rating.stars, rating.maxStars, evacuated, game.airOutDays >= 2)}</p>
         {!evacuated && days < RULES.maxDays && (
           <p className="hint">
             You handed the base over early, after day {days} of {RULES.maxDays}.

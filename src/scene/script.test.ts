@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import raw from '../data/scenarios.json'
+import { MISSIONS } from '../game/content.ts'
 import { type GameState, type Plan, alertFor, createGame, emptyPlan, resolveDay } from '../game/outpost.ts'
 import { FLARE, STORM, scenarioOf } from '../game/testing.ts'
 import { walk, spotFor } from './layout.ts'
@@ -54,7 +55,7 @@ describe('the film of a day', () => {
     const state = createGame('sep-2017', 1)
     const scenario = scenarioOf('sep-2017', [{ watchFlare: FLARE, storm: STORM }])
     const plan = busyPlan(state)
-    for (const response of ['carry', 'inside', 'shelter'] as const) {
+    for (const response of ['carry', 'inside'] as const) {
       const result = resolveDay(state, scenario, plan, response)
       const film = restScript(state, result.state, result.report)
       expect(film[film.length - 1].kind).toBe('end')
@@ -82,10 +83,13 @@ describe('the film of a day', () => {
     expect(hit.sort()).toEqual(hurt.sort())
     expect(hurt).toContain('niamh')
 
-    const sheltered = resolveDay(state, scenario, plan, 'shelter')
-    const safe = restScript(state, sheltered.state, sheltered.report)
+    // With the Moon-soil shield built and everyone indoors, the storm hits nobody.
+    const shielded = structuredClone(state)
+    shielded.missions.shield = MISSIONS.shield.goal
+    const called = resolveDay(shielded, scenario, plan, 'inside')
+    const safe = restScript(shielded, called.state, called.report)
     expect(kinds(safe)).not.toContain('hit')
-    expect(safe.filter((cue) => cue.kind === 'go' && cue.act === 'shelter')).toHaveLength(state.crew.length)
+    expect(safe.some((cue) => cue.kind === 'float' && cue.text.includes('shield holds'))).toBe(true)
   })
 
   it('brings a recalled rover home', () => {
@@ -108,7 +112,7 @@ describe('the film of a day', () => {
         const alert = alertFor(state, scenario, plan)
         const calm = resolveDay(state, scenario, plan, 'carry')
         const morning = morningScript(state, calm.report, alert !== null)
-        const result = alert ? resolveDay(state, scenario, plan, day % 2 ? 'shelter' : 'inside') : calm
+        const result = alert ? resolveDay(state, scenario, plan, day % 2 ? 'carry' : 'inside') : calm
         const film = [...morning, ...later(restScript(state, result.state, result.report), MORNING)]
         expect(film.filter((cue) => cue.kind === 'end')).toHaveLength(1)
         state = result.state
@@ -120,7 +124,7 @@ describe('the film of a day', () => {
 
 describe('walking around the base', () => {
   it('finds a way between any two places, through the doors', () => {
-    const acts = ['idle', 'garden', 'lab', 'build', 'rest', 'shelter', 'board'] as const
+    const acts = ['idle', 'garden', 'lab', 'build', 'rest', 'board'] as const
     for (const from of acts) {
       for (const to of acts) {
         const steps = walk(spotFor(from, 0).node, spotFor(to, 0))
@@ -129,7 +133,7 @@ describe('walking around the base', () => {
         expect(end.y).toBe(spotFor(to, 0).y)
       }
     }
-    // From the building site to the shelter: out through the airlock, never in a straight line.
-    expect(walk(spotFor('build', 0).node, spotFor('shelter', 0)).length).toBeGreaterThan(4)
+    // From the building site to the Lab: in through the airlock, never in a straight line.
+    expect(walk(spotFor('build', 0).node, spotFor('lab', 0)).length).toBeGreaterThan(4)
   })
 })

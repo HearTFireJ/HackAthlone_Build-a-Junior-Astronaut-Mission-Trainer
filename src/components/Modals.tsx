@@ -130,7 +130,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
     return (
       <Card tone="event">
         <p className="eyebrow">Day {game.day} · This morning</p>
-        <h2>⭐ All four missions are done!</h2>
+        <h2>⭐ Every mission is done!</h2>
         <p>The next crew can come as soon as you call them.</p>
         <p className={`clue ${ready ? 'safe' : 'unknown'}`}>
           {ready ? (
@@ -197,15 +197,11 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
         <div className="choices">
           <button type="button" className="choice" onClick={() => onRespond('carry')}>
             <strong>Carry on</strong>
-            <span>Everyone finishes their work. If a storm comes, people outside are hurt badly and people inside {shield ? 'are mostly safe behind the shield' : 'a little'}.</span>
+            <span>Everyone finishes their work. If a storm comes, people outside are hurt badly{shield ? '. Indoors is safe under the shield.' : ' and people indoors a little.'}</span>
           </button>
           <button type="button" className="choice" disabled={names.length === 0} onClick={() => onRespond('inside')}>
             <strong>Call outside crew in</strong>
             <span>{names.length > 0 ? `${names.join(', ')} ${names.length === 1 ? 'stops' : 'stop'} early and ${names.length === 1 ? 'gets' : 'get'} half a day's work done at most. A rover trip is cancelled and must start again.` : 'Nobody is outside.'}</span>
-          </button>
-          <button type="button" className="choice" onClick={() => onRespond('shelter')}>
-            <strong>Everyone to the storm shelter</strong>
-            <span>Nobody is hurt. Everyone gets half a day's work done at most. If no storm comes, the crew is fed up with the wasted day.</span>
           </button>
         </div>
       </Card>

@@ -3,7 +3,7 @@
 // The rules (src/game/outpost.ts) have already decided everything that happens. This
 // file only decides how to show it. It is plain data, so it can be tested without a screen.
 
-import { JOBS, MISSIONS, MODULES, TRIPS, crewInfo, type JobId, type MissionId, type ModuleId } from '../game/content.ts'
+import { JOBS, MISSIONS, MODULES, TRIPS, crewInfo, type JobId, type ModuleId, type ProjectId } from '../game/content.ts'
 import { RULES, type DayReport, type GameState, type Missions, type Why } from '../game/outpost.ts'
 import type { Activity, PlaceId } from './layout.ts'
 
@@ -118,13 +118,12 @@ const WHY_WORDS: Record<Why, string> = {
   tired: 'tired',
   friend: 'with a friend',
   rival: 'annoyed',
-  bored: 'bored',
   hungry: 'hungry',
   called: 'called home',
   cheer: 'hooray!',
 }
 
-const MISSION_PLACE: Record<MissionId, PlaceId> = { ice: 'life', shield: 'shelter', dish: 'site', sun: 'scope' }
+const MISSION_PLACE: Record<ProjectId, PlaceId> = { ice: 'life', shield: 'habitat', dish: 'site', sun: 'scope' }
 
 const signed = (value: number) => (value > 0 ? `+${value}` : `−${Math.abs(value)}`)
 
@@ -144,13 +143,7 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
     if (member.gaveUp) add(t, { kind: 'note', text: `${crewInfo(member.id).name} was too poorly to carry on and drove home. The trip has to start again.`, tone: 'bad' })
   }
   if (report.alertShown) {
-    if (report.response === 'shelter') {
-      add(t, { kind: 'caption', text: 'Everyone to the storm shelter!', tone: 'warn' })
-      for (const member of report.crew) {
-        if (member.recalled) add(t, { kind: 'rover-in', who: member.id, act: 'shelter', hurry: true })
-        else if (!inRover(member.job)) add(t, { kind: 'go', who: member.id, act: 'shelter', hurry: true })
-      }
-    } else if (report.response === 'inside') {
+    if (report.response === 'inside') {
       add(t, { kind: 'caption', text: 'Outside crew, come inside!', tone: 'warn' })
       for (const member of report.crew) {
         if (member.recalled) add(t, { kind: 'rover-in', who: member.id, act: 'idle', hurry: true })
@@ -168,18 +161,19 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
     add(t, { kind: 'time', label: 'Storm' })
     add(t, { kind: 'storm', seconds: 4.8, severe: report.storm.severe })
     add(t, { kind: 'caption', text: `A ${report.storm.severe ? 'severe ' : ''}solar particle storm hits the base!`, tone: 'bad' })
-    let sheltered = false
+    // Indoors and unhurt in a storm can only mean one thing: the Moon-soil shield is built.
+    let shielded = false
     for (const member of report.crew) {
       if (member.hurt > 0) {
         add(t + 1.5, { kind: 'hit', who: member.id })
         add(t + 1.5, { kind: 'float', at: { who: member.id }, text: `−${member.hurt} ♥`, tone: 'bad' })
         stats[member.id] = { ...stats[member.id], health: Math.max(0, stats[member.id].health - member.hurt) }
-      } else if (member.where === 'shelter') {
-        sheltered = true
+      } else if (member.where === 'inside') {
+        shielded = true
       }
     }
     add(t + 1.5, { kind: 'hud', patch: { crew: { ...stats } } })
-    if (sheltered) add(t + 1.8, { kind: 'float', at: 'shelter', text: '🛡️ Safe in here', tone: 'good' })
+    if (shielded) add(t + 1.8, { kind: 'float', at: 'habitat', text: '🛡️ The shield holds', tone: 'good' })
     add(t + 2.6, { kind: 'hud', patch: { panelsDead: Math.min(before.solar, before.solarLoss + before.powerPenalty + 1) } })
     add(t + 2.6, { kind: 'float', at: 'panels', text: '−1 ⚡ worn by the storm', tone: 'bad' })
     if (report.cropLoss > 0) {
@@ -229,8 +223,12 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
     report.finished.forEach((id, index) => {
       add(t + 2 + index * 0.3, { kind: 'fx', fx: 'celebrate', place: MISSION_PLACE[id] })
     })
-    const names = report.finished.map((id) => MISSIONS[id].name).join(' and ')
-    add(t + 2, { kind: 'caption', text: `⭐ Mission complete: ${names}! ${MISSIONS[report.finished[0]].reward}`, tone: 'good' })
+    // The shield is not a mission: it gets its own words, and no star.
+    const stars = report.finished.filter((id) => id !== 'shield')
+    const said: string[] = []
+    if (stars.length > 0) said.push(`⭐ Mission complete: ${stars.map((id) => MISSIONS[id].name).join(' and ')}! ${MISSIONS[stars[0]].reward}`)
+    if (report.finished.includes('shield')) said.push(`🛡️ The Moon-soil shield is built! ${MISSIONS.shield.reward}`)
+    add(t + 2, { kind: 'caption', text: said.join(' '), tone: 'good' })
     t += 2.4
   }
   t += 2.8

@@ -20,7 +20,7 @@ export interface Rect {
 }
 
 /** Every part of the base that can be pointed at. */
-export type PlaceId = 'habitat' | 'farm' | 'life' | 'lab' | 'garage' | 'shelter' | 'panels' | 'site' | 'comms' | 'scope'
+export type PlaceId = 'habitat' | 'farm' | 'life' | 'lab' | 'garage' | 'panels' | 'site' | 'comms' | 'scope'
 
 export const HAB = { x: 800, y: 450, r: 125 }
 export const ROOMS = {
@@ -28,7 +28,6 @@ export const ROOMS = {
   farm: { x: 1075, y: 370, w: 260, h: 160 },
   lab: { x: 430, y: 645, w: 200, h: 135 },
   garage: { x: 745, y: 668, w: 205, h: 137 },
-  shelter: { x: 485, y: 172, w: 165, h: 123 },
 } as const satisfies Record<string, Rect>
 export type RoomId = keyof typeof ROOMS
 
@@ -43,7 +42,6 @@ export const CORRIDORS: [Pt, Pt][] = [
   [{ x: 920, y: 450 }, { x: 1075, y: 450 }],
   [{ x: 716, y: 534 }, { x: 618, y: 650 }],
   [{ x: 800, y: 570 }, { x: 800, y: 668 }],
-  [{ x: 716, y: 366 }, { x: 640, y: 290 }],
 ]
 
 /** The rover's way out of the base. It ends far off the right edge of the picture. */
@@ -77,9 +75,6 @@ const NODES = {
   habS: { x: 800, y: 562 },
   garDoor: { x: 800, y: 676 },
   garage: { x: 800, y: 730 },
-  habNW: { x: 718, y: 368 },
-  shelDoor: { x: 638, y: 288 },
-  shelter: { x: 612, y: 262 },
   habSE: { x: 882, y: 532 },
   se1: { x: 1010, y: 640, out: true },
   siteGate: { x: 1128, y: 700, out: true },
@@ -92,7 +87,6 @@ const EDGES: [NodeId, NodeId][] = [
   ['hab', 'habW'], ['habW', 'lifeDoor'], ['lifeDoor', 'life'],
   ['hab', 'habSW'], ['habSW', 'labDoor'], ['labDoor', 'lab'],
   ['hab', 'habS'], ['habS', 'garDoor'], ['garDoor', 'garage'],
-  ['hab', 'habNW'], ['habNW', 'shelDoor'], ['shelDoor', 'shelter'],
   ['hab', 'habSE'], ['habSE', 'se1'], ['se1', 'siteGate'],
 ]
 
@@ -133,7 +127,7 @@ function nodePath(from: NodeId, to: NodeId): NodeId[] {
 // ---------------------------------------------------------------- where people stand
 
 /** What an astronaut is doing on the spot where they stand. */
-export type Activity = 'idle' | 'garden' | 'lab' | 'build' | 'repair' | 'rest' | 'sickbay' | 'call' | 'shelter' | 'board'
+export type Activity = 'idle' | 'garden' | 'lab' | 'build' | 'repair' | 'rest' | 'sickbay' | 'call' | 'board'
 
 export type Facing = 'up' | 'down' | 'left' | 'right'
 
@@ -191,13 +185,6 @@ const SPOTS: Record<Exclude<Activity, 'repair'>, Spot[]> = {
     spot(1148, 646, 'siteGate', 'right', { work: { x: 1182, y: 660 } }),
     spot(1196, 800, 'siteGate', 'up', { work: { x: 1212, y: 766 } }),
     spot(1202, 590, 'siteGate', 'down', { work: { x: 1216, y: 618 } }),
-  ],
-  shelter: [
-    spot(522, 240, 'shelter', 'down'),
-    spot(567, 240, 'shelter', 'down'),
-    spot(612, 240, 'shelter', 'down'),
-    spot(522, 284, 'shelter', 'down'),
-    spot(567, 284, 'shelter', 'down'),
   ],
   board: [spot(842, 748, 'garage', 'right')],
 }
@@ -264,7 +251,6 @@ export const PLACES: PlaceShape[] = [
   { id: 'life', module: 'life', name: 'Life Support', label: { x: 380, y: 542 }, contains: inRect(ROOMS.life) },
   { id: 'lab', module: 'lab', name: 'Lab', label: { x: 530, y: 802 }, contains: inRect(ROOMS.lab) },
   { id: 'garage', module: 'garage', name: 'Rover Bay', label: { x: 848, y: 826 }, contains: inRect(ROOMS.garage) },
-  { id: 'shelter', module: null, name: 'Storm shelter', label: { x: 556, y: 324 }, contains: inRect(ROOMS.shelter, 14) },
   { id: 'panels', module: null, name: 'Solar panels', label: { x: 920, y: 82 }, contains: inRect({ x: 712, y: 100, w: 420, h: 150 }) },
   { id: 'site', module: null, name: 'Radio telescope', label: { x: 1250, y: 812 }, contains: inCircle(SITE, 14) },
   { id: 'comms', module: 'comms', name: 'Radio Dish', label: { x: 300, y: 282 }, contains: inCircle(DISH, 8) },

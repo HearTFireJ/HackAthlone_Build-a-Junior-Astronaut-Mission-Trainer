@@ -1,6 +1,6 @@
 // Small helpers that turn game values into words and symbols for the screen.
 
-import { crewInfo, type JobId, type MissionId, type ModuleId } from '../game/content.ts'
+import { crewInfo, type JobId, type ModuleId, type ProjectId } from '../game/content.ts'
 import { RULES, type Condition, type GameState } from '../game/outpost.ts'
 
 export const MODULE_ICONS: Record<ModuleId, string> = {
@@ -12,7 +12,7 @@ export const MODULE_ICONS: Record<ModuleId, string> = {
   garage: '🚙',
 }
 
-export const MISSION_ICONS: Record<MissionId, string> = {
+export const MISSION_ICONS: Record<ProjectId, string> = {
   ice: '❄️',
   shield: '🛡️',
   dish: '🏗️',

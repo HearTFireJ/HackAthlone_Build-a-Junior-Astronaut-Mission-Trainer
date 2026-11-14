@@ -119,11 +119,11 @@ function withFacts(facts: FactId[], ...more: (FactId | undefined)[]): FactId[] {
 /** The real-life facts that a day's events bring to light. */
 function factsOf(report: DayReport): FactId[] {
   const facts: FactId[] = report.finished.map((id) => MISSION_FACTS[id])
-  if (report.storm && report.response === 'shelter') facts.push('shelter')
+  if (report.storm && report.response === 'inside') facts.push('shelter')
   if (report.call === 'false-alarm') facts.push('fraction')
   if (report.storm) facts.push('panels')
   if (report.cropLoss > 0) facts.push('plants')
-  if (report.crew.some((member) => member.why.includes('rival') || member.why.includes('bored'))) facts.push('hazards')
+  if (report.crew.some((member) => member.why.includes('rival'))) facts.push('hazards')
   return facts
 }
 

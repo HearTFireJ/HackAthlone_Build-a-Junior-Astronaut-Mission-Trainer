@@ -48,7 +48,6 @@ const FLOOR = {
   farm: '#3b3327',
   lab: '#483c6e',
   garage: '#4a4f5d',
-  shelter: '#5b4f3d',
   corridor: '#5a6592',
 }
 const WALL = 10
@@ -458,17 +457,13 @@ export function drawBase(ctx: Ctx, base: BaseView, t: number) {
   ctx.fill()
   ctx.restore()
 
-  // The storm shelter is buried under a heap of Moon soil.
-  const s = ROOMS.shelter
-  const heap = ctx.createRadialGradient(s.x + s.w / 2 - 20, s.y + s.h / 2 - 20, 20, s.x + s.w / 2, s.y + s.h / 2, 120)
-  heap.addColorStop(0, base.shield ? '#b9c7a2' : '#a59a86')
-  heap.addColorStop(1, base.shield ? '#6f8163' : '#6f675b')
-  ctx.fillStyle = heap
-  box(ctx, s.x - 26, s.y - 24, s.w + 52, s.h + 48, 46)
-  ctx.fill()
-  ctx.strokeStyle = base.shield ? '#5fd38d' : 'rgba(30,26,20,0.55)'
-  ctx.lineWidth = base.shield ? 4 : 2.5
-  ctx.stroke()
+  // The Moon-soil shield: once it is built, soil is heaped up around every room of the base.
+  if (base.shield) {
+    hulls(ctx, 27, '#5fd38d')
+    hulls(ctx, 24, '#6f7a5f')
+    hulls(ctx, 17, '#9aa588')
+    hulls(ctx, 10, '#b9c2a4')
+  }
 
   // A warm glow around every room that is switched on.
   ctx.save()
@@ -491,7 +486,6 @@ export function drawBase(ctx: Ctx, base: BaseView, t: number) {
   floor(ctx, ROOMS.farm, FLOOR.farm)
   floor(ctx, ROOMS.lab, FLOOR.lab)
   floor(ctx, ROOMS.garage, FLOOR.garage)
-  floor(ctx, ROOMS.shelter, FLOOR.shelter)
   const habFloor = ctx.createRadialGradient(HAB.x, HAB.y, 10, HAB.x, HAB.y, HAB.r)
   habFloor.addColorStop(0, '#4a5890')
   habFloor.addColorStop(1, FLOOR.hab)
@@ -532,7 +526,6 @@ export function drawBase(ctx: Ctx, base: BaseView, t: number) {
   greenhouse(ctx, lit('farm'), base, t)
   lab(ctx, lit('lab'), t)
   garage(ctx, lit('garage'), t)
-  shelter(ctx)
 
   for (const id of ['life', 'farm', 'lab', 'garage'] as const) if (!lit(id)) dark(ctx, ROOMS[id])
 
@@ -1010,42 +1003,6 @@ function garage(ctx: Ctx, on: boolean, t: number) {
   ctx.fillRect(776, 776, 12, 3)
   crate(ctx, 812, 772, 16, 14)
   crate(ctx, 830, 776, 13, 10, '#b7c0d8')
-}
-
-function shelter(ctx: Ctx) {
-  // A long bench along the wall, and what a crew needs to wait out a storm.
-  ctx.fillStyle = '#8a7a5f'
-  ctx.strokeStyle = '#2b2419'
-  ctx.lineWidth = 2
-  box(ctx, 500, 187, 104, 10, 3)
-  ctx.fill()
-  ctx.stroke()
-  // A lamp in the ceiling.
-  const lamp = ctx.createRadialGradient(567, 232, 2, 567, 232, 62)
-  lamp.addColorStop(0, 'rgba(255,224,150,0.3)')
-  lamp.addColorStop(1, 'rgba(255,224,150,0)')
-  ctx.fillStyle = lamp
-  ctx.fillRect(495, 182, 145, 103)
-  // Food, water and a first-aid box.
-  crate(ctx, 610, 187, 24, 17)
-  crate(ctx, 616, 207, 18, 13, '#b7a37a')
-  for (const x of [500, 510, 520]) {
-    circle(ctx, x + 4, 270, 4.2)
-    ctx.fillStyle = '#7fc4ff'
-    ctx.fill()
-    ctx.strokeStyle = EDGE
-    ctx.lineWidth = 1.2
-    ctx.stroke()
-  }
-  box(ctx, 618, 262, 17, 14, 3)
-  ctx.fillStyle = '#f4f7ff'
-  ctx.fill()
-  ctx.strokeStyle = EDGE
-  ctx.lineWidth = 1.6
-  ctx.stroke()
-  ctx.fillStyle = '#ff5d6c'
-  ctx.fillRect(625, 265, 3, 8)
-  ctx.fillRect(622.5, 267.5, 8, 3)
 }
 
 function solarPanels(ctx: Ctx, base: BaseView, t: number) {

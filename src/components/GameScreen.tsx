@@ -106,7 +106,6 @@ function jobAt(place: PlaceId, game: GameState): Job | null {
 }
 
 const PLACE_HINTS: Partial<Record<PlaceId, string>> = {
-  shelter: 'The storm shelter. You can send everyone here when a flare alert comes in.',
   habitat: 'The crew quarters. Pick an astronaut first, then click here to let them rest.',
   panels: 'The solar panels make all the power. Pick an astronaut, then click here to repair them.',
   site: 'The radio telescope is built here. Pick an astronaut, then click here to build.',
@@ -121,17 +120,16 @@ const PLACE_WORDS: Record<PlaceId, [name: string, purpose: string]> = {
   habitat: ['Crew quarters', 'Where the crew eats, rests and sleeps.'],
   life: ['Life Support', 'Makes the air the crew breathes.'],
   farm: ['Greenhouse', "Grows the crew's food."],
-  lab: ['Lab', 'Research into a Moon-soil shield against storms.'],
+  lab: ['Lab', 'Researches a Moon-soil shield: with it, storms cannot hurt anyone indoors.'],
   garage: ['Rover Bay', 'Charges the rover for trips far from the base.'],
   comms: ['Radio Dish', 'Lets Mission Control warn you about the Sun.'],
   scope: ['Sun Telescope', 'Shows whether a flare could bring a storm.'],
-  shelter: ['Storm shelter', 'The safest place when a storm comes.'],
   panels: ['Solar panels', "Make all of the base's power."],
   site: ['Radio telescope', 'Built here, piece by piece.'],
 }
 
 /** Where each mission is done. Pointing at one lights up the other, so the two are easy to match. */
-const MISSION_PLACE: Record<MissionId, PlaceId> = { ice: 'garage', shield: 'lab', dish: 'site', sun: 'scope' }
+const MISSION_PLACE: Record<MissionId, PlaceId> = { ice: 'garage', dish: 'site', sun: 'scope' }
 const missionAt = (place: PlaceId): MissionId | null => MISSION_IDS.find((id) => MISSION_PLACE[id] === place) ?? null
 
 /**
@@ -285,7 +283,7 @@ export function GameScreen(props: Props) {
     const place = pick.id
     if (selected) {
       const job = jobAt(place, game)
-      if (!job) return say(place === 'shelter' ? PLACE_HINTS.shelter! : `There is no job for ${crewInfo(selected).name} there today.`)
+      if (!job) return say(`There is no job for ${crewInfo(selected).name} there today.`)
       return assign(selected, job)
     }
     const module = (['life', 'farm', 'comms', 'scope', 'lab', 'garage'] as PlaceId[]).includes(place) ? (place as ModuleId) : null
@@ -423,7 +421,7 @@ export function GameScreen(props: Props) {
         <LogWindow lines={props.log} />
         </div>
 
-        {/* The missions, and the fifth star. */}
+        {/* The missions, and the last star. */}
         <ul className="goals" aria-label="Missions">
           {MISSION_IDS.map((id) => {
             const done = missionDone(shown.missions, id)
@@ -444,7 +442,7 @@ export function GameScreen(props: Props) {
           <li className={`goal${handoverReady(game) ? ' done' : ''}${goalOver === 'handover' ? ' lit' : ''}`} onMouseEnter={() => setGoalOver('handover')} onMouseLeave={() => setGoalOver(null)}>
             <span className="goal-name">🤝 Hand over the base</span>
             <span className="goal-count">{handoverReady(game) ? 'ready' : 'not yet'}</span>
-            {/* The fifth star. Say what is still missing, so it is never a surprise at the end. */}
+            {/* The last star. Say what is still missing, so it is never a surprise at the end. */}
             {!handoverReady(game) && <span className="goal-needs">Needs {handoverNeeds(game).join(', ')}.</span>}
             {/* With every mission done, the commander may end the tour on any morning. */}
             {phase === 'plan' && allMissionsDone(game) && (
