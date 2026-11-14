@@ -374,6 +374,10 @@ button:disabled { cursor: not-allowed; }
   .module .spot-icon { position: static; }
   .action-bar { position: sticky; bottom: 0; flex-direction: column; align-items: stretch; }
   .action-bar .primary { width: 100%; }
+  /* On a phone the bar at the bottom stays small: only warnings, no how-to line. */
+  .note.next-step { display: none; }
+  .action-notes { font-size: 0.78rem; gap: 0.15rem 0.6rem; }
+  .action-bar { gap: 0.4rem; padding: 0.45rem 0.8rem; }
   .token.small { width: 1.4rem; height: 1.4rem; font-size: 0.68rem; }
   .job-grid { grid-template-columns: 1fr 1fr; }
   .report-missions { grid-template-columns: 1fr 1fr; }

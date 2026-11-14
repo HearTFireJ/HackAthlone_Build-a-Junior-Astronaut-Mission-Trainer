@@ -38,7 +38,7 @@ Each turn is one day, and a tour lasts ten days. Then the next crew arrives and 
    | Radio telescope | Build it outside, piece by piece | The whole crew cheers up |
    | Watch the Sun | Run the Sun Telescope for 5 days | Alerts always say if a cloud left the Sun |
 
-**Most mornings something happens**: a pea-sized rock hits the Greenhouse, a school wants to call, a supply pod lands far away, someone misses home. Every card is a choice between two costs.
+**Most mornings something happens**: a pea-sized rock hits the Greenhouse, a school wants to call, a supply pod lands far away, someone misses home, the rover gets stuck in the dust. Every card is a choice between two answers.
 
 **When the Sun fires a big flare, Mission Control calls** (if the Radio Dish has power). You have three answers:
 
@@ -150,6 +150,7 @@ No NASA logos or other NASA branding are used anywhere in the project.
 - NASA, "Dust: An Out-of-This World Problem": https://www.nasa.gov/humans-in-space/dust-an-out-of-this-world-problem/
 - NASA, "Isolation: What Can We Learn From the Experiences of NASA Astronauts?": https://www.nasa.gov/humans-in-space/isolation-what-can-we-learn-from-the-experiences-of-nasa-astronauts/
 - NASA, "5 Hazards of Human Spaceflight": https://www.nasa.gov/hrp/hazards/
+- NASA, "Shrinking Moon May Be Generating Moonquakes": https://www.nasa.gov/news-release/shrinking-moon-may-be-generating-moonquakes/
 - NASA, "Growing Plants in Space": https://www.nasa.gov/exploration-research-and-technology/growing-plants-in-space/
 - NASA Science, "Shadows near the Moon's South Pole": https://science.nasa.gov/resource/shadows-near-the-moons-south-pole/
 - NASA, "NASA Plans to Assign Missions for Two Future Artemis Cargo Landers": https://www.nasa.gov/news-release/nasa-plans-to-assign-missions-for-two-future-artemis-cargo-landers/

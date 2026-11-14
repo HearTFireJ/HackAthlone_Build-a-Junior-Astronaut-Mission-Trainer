@@ -89,6 +89,11 @@ export const FACTS = {
     source: 'NASA: Growing Plants in Space',
     url: 'https://www.nasa.gov/exploration-research-and-technology/growing-plants-in-space/',
   },
+  quakes: {
+    text: 'The Moon has quakes too. Seismometers from the Apollo missions recorded 28 shallow moonquakes between 1969 and 1977.',
+    source: 'NASA: Shrinking Moon May Be Generating Moonquakes',
+    url: 'https://www.nasa.gov/news-release/shrinking-moon-may-be-generating-moonquakes/',
+  },
 } satisfies Record<string, Fact>
 
 export type FactId = keyof typeof FACTS
@@ -103,4 +108,5 @@ export const EVENT_FACTS: Partial<Record<string, FactId>> = {
   shadow: 'light',
   pod: 'cargo',
   stuck: 'rover',
+  quake: 'quakes',
 }

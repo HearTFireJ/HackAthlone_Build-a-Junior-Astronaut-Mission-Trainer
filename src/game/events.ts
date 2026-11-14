@@ -18,6 +18,8 @@ export const EVENT_IDS = [
   'homesick',
   'stuck',
   'find',
+  'quake',
+  'box',
 ] as const
 export type EventId = (typeof EVENT_IDS)[number]
 
@@ -272,6 +274,56 @@ export const EVENTS: Record<EventId, EventCard> = {
           moodFor(state, (id) => (id === who ? -2 : 0))
         },
         result: (_state, who) => `${nameOf(who)} nods and goes quiet.`,
+      },
+    ],
+  },
+  quake: {
+    title: 'A moonquake',
+    icon: '📳',
+    text: () => 'The ground shook for a few minutes. Now a water pipe in the Greenhouse is dripping.',
+    aboutSomeone: false,
+    when: (state) => !state.broken.includes('farm') && !state.offToday.includes('farm'),
+    options: [
+      {
+        label: 'Fix the pipe now',
+        detail: 'The Greenhouse cannot run today',
+        apply: (state) => {
+          state.offToday.push('farm')
+        },
+        result: () => 'The pipe is fixed. The Greenhouse cannot run until tomorrow.',
+      },
+      {
+        label: 'Put a bucket under it',
+        detail: 'Some plants go thirsty: you lose 2 food',
+        apply: (state) => {
+          state.food -= 2
+        },
+        result: () => 'The bucket filled up twice. Some of the plants went thirsty, and you lost 2 food.',
+      },
+    ],
+  },
+  box: {
+    title: 'A box from the last crew',
+    icon: '🎁',
+    text: (_state, who) => `${nameOf(who)} found a box behind a wall panel. The last crew left it, with a note: "Pick one. The other one is for the crew after you."`,
+    aboutSomeone: true,
+    when: () => true,
+    options: [
+      {
+        label: 'Take the snacks',
+        detail: '3 more food',
+        apply: (state) => {
+          state.food += 3
+        },
+        result: () => 'Dried fruit and chocolate: 3 more food. The films go back behind the panel.',
+      },
+      {
+        label: 'Take the films',
+        detail: 'Everyone cheers up',
+        apply: (state) => {
+          moodFor(state, () => 1)
+        },
+        result: () => 'Film night! Everyone is in a better mood. The snacks go back behind the panel.',
       },
     ],
   },
