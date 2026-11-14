@@ -17,7 +17,7 @@ export const MODULES: Record<ModuleId, ModuleInfo> = {
   life: { name: 'Life Support', power: 2, does: 'Makes air to breathe' },
   farm: { name: 'Greenhouse', power: 2, does: 'Grow-lights: plants make food' },
   comms: { name: 'Radio Dish', power: 1, does: 'Storm alerts today, Sun report tomorrow' },
-  scope: { name: 'Sun Telescope', power: 1, does: 'Watches the Sun for clouds of gas' },
+  scope: { name: 'Sun Telescope', power: 1, does: 'Shows whether a flare could bring a storm' },
   lab: { name: 'Lab', power: 2, does: 'Lets the crew do research' },
   garage: { name: 'Rover Bay', power: 2, does: 'Charges the rover for a trip' },
 }
@@ -132,7 +132,7 @@ export const MISSIONS: Record<MissionId, MissionInfo> = {
     name: 'Watch the Sun',
     goal: 5,
     how: 'Run the Sun Telescope for 5 days.',
-    reward: 'Alerts always say if a cloud left the Sun.',
+    reward: 'Flare alerts always show whether a storm could follow.',
   },
 }
 

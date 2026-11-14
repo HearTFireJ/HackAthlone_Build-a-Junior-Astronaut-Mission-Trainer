@@ -643,7 +643,9 @@ export class World {
         if (far !== null && (!best || far < best.far)) best = { id, far }
       }
       for (const actor of this.actors.values()) if (!actor.hidden) offer(actor.id, reach(actor, false))
-      for (const planned of this.planned()) {
+      // A shadow at a workplace can be clicked to pick that astronaut, but not while someone
+      // else is picked: then a click on the place means "send them here", shadow or no shadow.
+      for (const planned of this.selected ? [] : this.planned()) {
         if (planned.act === 'idle' || planned.act === 'rest') continue
         const at = spotFor(planned.act, planned.slot, planned.repairAt)
         offer(planned.id, reach(at, !!at.lie))

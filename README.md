@@ -42,7 +42,7 @@ While you play, the game does not lecture. The real records and the real-life fa
    | Find water ice | Three rover trips to a dark crater | Life Support makes much more air |
    | Moon-soil shield | Research in the Lab | Storms hurt less inside the base |
    | Radio telescope | Build it outside, piece by piece | The whole crew cheers up |
-   | Watch the Sun | Run the Sun Telescope for 5 days | Alerts always say if a cloud left the Sun |
+   | Watch the Sun | Run the Sun Telescope for 5 days | Flare alerts always show whether a storm could follow |
 
 **Most mornings something happens**: a pea-sized rock hits the Greenhouse, a school wants to call, a supply pod lands far away, someone misses home, the rover gets stuck in the dust. Every card is a choice between two answers.
 

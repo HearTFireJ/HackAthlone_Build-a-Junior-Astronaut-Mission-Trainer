@@ -12,6 +12,7 @@ import {
   TRIPS,
   crewInfo,
   type JobId,
+  type MissionId,
   type ModuleId,
 } from '../game/content.ts'
 import {
@@ -116,11 +117,15 @@ const PLACE_WORDS: Record<PlaceId, [name: string, purpose: string]> = {
   lab: ['Lab', 'Research into a Moon-soil shield against storms.'],
   garage: ['Rover Bay', 'Charges the rover for trips far from the base.'],
   comms: ['Radio Dish', 'Lets Mission Control warn you about the Sun.'],
-  scope: ['Sun Telescope', 'Watches the Sun for clouds of gas.'],
+  scope: ['Sun Telescope', 'Shows whether a flare could bring a storm.'],
   shelter: ['Storm shelter', 'The safest place when a storm comes.'],
   panels: ['Solar panels', "Make all of the base's power."],
-  site: ['Radio telescope', 'A mission: it is built here, piece by piece.'],
+  site: ['Radio telescope', 'Built here, piece by piece.'],
 }
+
+/** Where each mission is done. Pointing at one lights up the other, so the two are easy to match. */
+const MISSION_PLACE: Record<MissionId, PlaceId> = { ice: 'garage', shield: 'lab', dish: 'site', sun: 'scope' }
+const missionAt = (place: PlaceId): MissionId | null => MISSION_IDS.find((id) => MISSION_PLACE[id] === place) ?? null
 
 /**
  * What one day of this job makes when this astronaut does it, in a few characters: "+2 🥕".
@@ -137,6 +142,17 @@ function jobOutput(game: GameState, astronautId: string, job: Job): string | nul
   // A repair mends a broken module first; only with none broken does it bring panels back.
   if (job.kind === 'repair' && game.broken.length === 0) return `+${panelsFixed(game.solarLoss, points)} ⚡`
   return null
+}
+
+/**
+ * Why this astronaut cannot be given this job, or null if they can. Giving someone a rover
+ * trip takes the rover from whoever was going to drive, so a trip is checked as if nobody
+ * else had been given one.
+ */
+function choiceProblem(game: GameState, plan: Plan, astronautId: string, job: Job): string | null {
+  if (job.kind !== 'trip') return jobProblem(game, plan, astronautId, job)
+  const jobs = Object.fromEntries(Object.entries(plan.jobs).filter(([id, other]) => id === astronautId || other.kind !== 'trip'))
+  return jobProblem(game, { ...plan, jobs }, astronautId, job)
 }
 
 /** What the base still lacks for a good handover to the next crew, as a few short words each. */
@@ -166,6 +182,8 @@ export function GameScreen(props: Props) {
   const [timeLabel, setTimeLabel] = useState('Morning')
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null)
   const [hovered, setHovered] = useState<Pick | null>(null)
+  // The row of the mission window the mouse is over.
+  const [goalOver, setGoalOver] = useState<MissionId | 'handover' | null>(null)
 
   const toastCount = useRef(0)
   useEffect(() => {
@@ -212,7 +230,7 @@ export function GameScreen(props: Props) {
   }
 
   const assign = (id: string, job: Job) => {
-    const problem = jobProblem(game, plan, id, job)
+    const problem = choiceProblem(game, plan, id, job)
     if (problem) return say(problem)
     props.onAssign(id, job)
     props.onSelect(null)
@@ -239,22 +257,34 @@ export function GameScreen(props: Props) {
   if (planning && selected) {
     for (const place of ['farm', 'lab', 'site', 'panels', 'habitat', 'garage', 'life', 'comms', 'scope'] as PlaceId[]) {
       const job = jobAt(place, game)
-      if (job && !jobProblem(game, plan, selected, job)) targets.push(place)
+      if (job && !choiceProblem(game, plan, selected, job)) targets.push(place)
     }
+  } else if (goalOver && goalOver !== 'handover') {
+    // Pointing at a mission lights up the place where it is done.
+    targets.push(MISSION_PLACE[goalOver])
   }
 
   // What the bottom bar says about the thing under the mouse: a name and one short line.
   let hover: [name: string, line: string] | null = null
-  if (hovered?.kind === 'place' || hovered?.kind === 'switch') {
+  // The mission that goes with the place under the mouse, if there is one.
+  let hoverMission: MissionId | null = null
+  if (goalOver === 'handover') {
+    const { air, food, stat } = RULES.handover
+    hover = ['Hand over the base', `End with ${air} air, ${food} food, and everyone at ${stat} or more for health and mood. Reward: one more star.`]
+  } else if (goalOver) {
+    hover = [MISSIONS[goalOver].name, `${MISSIONS[goalOver].how} Reward: ${MISSIONS[goalOver].reward}`]
+  } else if (hovered?.kind === 'place' || hovered?.kind === 'switch') {
     const place: PlaceId = hovered.kind === 'place' ? hovered.id : hovered.module
     hover = PLACE_WORDS[place]
+    hoverMission = missionAt(place)
     // With someone picked, the question changes to "what happens if I click here?".
     const job = planning && selected && hovered.kind === 'place' ? jobAt(place, game) : null
     if (job && selected) {
-      const problem = jobProblem(game, plan, selected, job)
+      const problem = choiceProblem(game, plan, selected, job)
       const work = job.kind === 'trip' && job.trip ? TRIPS[job.trip].name : JOBS[job.kind].name
       const out = jobOutput(game, selected, job)
       hover = problem ? [crewInfo(selected).name, problem] : [`${crewInfo(selected).name} →`, out ? `${work}  ${out}` : work]
+      hoverMission = null
     }
   } else if (hovered?.kind === 'pawn' && planning) {
     const who = crewInfo(hovered.id)
@@ -339,7 +369,7 @@ export function GameScreen(props: Props) {
           {MISSION_IDS.map((id) => {
             const done = missionDone(shown.missions, id)
             return (
-              <li key={id} className={done ? 'goal done' : 'goal'} title={`${MISSIONS[id].how} Reward: ${MISSIONS[id].reward}`}>
+              <li key={id} className={`goal${done ? ' done' : ''}${hoverMission === id || goalOver === id ? ' lit' : ''}`} onMouseEnter={() => setGoalOver(id)} onMouseLeave={() => setGoalOver(null)}>
                 <span className="goal-name">
                   {done ? '✅' : MISSION_ICONS[id]} {MISSIONS[id].name}
                 </span>
@@ -352,7 +382,7 @@ export function GameScreen(props: Props) {
               </li>
             )
           })}
-          <li className={handoverReady(game) ? 'goal done' : 'goal'}>
+          <li className={`goal${handoverReady(game) ? ' done' : ''}${goalOver === 'handover' ? ' lit' : ''}`} onMouseEnter={() => setGoalOver('handover')} onMouseLeave={() => setGoalOver(null)}>
             <span className="goal-name">🤝 Hand over the base</span>
             <span className="goal-count">{handoverReady(game) ? 'ready' : 'not yet'}</span>
             {/* The fifth star. Say what is still missing, so it is never a surprise at the end. */}
@@ -364,6 +394,11 @@ export function GameScreen(props: Props) {
         {hover ? (
           <div className="subtitle info">
             <strong>{hover[0]}</strong> {hover[1]}
+            {hoverMission && (
+              <span className="mission-chip">
+                {MISSION_ICONS[hoverMission]} Mission: {MISSIONS[hoverMission].name}
+              </span>
+            )}
           </div>
         ) : planning ? (
           <div className="subtitle plain">
@@ -462,7 +497,7 @@ function Meter({ icon, label, value, detail, tone, gold = false }: { icon: strin
 }
 
 const MENU_WIDTH = 288
-const MENU_HEIGHT = 400
+const MENU_HEIGHT = 520
 
 /**
  * The list of jobs. It opens on the picture, just left of the crew quarters where the
@@ -514,7 +549,7 @@ function JobMenu({ astronautId, game, plan, anchor, onAssign, onClose }: { astro
       </p>
       <div className="job-list">
         {choices.map((choice) => {
-          const why = jobProblem(game, plan, astronautId, choice.job)
+          const why = choiceProblem(game, plan, astronautId, choice.job)
           const chosen = current?.kind === choice.job.kind && current?.trip === choice.job.trip
           const out = why ? null : jobOutput(game, astronautId, choice.job)
           // The number already says what the job makes: only "Outside!" is still worth a line.

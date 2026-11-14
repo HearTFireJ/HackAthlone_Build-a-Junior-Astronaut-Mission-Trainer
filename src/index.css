@@ -149,6 +149,8 @@ button:disabled { cursor: not-allowed; }
 .goal .bar-fill { display: block; }
 .goal-needs { grid-column: 1 / -1; color: var(--muted); font-size: 0.72rem; line-height: 1.25; }
 .goal.done .goal-name, .goal.done .goal-count { color: var(--good); }
+.goal { border-radius: 8px; margin: -0.1rem -0.3rem; padding: 0.1rem 0.3rem; cursor: help; }
+.goal.lit { background: rgba(108, 184, 255, 0.2); box-shadow: 0 0 0 1px var(--info); }
 .goal.done .bar-fill { background: var(--good); }
 
 /* The crew: small portraits floating down the left edge. They show, they are not buttons. */
@@ -171,7 +173,7 @@ button:disabled { cursor: not-allowed; }
 .tone-fed .pip.on { color: var(--good); }
 
 /* The list of jobs opens beside the astronaut, on the picture. */
-.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: 288px; overflow-y: auto; background: rgba(15, 21, 43, 0.96); border: 2px solid var(--info); border-radius: 14px; padding: 0.5rem; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); display: grid; gap: 0.35rem; align-content: start; }
+.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: 288px; overflow: hidden auto; scrollbar-width: thin; background: rgba(15, 21, 43, 0.96); border: 2px solid var(--info); border-radius: 14px; padding: 0.5rem; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); display: grid; gap: 0.35rem; align-content: start; }
 .job-menu-about { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.4rem; margin: 0; font-size: 0.8rem; color: #d7defa; padding-right: 1.6rem; }
 .job-menu-about strong { font-size: 1rem; margin-right: 0.15rem; }
 .trait { border: 1px solid var(--line); border-radius: 999px; padding: 0.05rem 0.5rem; white-space: nowrap; }
@@ -209,7 +211,8 @@ button:disabled { cursor: not-allowed; }
   font-size: 1rem; font-weight: 700; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); animation: rise 0.25s ease-out;
 }
 .subtitle.plain { font-weight: 600; font-size: 0.9rem; color: #d7defa; }
-.subtitle.info { font-weight: 500; font-size: 0.95rem; color: #d7defa; white-space: nowrap; animation: none; }
+.subtitle.info { font-weight: 500; font-size: 0.95rem; color: #d7defa; animation: none; width: max-content; }
+.mission-chip { display: inline-block; margin-left: 0.5rem; border: 1px solid var(--info); border-radius: 999px; padding: 0 0.55rem; font-size: 0.82rem; font-weight: 700; color: var(--text); white-space: nowrap; }
 .subtitle.info strong { color: var(--power); font-weight: 800; margin-right: 0.35rem; }
 .subtitle.tone-good { border-color: var(--good); }
 .subtitle.tone-warn { border-color: var(--warn); color: #ffe3b0; }
