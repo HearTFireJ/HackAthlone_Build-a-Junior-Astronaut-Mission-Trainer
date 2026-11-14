@@ -16,6 +16,7 @@ import {
 } from '../game/content.ts'
 import {
   RULES,
+  airPerDay,
   type GameState,
   type Job,
   type Plan,
@@ -102,6 +103,33 @@ const PLACE_HINTS: Partial<Record<PlaceId, string>> = {
   site: 'The radio telescope is built here. Pick an astronaut, then click here to build.',
 }
 
+/** What a part of the base is for, in a sentence or two, for when the mouse is over it. */
+function describePlace(place: PlaceId, game: GameState, on: ModuleId[]): string {
+  const off = (module: ModuleId) => (game.broken.includes(module) ? ' It is broken: someone has to repair it.' : on.includes(module) ? '' : ' It is switched off.')
+  switch (place) {
+    case 'habitat':
+      return 'Crew quarters: where the crew eats and sleeps. Send someone here to rest, to lie in the sick bay, or to call home.'
+    case 'life':
+      return `Life Support: makes ${airPerDay(game)} air a day. Each astronaut breathes 1 air a day.${off('life')}`
+    case 'farm':
+      return `Greenhouse: its grow-lights make ${RULES.farmFood} food a day. Send someone to tend the plants and it makes more. Each astronaut eats 1 food a day.${off('farm')}`
+    case 'lab':
+      return `Lab: send someone here to research the Moon-soil shield, which makes storms hurt less inside the base.${off('lab')}`
+    case 'garage':
+      return `Rover Bay: charges the rover. Send someone here to drive it far away, to look for ice or fetch supplies.${off('garage')}`
+    case 'comms':
+      return `Radio Dish: with it on, Mission Control can warn you of a big flare today, and the crew can call home. With it off, no warnings.${off('comms')}`
+    case 'scope':
+      return `Sun Telescope: with it on, a flare alert also tells you if a cloud of gas left the Sun. Running it for 5 days is one of your missions.${off('scope')}`
+    case 'shelter':
+      return 'Storm shelter: thick walls under a heap of Moon soil. When a flare alert comes you can send everyone here. Nobody gets hurt inside, but less work gets done.'
+    case 'panels':
+      return 'Solar panels: they make all the power for the base. Storms and dust wear them down. Send someone here to repair them.'
+    case 'site':
+      return 'Radio telescope: one of your missions. It is built outside, piece by piece. Send someone here to build, but outside there are no walls against a storm.'
+  }
+}
+
 /** The main screen: the living base, with a few numbers around it. */
 export function GameScreen(props: Props) {
   const { info, game, plan, selected, phase, dayKey, script, speed, effect, guideNew } = props
@@ -112,6 +140,7 @@ export function GameScreen(props: Props) {
   const [log, setLog] = useState<LogLine[]>([])
   const [timeLabel, setTimeLabel] = useState('Morning')
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null)
+  const [hovered, setHovered] = useState<Pick | null>(null)
 
   const toastCount = useRef(0)
   useEffect(() => {
@@ -190,6 +219,26 @@ export function GameScreen(props: Props) {
       const job = jobAt(place, game)
       if (job && !jobProblem(game, plan, selected, job)) targets.push(place)
     }
+  }
+
+  // What the bottom bar says about the thing under the mouse.
+  let hoverText: string | null = null
+  if (hovered?.kind === 'place') {
+    hoverText = describePlace(hovered.id, game, on)
+    if (planning && selected) {
+      const job = jobAt(hovered.id, game)
+      const problem = job ? jobProblem(game, plan, selected, job) : null
+      const name = crewInfo(selected).name
+      // With someone picked, the bar says what a click will do, and nothing else.
+      if (job && !problem) hoverText = `👉 Click to send ${name} here: ${job.kind === 'trip' && job.trip ? TRIPS[job.trip].name : JOBS[job.kind].name}.`
+      else if (job && problem) hoverText = `${name} cannot work here today: ${problem}`
+    }
+  } else if (hovered?.kind === 'switch' && planning) {
+    const module = hovered.module
+    hoverText = `${on.includes(module) ? 'Click to switch off' : 'Click to switch on'}: uses ${MODULES[module].power} power a day. ${describePlace(module, game, on)}`
+  } else if (hovered?.kind === 'pawn' && planning) {
+    const who = crewInfo(hovered.id)
+    hoverText = `${who.name} loves ${who.lovesText}. Click to pick ${who.name}, then click the place where they should work.`
   }
 
   const yesterday = yesterdayOf(info.scenario, game.day)
@@ -325,9 +374,11 @@ export function GameScreen(props: Props) {
         </aside>
 
         <section className="scene-wrap">
-          <Scene game={game} plan={plan} dayKey={dayKey} script={script} speed={speed} selected={planning ? selected : null} targets={targets} effect={effect} onPick={onPick} onCue={onCue} />
+          <Scene game={game} plan={plan} dayKey={dayKey} script={script} speed={speed} selected={planning ? selected : null} targets={targets} effect={effect} onPick={onPick} onHover={setHovered} onCue={onCue} />
 
-          {planning ? (
+          {hoverText ? (
+            <div className="subtitle info">{hoverText}</div>
+          ) : planning ? (
             <div className="subtitle plain">
               {selected
                 ? `👉 Now click where ${crewInfo(selected).name} should go.`

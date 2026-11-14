@@ -18,6 +18,8 @@ interface Props {
   targets: PlaceId[]
   effect: SceneEffect | null
   onPick: (pick: Pick | null) => void
+  /** Called when the mouse moves onto something else (or onto nothing). */
+  onHover: (pick: Pick | null) => void
   onCue: (cue: Cue) => void
 }
 
@@ -26,8 +28,16 @@ interface Props {
  * sixty times a second by the World, which is plain TypeScript. That keeps the moving
  * picture fast, and keeps it apart from the rules.
  */
-export function Scene({ game, plan, dayKey, script, speed, selected, targets, effect, onPick, onCue }: Props) {
+export function Scene({ game, plan, dayKey, script, speed, selected, targets, effect, onPick, onHover, onCue }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null)
+  // What the mouse was over last time, as a short word, so the page only hears about changes.
+  const lastHover = useRef('')
+  const hoverChanged = (pick: Pick | null) => {
+    const key = pick ? `${pick.kind}:${pick.kind === 'switch' ? pick.module : pick.id}` : ''
+    if (key === lastHover.current) return
+    lastHover.current = key
+    onHover(pick)
+  }
   // The world lives outside React's state: it changes sixty times a second.
   const holder = useRef<World | null>(null)
   const getWorld = () => (holder.current ??= new World())
@@ -100,11 +110,13 @@ export function Scene({ game, plan, dayKey, script, speed, selected, targets, ef
         const pick = pickAt(event)
         const world = getWorld()
         world.hover = pick
+        hoverChanged(pick)
         const clickable = world.mode === 'plan' && pick !== null
         event.currentTarget.style.cursor = clickable ? 'pointer' : 'default'
       }}
       onPointerLeave={() => {
         getWorld().hover = null
+        hoverChanged(null)
       }}
       onClick={(event) => onPick(pickAt(event))}
     />
