@@ -130,6 +130,7 @@ button:disabled { cursor: not-allowed; }
 .meter-main { display: grid; line-height: 1.1; }
 .meter-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .meter-main strong { font-size: 1.15rem; }
+.meter.gold .meter-main strong { color: var(--power); }
 .meter-detail { font-size: 0.76rem; color: var(--muted); }
 .meter.tone-warn { border-color: var(--warn); }
 .meter.tone-warn .meter-detail { color: var(--warn); }

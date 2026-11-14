@@ -270,6 +270,7 @@ export function GameScreen(props: Props) {
             icon="💨"
             label="Air"
             value={String(shown.air)}
+            gold={shown.air >= RULES.handover.air}
             detail={planning ? `after today: ${preview.air.left}` : ''}
             tone={!planning ? 'good' : preview.air.left < game.crew.length ? 'bad' : preview.air.left < game.crew.length * 2 ? 'warn' : 'good'}
           />
@@ -277,6 +278,7 @@ export function GameScreen(props: Props) {
             icon="🥕"
             label="Food"
             value={String(shown.food)}
+            gold={shown.food >= RULES.handover.food}
             detail={planning ? `after today: ${preview.food.left}` : ''}
             tone={!planning ? 'good' : preview.food.left < game.crew.length ? 'bad' : preview.food.left < game.crew.length * 2 ? 'warn' : 'good'}
           />
@@ -454,9 +456,10 @@ function someoneDoes(game: GameState, plan: Plan, kind: JobId): boolean {
   })
 }
 
-function Meter({ icon, label, value, detail, tone }: { icon: string; label: string; value: string; detail: string; tone: 'good' | 'warn' | 'bad' | 'calm' }) {
+/** A number in the top bar. `gold` means it is high enough for the handover star. */
+function Meter({ icon, label, value, detail, tone, gold = false }: { icon: string; label: string; value: string; detail: string; tone: 'good' | 'warn' | 'bad' | 'calm'; gold?: boolean }) {
   return (
-    <div className={`meter tone-${tone}`}>
+    <div className={`meter tone-${tone}${gold ? ' gold' : ''}`}>
       <span className="meter-icon" aria-hidden="true">{icon}</span>
       <span className="meter-main">
         <span className="meter-label">{label}</span>
