@@ -171,6 +171,23 @@ describe('jobs', () => {
     expect(crew(state, 'aoife').mood).toBe(before - 1)
   })
 
+  it('a tired astronaut gets no lift from the job they love, until they take a day off', () => {
+    let state = createGame('sep-2017')
+    crew(state, 'aoife').mood = 3
+    const garden = (current: GameState) => planOf(current, ['life', 'farm'], { aoife: { kind: 'garden' } })
+    const moods: number[] = []
+    for (let i = 0; i < 4; i += 1) {
+      state = resolveDay(state, CALM, garden(state)).state
+      moods.push(crew(state, 'aoife').mood)
+    }
+    // Two happy days, then two tired ones.
+    expect(moods).toEqual([4, 5, 4, 3])
+    state = resolveDay(state, CALM, planOf(state, ['life', 'farm'])).state
+    expect(crew(state, 'aoife').streak).toBe(0)
+    state = resolveDay(state, CALM, garden(state)).state
+    expect(crew(state, 'aoife').mood).toBe(5)
+  })
+
   it('friends cheer each other up and rivals annoy each other', () => {
     const state = createGame('sep-2017')
     for (const astronaut of state.crew) astronaut.mood = 3
@@ -264,6 +281,16 @@ describe('flares, alerts and storms', () => {
     expect(workPoints(crew(state, 'aoife'), 'lab')).toBe(1)
     expect(resolveDay(state, stormy, plan, 'carry').state.missions.shield).toBe(1)
     expect(resolveDay(state, stormy, plan, 'shelter').state.missions.shield).toBe(0)
+  })
+
+  it('a day in the shelter for nothing costs mood; a day in the shelter during a storm does not', () => {
+    const state = createGame('sep-2017')
+    crew(state, 'cian').mood = 2
+    const plan = planOf(state, ['comms'], { aoife: { kind: 'call' } })
+    const moodAfter = (scenario: Scenario, response: Response) => crew(resolveDay(state, scenario, plan, response).state, 'cian').mood
+    // Cian rests (+2 mood) in every case, so the differences come from the shelter alone.
+    expect(moodAfter(falseAlarm, 'shelter')).toBe(moodAfter(falseAlarm, 'carry') - 1)
+    expect(moodAfter(stormy, 'shelter')).toBe(moodAfter(falseAlarm, 'carry'))
   })
 
   it('someone who gets too ill on a rover trip drives home with nothing', () => {

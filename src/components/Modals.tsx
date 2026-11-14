@@ -178,7 +178,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
           </button>
           <button type="button" className="choice" onClick={() => onRespond('shelter')}>
             <strong>Everyone to the storm shelter</strong>
-            <span>Nobody is hurt, but everyone only gets half a day's work done.</span>
+            <span>Nobody is hurt. Everyone gets half a day's work done at most. If no storm comes, the crew is fed up with the wasted day.</span>
           </button>
         </div>
       </Card>

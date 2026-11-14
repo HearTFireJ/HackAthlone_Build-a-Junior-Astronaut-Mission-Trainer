@@ -600,9 +600,15 @@ export function resolveDay(
       health -= hurt
       mood -= 1
       lines.push(`Hit by the storm ${entry.where === 'outside' ? 'outside' : 'inside the base'}: -${hurt} health.`)
-    } else if (storm && answer !== 'carry') {
-      mood += 1
-      lines.push('Felt safe during the storm.')
+    } else if (entry.where === 'shelter') {
+      if (storm) {
+        lines.push('Safe in the shelter while the storm passed.')
+      } else {
+        mood -= 1
+        lines.push('A long, dull day squeezed into the shelter for nothing.')
+      }
+    } else if (storm) {
+      lines.push('The storm did not get through.')
     }
     if (outOfAir) health -= RULES.noAirDamage
 
@@ -620,15 +626,16 @@ export function resolveDay(
     }
 
     const working = job === 'trip' || job === 'trip-away' || JOBS[job].work
-    if (working && !entry.recalled) {
+    astronaut.streak = working ? before.streak + 1 : 0
+    const tired = astronaut.streak >= RULES.tiredAfter
+    if (working && !entry.recalled && !tired) {
       const realJob: JobId = job === 'trip-away' ? 'trip' : job
       if (info.loves.includes(realJob)) {
         mood += 1
         lines.push(`Loves ${info.lovesText}.`)
       }
     }
-    astronaut.streak = working ? before.streak + 1 : 0
-    if (astronaut.streak >= RULES.tiredAfter) {
+    if (tired) {
       mood -= 1
       lines.push('Tired: needs a day off.')
     }

@@ -27,7 +27,7 @@ Each turn is one day, and a tour lasts ten days. Then the next crew arrives and 
    | Lab | 2 | Lets the crew do research |
    | Rover Bay | 2 | Charges the rover for a trip |
 
-2. **Give each astronaut a job.** Tend the plants, do research, build the radio telescope outside, repair the solar panels, drive the rover, rest, go to the sick bay, or call home. Each astronaut has health, mood and hunger. Each one loves a different job and does it better. Some are friends, and two get on each other's nerves. Three days of work in a row makes anyone tired.
+2. **Give each astronaut a job.** Tend the plants, do research, build the radio telescope outside, repair the solar panels, drive the rover, rest, go to the sick bay, or call home. Each astronaut has health, mood and hunger. Each one loves a different job and does it better. Some are friends, and two get on each other's nerves. Three days of work in a row makes anyone tired, and then only a day off helps.
 
 3. **Work on your four missions.** They are why the crew is there, and each one changes the base when it is finished:
 
@@ -44,7 +44,7 @@ Each turn is one day, and a tour lasts ten days. Then the next crew arrives and 
 
 - **Carry on.** All the work gets done. If a particle storm follows, people outside are hurt badly and people inside a little.
 - **Call the outside crew in.** They get half their work done at most, and a rover trip has to start again.
-- **Everyone to the storm shelter.** Nobody is hurt, and everyone gets half a day's work done at most.
+- **Everyone to the storm shelter.** Nobody is hurt, and everyone gets half a day's work done at most. If no storm comes, the crew's mood drops: a day squeezed into the shelter for nothing is no fun.
 
 Most flares bring no storm. The game then tells you what really happened that day, with a link to NASA's record.
 
