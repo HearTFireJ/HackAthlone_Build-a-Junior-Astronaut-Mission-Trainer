@@ -120,6 +120,21 @@ const PLACE_WORDS: Record<PlaceId, [name: string, purpose: string]> = {
   site: ['Radio telescope', 'A mission: it is built here, piece by piece.'],
 }
 
+/** What the base still lacks for a good handover to the next crew, as a few short words each. */
+function handoverNeeds(game: GameState): string[] {
+  const needs: string[] = []
+  const { air, food, stat } = RULES.handover
+  if (game.air < air) needs.push(`${air - game.air} more air`)
+  if (game.food < food) needs.push(`${food - game.food} more food`)
+  for (const a of game.crew) {
+    const name = crewInfo(a.id).name
+    if (a.away) needs.push(`${name} back home`)
+    if (a.health < stat) needs.push(`${name} healthier`)
+    if (a.mood < stat) needs.push(`${name} happier`)
+  }
+  return needs
+}
+
 /** The main screen: the living base, with a few numbers around it. */
 export function GameScreen(props: Props) {
   const { info, game, plan, selected, phase, dayKey, script, speed, effect, guideNew } = props
@@ -322,12 +337,11 @@ export function GameScreen(props: Props) {
                 </li>
               )
             })}
-            <li
-              className={handoverReady(game) ? 'goal done' : 'goal'}
-              title={`On the last day: at least ${RULES.handover.air} air and ${RULES.handover.food} food, and everyone at ${RULES.handover.stat} or more for health and mood.`}
-            >
+            <li className={handoverReady(game) ? 'goal done' : 'goal'}>
               <span className="goal-name">🤝 Hand over the base</span>
-              <span className="goal-count">{handoverReady(game) ? 'ready now' : 'not ready'}</span>
+              <span className="goal-count">{handoverReady(game) ? 'ready now' : 'not yet'}</span>
+              {/* The fifth star. Say what is still missing, so it is never a surprise at the end. */}
+              {!handoverReady(game) && <span className="goal-needs">Needs {handoverNeeds(game).join(', ')}.</span>}
             </li>
           </ul>
 

@@ -143,6 +143,7 @@ button:disabled { cursor: not-allowed; }
 .goal-count { color: var(--muted); font-weight: 600; text-align: right; }
 .goal .bar { grid-column: 1 / -1; display: block; height: 5px; margin: 0.1rem 0 0; }
 .goal .bar-fill { display: block; }
+.goal-needs { grid-column: 1 / -1; color: var(--muted); font-size: 0.74rem; line-height: 1.25; }
 .goal.done { border-color: var(--good); background: rgba(95, 211, 141, 0.1); }
 .goal.done .goal-name, .goal.done .goal-count { color: var(--good); }
 .goal.done .bar-fill { background: var(--good); }
