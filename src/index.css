@@ -175,6 +175,7 @@ button:disabled { cursor: not-allowed; }
 .spot-icon { font-size: 1.9em; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5)); }
 .spot-name { font-weight: 800; font-size: 1.08em; }
 .spot-status { color: var(--muted); }
+.spot-status.short { color: var(--warn); }
 .module .spot-icon { position: absolute; right: 0.45rem; top: 0.35rem; }
 .module .spot-name { padding-right: 2.2em; }
 .module.off { border-color: #59618a; background: linear-gradient(180deg, #151b33 0%, #0d1224 100%); }

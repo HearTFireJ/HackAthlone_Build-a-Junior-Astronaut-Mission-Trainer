@@ -135,8 +135,16 @@ export function BaseMap({ game, plan, selected, onTogglePower, onAssign, onSelec
       <>
         <span className="spot-icon" aria-hidden="true">{MODULE_ICONS[module]}</span>
         <span className="spot-name">{MODULES[module].name}</span>
-        <span className="spot-status">
-          {broken ? 'Broken: needs a repair' : blocked ? 'Cannot run today' : running ? status : MODULES[module].does}
+        <span className={cannotAfford && !broken && !blocked ? 'spot-status short' : 'spot-status'}>
+          {broken
+            ? 'Broken: needs a repair'
+            : blocked
+              ? 'Cannot run today'
+              : running
+                ? status
+                : cannotAfford
+                  ? `${MODULES[module].does}. Not enough power left.`
+                  : MODULES[module].does}
         </span>
         <button
           type="button"
