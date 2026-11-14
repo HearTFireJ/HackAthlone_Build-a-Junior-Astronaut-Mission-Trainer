@@ -41,11 +41,13 @@ export function ResultScreen({ game, report, onNext }: Props) {
         <section className="panel">
           <h2>What the Sun did</h2>
           {report.storm === 0 ? (
-            <p>No burst of solar particles was measured near Earth on {longDate(report.date)}.</p>
+            <p>
+              No new solar particle storm started on {longDate(report.date)}, according to NASA's records.
+            </p>
           ) : (
             <p>
-              On {longDate(report.date)}, {spacecraftList(weather)} measured a burst of fast particles from the
-              Sun{report.storm === 2 ? ', including very powerful ones' : ''}.{' '}
+              On {longDate(report.date)}, {spacecraftList(weather)} measured a new burst of fast particles from
+              the Sun{report.storm === 2 ? ', including very powerful ones' : ''}.{' '}
               {link && (
                 <a href={link} target="_blank" rel="noreferrer">
                   See NASA's record
@@ -109,6 +111,8 @@ export function ResultScreen({ game, report, onNext }: Props) {
                       ? 'Stayed in the storm shelter.'
                       : astronaut.tooSickToWork
                         ? 'Was too sick to work, and rested.'
+                        : astronaut.noSuitOxygen
+                          ? 'Could not go outside: no oxygen left to fill a space suit. Rested instead.'
                         : `${astronaut.name} ${JOB_WORDS[astronaut.did].past}.`}
                   </p>
                   {astronaut.stormDamage > 0 && (

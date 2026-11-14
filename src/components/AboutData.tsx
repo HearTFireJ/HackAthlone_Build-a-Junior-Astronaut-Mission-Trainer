@@ -10,8 +10,9 @@ export function AboutData() {
         <h3>Real</h3>
         <ul>
           <li>
-            The dates, the solar flares and their sizes, and the days when spacecraft near Earth measured a
-            burst of fast particles from the Sun. They come from NASA's space weather database, called DONKI.
+            The dates, the solar flares and their sizes, and the days when spacecraft near Earth first measured
+            a new burst of fast particles from the Sun. They come from NASA's space weather database, called
+            DONKI.
           </li>
           <li>
             These are saved records, not live data. We copied them from{' '}
@@ -28,7 +29,10 @@ export function AboutData() {
         <h3>Made simple for the game</h3>
         <ul>
           <li>Power, oxygen and food are counted in small made-up units, and health is shown as hearts.</li>
-          <li>A whole day is either a storm day or a calm day. Real storms can last hours or days.</li>
+          <li>
+            In the game a storm lasts one day: the day it started. Real particle storms can go on for several
+            days. A "calm day" in the game only means that no new storm started.
+          </li>
           <li>
             The forecast only looks at yesterday's biggest flare. Real forecasters use much more, and they are
             still sometimes wrong.

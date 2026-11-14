@@ -234,3 +234,73 @@ describe('no free, safe choice', () => {
     expect(playOut(stormy, (state) => jobs(state, 'solar', 'oxygen', 'farm')).status).toBe('evacuated')
   })
 })
+
+describe('fixes from code review', () => {
+  it('a weak astronaut resting in the base is still hurt by a severe storm', () => {
+    const base = createGame(makeScenario([2]))
+    const start: GameState = { ...base, crew: base.crew.map((astronaut) => ({ ...astronaut, health: 1 })) }
+    const { state, report } = resolveDay(start, emptyPlan(start))
+    // 1 health, -2 from the storm, +1 from rest: still 0. Rest must not cancel the storm.
+    expect(state.crew.every((astronaut) => astronaut.health === 0)).toBe(true)
+    expect(report.crew.every((astronaut) => astronaut.healed === 0)).toBe(true)
+    expect(state.status).toBe('evacuated')
+  })
+
+  it('a sick astronaut does not recover in the base during a storm', () => {
+    const base = createGame(makeScenario([1]))
+    const start: GameState = {
+      ...base,
+      crew: base.crew.map((astronaut, index) => ({ ...astronaut, health: index === 0 ? 0 : 4 })),
+    }
+    const { state } = resolveDay(start, jobs(start, 'rest', 'solar', 'oxygen'))
+    // 0 health, -1 from the storm, +1 from rest: 0.
+    expect(state.crew[0].health).toBe(0)
+  })
+
+  it('rest and storm damage add up for a healthy astronaut', () => {
+    const start = createGame(makeScenario([1]))
+    const { state, report } = resolveDay(start, jobs(start, 'rest', 'solar', 'oxygen'))
+    // 4 health, -1 from the storm, +1 from rest: back to 4.
+    expect(state.crew[0].health).toBe(RULES.fullHealth)
+    expect(report.crew[0].stormDamage).toBe(1)
+    expect(report.crew[0].healed).toBe(1)
+  })
+
+  it('nobody can explore outside when the oxygen tank is empty', () => {
+    const start: GameState = { ...createGame(makeScenario()), resources: { power: 8, oxygen: 0, food: 8 } }
+    const { state, report } = resolveDay(start, jobs(start, 'science', 'science', 'oxygen'))
+    expect(state.science).toBe(0)
+    expect(report.scienceGained).toBe(0)
+    expect(report.crew[0].noSuitOxygen).toBe(true)
+    expect(report.crew[0].did).toBe('rest')
+  })
+
+  it('only as many astronauts go outside as there are full space suits', () => {
+    const start: GameState = { ...createGame(makeScenario()), resources: { power: 8, oxygen: 2, food: 8 } }
+    const { state, report } = resolveDay(start, jobs(start, 'science', 'science', 'science'))
+    expect(state.science).toBe(2)
+    expect(report.crew.map((astronaut) => astronaut.noSuitOxygen)).toEqual([false, false, true])
+  })
+
+  it('a sick astronaut recovers in the shelter, just as when resting in the base', () => {
+    const base = createGame(makeScenario([2]))
+    const start: GameState = {
+      ...base,
+      crew: base.crew.map((astronaut, index) => ({ ...astronaut, health: index === 0 ? 0 : 3 })),
+    }
+    const { state, report } = resolveDay(start, SHELTER)
+    expect(state.crew.map((astronaut) => astronaut.health)).toEqual([1, 4, 4])
+    expect(report.crew[0].healed).toBe(1)
+  })
+
+  it('the shelter does not heal on a day without enough air or food', () => {
+    const base = createGame(makeScenario())
+    const start: GameState = {
+      ...base,
+      resources: { power: 8, oxygen: 1, food: 8 },
+      crew: base.crew.map((astronaut) => ({ ...astronaut, health: 2 })),
+    }
+    const { state } = resolveDay(start, SHELTER)
+    expect(state.crew.every((astronaut) => astronaut.health === 1)).toBe(true)
+  })
+})

@@ -11,7 +11,7 @@ export interface SpaceWeatherDay {
   strongestFlare: string | null
   strongestFlareLink: string | null
   flareCount: number
-  /** Solar particle events measured by spacecraft near Earth (and so near the Moon). */
+  /** Solar particle events that started on this day, measured by spacecraft near Earth (and so near the Moon). */
   particleEvents: { time: string; instruments: string[]; link: string }[]
   /** Highest Kp index (how disturbed Earth's magnetic field was), or null. */
   maxKp: number | null
@@ -33,11 +33,14 @@ export type StormLevel = 0 | 1 | 2
 /**
  * How strong the solar storm at the base is on this real day.
  *
- * Real data: a storm day is a day when a spacecraft near Earth measured a
- * solar energetic particle event. Those particles are the radiation danger
- * for astronauts on the Moon, which has no air or magnetic field to stop them.
- * Game simplification: a whole day counts as either a storm day or not, and
- * "severe" means protons above 100 MeV were measured.
+ * Real data: DONKI lists each solar energetic particle event with the time a
+ * spacecraft near Earth first measured it. Those particles are the radiation
+ * danger for astronauts on the Moon, which has no air or magnetic field to
+ * stop them.
+ * Game simplification: each event makes exactly one storm day, the day it
+ * started. Real particle events can go on for several days, so a "calm" day
+ * in the game only means that no new event started. "Severe" means protons
+ * above 100 MeV were measured.
  */
 export function stormLevel(day: SpaceWeatherDay): StormLevel {
   if (day.particleEvents.length === 0) return 0

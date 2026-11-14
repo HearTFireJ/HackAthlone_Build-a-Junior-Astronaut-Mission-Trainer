@@ -84,6 +84,13 @@ export function DayScreen({ game, plan, onChange, onStart }: Props) {
               ⚠️ No power! The oxygen machine and greenhouse lamps are off today. Fix the solar panels first.
             </p>
           )}
+          {preview.crew
+            .filter((astronaut) => astronaut.noSuitOxygen)
+            .map((astronaut) => (
+              <p key={astronaut.id} className="warning">
+                ⚠️ Not enough oxygen to fill a space suit. {astronaut.name} cannot go outside today.
+              </p>
+            ))}
           {preview.ranOutOf
             .filter((name) => name !== 'power')
             .map((name) => (

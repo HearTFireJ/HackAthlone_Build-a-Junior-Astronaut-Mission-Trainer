@@ -89,13 +89,15 @@ export interface AstronautReport {
   did: Job | 'shelter'
   /** True if the astronaut was too sick for the job the player picked. */
   tooSickToWork: boolean
+  /** True if the astronaut was sent outside but the oxygen tank was too empty to fill a space suit. */
+  noSuitOxygen: boolean
   healthBefore: number
   healthAfter: number
   /** Health the storm would take. The numbers below explain healthBefore -> healthAfter. */
   stormDamage: number
   /** Health lost because the base ran out of oxygen or food. */
   shortageDamage: number
-  /** Health won back by resting. */
+  /** Health won back by resting, in the base or in the shelter. */
   healed: number
 }
 
@@ -168,10 +170,10 @@ export function starsFor(state: GameState): 0 | 1 | 2 | 3 {
  * Plays one day. Does not change `state`; returns the next state and a report.
  *
  * Order of the day:
- *  1. Crew work (or sit in the shelter).
+ *  1. Crew work (or sit in the shelter). Space suits are filled from the morning oxygen tank.
  *  2. A solar storm arrives, if the real data has one on this day.
  *  3. The base uses up its daily power, oxygen and food.
- *  4. Resting astronauts recover.
+ *  4. Health: storm damage, shortage damage and rest are added up, then kept between 0 and full.
  *  5. Check whether the mission goes on, is won, or the crew must leave.
  */
 export function resolveDay(state: GameState, plan: DayPlan): { state: GameState; report: DayReport } {
@@ -187,11 +189,17 @@ export function resolveDay(state: GameState, plan: DayPlan): { state: GameState;
   // The oxygen machine and the greenhouse lamps run on electricity.
   const machinesOff = !plan.shelter && state.resources.power <= 0
 
+  // A trip outside needs a full space suit. Suits are filled in the morning,
+  // so science can only spend oxygen that is really in the tank.
+  let suitOxygenLeft = state.resources.oxygen
+
   // 1. Work.
   const crewReports: AstronautReport[] = state.crew.map((astronaut) => {
     const wanted: Job = plan.jobs[astronaut.id] ?? 'rest'
     const tooSickToWork = !plan.shelter && astronaut.health <= 0 && wanted !== 'rest'
-    const did: Job | 'shelter' = plan.shelter ? 'shelter' : tooSickToWork ? 'rest' : wanted
+    const noSuitOxygen =
+      !plan.shelter && !tooSickToWork && wanted === 'science' && suitOxygenLeft < RULES.scienceOxygenCost
+    const did: Job | 'shelter' = plan.shelter ? 'shelter' : tooSickToWork || noSuitOxygen ? 'rest' : wanted
 
     if (did === 'solar') produced.power += RULES.jobOutput
     if (did === 'oxygen' && !machinesOff) produced.oxygen += RULES.jobOutput
@@ -199,6 +207,7 @@ export function resolveDay(state: GameState, plan: DayPlan): { state: GameState;
     if (did === 'science') {
       scienceGained += RULES.scienceOutput
       used.oxygen += RULES.scienceOxygenCost
+      suitOxygenLeft -= RULES.scienceOxygenCost
     }
 
     return {
@@ -206,6 +215,7 @@ export function resolveDay(state: GameState, plan: DayPlan): { state: GameState;
       name: astronaut.name,
       did,
       tooSickToWork,
+      noSuitOxygen,
       healthBefore: astronaut.health,
       healthAfter: astronaut.health,
       stormDamage: 0,
@@ -235,18 +245,21 @@ export function resolveDay(state: GameState, plan: DayPlan): { state: GameState;
   // Running out of power does not hurt people directly: it switches machines off tomorrow.
   const shortages = ranOutOf.filter((name) => name !== 'power').length
 
-  // 4. Health changes: storm, shortages, then rest.
+  // 4. Health changes. Everything is added up first and only then kept between
+  //    0 and full health. (Cutting off at 0 before adding the rest would let a
+  //    weak, resting astronaut shrug off any storm.)
+  //    Sitting in the shelter counts as resting.
   //    Nobody recovers on a day without enough air or food. Without this rule,
   //    "everyone rests every day" would be a free, safe way to finish the mission.
+  const keepInRange = (health: number) => Math.min(RULES.fullHealth, Math.max(0, health))
   const crew: Astronaut[] = state.crew.map((astronaut, index) => {
     const report = crewReports[index]
     report.shortageDamage = shortages * RULES.shortageDamage
-    let health = Math.max(0, astronaut.health - report.stormDamage - report.shortageDamage)
-    if (report.did === 'rest' && shortages === 0) {
-      const rested = Math.min(RULES.fullHealth, health + RULES.restHealing)
-      report.healed = rested - health
-      health = rested
-    }
+    const afterDamage = astronaut.health - report.stormDamage - report.shortageDamage
+    const resting = report.did === 'rest' || report.did === 'shelter'
+    const health = keepInRange(afterDamage + (resting && shortages === 0 ? RULES.restHealing : 0))
+    // How much better off the astronaut is thanks to resting.
+    report.healed = health - keepInRange(afterDamage)
     report.healthAfter = health
     return { ...astronaut, health }
   })

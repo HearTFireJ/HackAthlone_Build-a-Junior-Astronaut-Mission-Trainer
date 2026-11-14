@@ -18,6 +18,7 @@ Built at HackAthlone 2026 (TUS Athlone, Ireland) for the NASA Space Apps Challen
 - Each morning Mission Control sends a **storm forecast**: low, medium or high. The forecast is sometimes wrong, as real forecasts are.
 - You can send everyone to the **storm shelter**. They are safe, but nobody works that day and the base still uses its supplies.
 - If a solar storm arrives, people outside are hurt the most, people inside the base a little, and people in the shelter not at all.
+- Exploring outside needs oxygen for the space suit. With an empty tank, nobody can go out.
 - Finishing the mission earns one star. More science earns up to three.
 
 The trade-off the game teaches: you cannot know for certain when the Sun will be dangerous, and hiding from it has a real cost. Shelter too rarely and the crew gets sick. Shelter too often and the base runs out of air and food.
@@ -36,7 +37,7 @@ How the records drive the game:
 
 | In the game | From the real data | Simplified for the game |
 |---|---|---|
-| Is there a storm today? | A storm day is a day when a spacecraft near Earth (GOES, SOHO or ACE) measured a solar energetic particle event. Model predictions and the distant STEREO A spacecraft are left out. | A whole day is either a storm day or a calm day. |
+| Is there a storm today? | DONKI lists each solar energetic particle event with the time a spacecraft near Earth (GOES, SOHO or ACE) first measured it. Model predictions and the distant STEREO A spacecraft are left out. | Each event makes one storm day: the day it started. Real particle events can last several days, so a "calm day" in the game only means that no new event started. |
 | Is the storm severe? | Protons above 100 MeV were measured. | Only two levels. |
 | Morning forecast | The class of the strongest solar flare on the day before. | X-class gives "high", M-class gives "medium", anything weaker gives "low". Real forecasting uses far more than this. |
 | Radio link down | Nothing. | A game rule: no forecast arrives on the morning after a storm. |
