@@ -87,7 +87,12 @@ export const CREW: CrewInfo[] = [
   { id: 'cian', name: 'Cian', loves: ['trip'], lovesText: 'driving the rover', about: 'Never gets lost. Says so often.', colour: '#ffb454' },
   { id: 'niamh', name: 'Niamh', loves: ['build', 'repair'], lovesText: 'building and fixing', about: 'Carries a spanner everywhere.', colour: '#6cb8ff' },
   { id: 'oisin', name: 'Oisín', loves: ['lab'], lovesText: 'experiments', about: 'Asks "why?" about everything.', colour: '#d58cff' },
+  { id: 'saoirse', name: 'Saoirse', loves: ['lab'], lovesText: 'experiments', about: 'Labels everything. Even the labels.', colour: '#ff8fc0' },
+  { id: 'tadhg', name: 'Tadhg', loves: ['garden'], lovesText: 'plants', about: 'Has given every seedling a name.', colour: '#f2665a' },
 ]
+
+/** The base has four beds: the crew never grows past this. */
+export const MAX_CREW = 4
 
 /** Pairs who cheer each other up when they spend the day in the same place. */
 export const FRIENDS: [string, string][] = [

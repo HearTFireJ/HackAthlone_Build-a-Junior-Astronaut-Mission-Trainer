@@ -3,7 +3,7 @@
 //
 // These events are made up for the game. Only the solar flares and storms are real records.
 
-import { CREW, MISSIONS, crewInfo } from './content.ts'
+import { CREW, MAX_CREW, MISSIONS, crewInfo } from './content.ts'
 import type { GameState } from './outpost.ts'
 
 export const EVENT_IDS = [
@@ -234,7 +234,7 @@ export const EVENTS: Record<EventId, EventCard> = {
     icon: '🚀',
     text: () => 'Mission Control can send one more astronaut on a cargo flight. More hands, and one more mouth.',
     aboutSomeone: false,
-    when: (state) => state.crew.length < CREW.length && !state.arriving && state.day <= 6,
+    when: (state) => state.crew.length < MAX_CREW && !state.arriving && state.day <= 6,
     options: [
       {
         label: 'Yes, send them',

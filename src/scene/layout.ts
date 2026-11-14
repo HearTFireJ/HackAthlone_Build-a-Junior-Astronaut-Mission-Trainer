@@ -151,8 +151,9 @@ const spot = (x: number, y: number, node: NodeId, face: Facing, extra: Partial<S
   ...extra,
 })
 
-export const BEDS: Pt[] = [{ x: 740, y: 388 }, { x: 780, y: 384 }, { x: 820, y: 384 }, { x: 860, y: 388 }]
-export const MED_BEDS: Pt[] = [{ x: 872, y: 438 }, { x: 872, y: 472 }]
+// The beds are as long as the people are tall, and they just fit under the round wall.
+export const BEDS: Pt[] = [{ x: 743, y: 397 }, { x: 781, y: 392 }, { x: 819, y: 392 }, { x: 857, y: 397 }]
+export const MED_BEDS: Pt[] = [{ x: 868, y: 447 }, { x: 868, y: 482 }]
 // Four beds along each long wall, all inside the walls, with an aisle down the middle.
 const PLANT_COLUMNS = [1117, 1176, 1235, 1294]
 export const PLANT_BEDS: Pt[] = PLANT_COLUMNS.flatMap((x) => [{ x, y: 402 }, { x, y: 498 }])
@@ -163,7 +164,7 @@ const SPOTS: Record<Exclude<Activity, 'repair'>, Spot[]> = {
     spot(754, 523, 'hab', 'down'),
     spot(846, 523, 'hab', 'down'),
     spot(710, 504, 'hab', 'down'),
-    spot(890, 504, 'hab', 'down'),
+    spot(884, 524, 'hab', 'down'),
   ],
   rest: BEDS.map((bed) => spot(bed.x, bed.y, 'hab', 'down', { lie: 'v' })),
   sickbay: MED_BEDS.map((bed) => spot(bed.x, bed.y, 'hab', 'down', { lie: 'h' })),

@@ -1,7 +1,8 @@
 // Everything that is painted on the canvas: the ground, the base, the crew, the rover.
 // These functions only draw. They never change the game.
 
-import { CREW, type ModuleId } from '../game/content.ts'
+import type { ModuleId } from '../game/content.ts'
+import { FACE, HAIR, HEAD, colourOf, lookOf, shade } from './looks.ts'
 import {
   BEDS,
   CORRIDORS,
@@ -615,18 +616,18 @@ function habitat(ctx: Ctx, t: number) {
   // Beds, each with its own blanket.
   const blankets = ['#8fd3b0', '#f2b872', '#8fb8f2', '#d6a3f0']
   BEDS.forEach((bed, index) => {
-    box(ctx, bed.x - 15, bed.y - 26, 30, 51, 6)
+    box(ctx, bed.x - 18, bed.y - 31, 36, 60, 7)
     ctx.fillStyle = '#b9c2e6'
     ctx.fill()
     ctx.strokeStyle = EDGE
-    ctx.lineWidth = 2
+    ctx.lineWidth = 2.2
     ctx.stroke()
-    box(ctx, bed.x - 12, bed.y - 6, 24, 28, 5)
+    box(ctx, bed.x - 14.5, bed.y - 7, 29, 33, 6)
     ctx.fillStyle = blankets[index % blankets.length]
     ctx.fill()
     ctx.fillStyle = 'rgba(255,255,255,0.35)'
-    ctx.fillRect(bed.x - 12, bed.y - 6, 24, 5)
-    box(ctx, bed.x - 10, bed.y - 23, 20, 13, 5)
+    ctx.fillRect(bed.x - 14.5, bed.y - 7, 29, 6)
+    box(ctx, bed.x - 12.5, bed.y - 28, 25, 16, 6)
     ctx.fillStyle = '#ffffff'
     ctx.fill()
     ctx.strokeStyle = 'rgba(23,28,49,0.3)'
@@ -635,18 +636,18 @@ function habitat(ctx: Ctx, t: number) {
   })
   // Sick bay beds, with a red cross.
   for (const bed of MED_BEDS) {
-    box(ctx, bed.x - 24, bed.y - 13, 48, 26, 6)
+    box(ctx, bed.x - 30, bed.y - 16.5, 60, 33, 7)
     ctx.fillStyle = '#f4f7ff'
     ctx.fill()
     ctx.strokeStyle = EDGE
-    ctx.lineWidth = 2
+    ctx.lineWidth = 2.2
     ctx.stroke()
-    box(ctx, bed.x - 21, bed.y - 9, 13, 18, 4)
+    box(ctx, bed.x - 27, bed.y - 12, 16, 24, 5)
     ctx.fillStyle = '#dfe6fb'
     ctx.fill()
     ctx.fillStyle = '#ff5d6c'
-    ctx.fillRect(bed.x + 10, bed.y - 2, 10, 4)
-    ctx.fillRect(bed.x + 13, bed.y - 5, 4, 10)
+    ctx.fillRect(bed.x + 9, bed.y - 2.5, 14, 5)
+    ctx.fillRect(bed.x + 13.5, bed.y - 7, 5, 14)
   }
   // The radio desk for calling home, with two screens.
   box(ctx, 702, 424, 22, 66, 5)
@@ -662,14 +663,14 @@ function habitat(ctx: Ctx, t: number) {
   box(ctx, 706, 465, 10, 18, 2)
   ctx.fill()
   // A plant in a pot, and a shelf of lockers by the airlock.
-  circle(ctx, 884, 396, 8)
+  circle(ctx, 894, 412, 8)
   ctx.fillStyle = '#c9743f'
   ctx.fill()
   ctx.strokeStyle = EDGE
   ctx.lineWidth = 1.6
   ctx.stroke()
   for (const [dx, dy] of [[-5, -5], [5, -4], [0, -9], [-1, 0]]) {
-    circle(ctx, 884 + dx, 396 + dy, 5)
+    circle(ctx, 894 + dx, 412 + dy, 5)
     ctx.fillStyle = '#5fc27a'
     ctx.fill()
   }
@@ -931,10 +932,10 @@ function lab(ctx: Ctx, on: boolean, t: number) {
 function garage(ctx: Ctx, on: boolean, t: number) {
   // Yellow and black stripes on the floor by the big door.
   ctx.save()
-  box(ctx, 918, 712, 20, 58, 3)
+  box(ctx, 930, 712, 10, 58, 3)
   ctx.clip()
   ctx.fillStyle = '#e9c34f'
-  ctx.fillRect(918, 712, 20, 58)
+  ctx.fillRect(930, 712, 10, 58)
   ctx.strokeStyle = '#2b2f3f'
   ctx.lineWidth = 5
   for (let y = 700; y < 790; y += 13) {
@@ -948,7 +949,7 @@ function garage(ctx: Ctx, on: boolean, t: number) {
   ctx.strokeStyle = 'rgba(233,195,79,0.7)'
   ctx.lineWidth = 3
   ctx.setLineDash([8, 6])
-  box(ctx, 846, 716, 70, 50, 6)
+  box(ctx, 841, 707, 98, 66, 8)
   ctx.stroke()
   ctx.setLineDash([])
   // The charger. Its light blinks while it has power.
@@ -1205,21 +1206,7 @@ function buildSite(ctx: Ctx, progress: number, t: number) {
 
 // ---------------------------------------------------------------- the crew
 
-/** How each astronaut looks. Made up for the game. */
-const LOOKS: Record<string, { skin: string; hair: string; style: 'long' | 'short' | 'bun' | 'curly' }> = {
-  aoife: { skin: '#f3c9a8', hair: '#c9512f', style: 'long' },
-  cian: { skin: '#c98f62', hair: '#24212b', style: 'short' },
-  niamh: { skin: '#f0d0b4', hair: '#6b4326', style: 'bun' },
-  oisin: { skin: '#e9bd94', hair: '#e6c35c', style: 'curly' },
-}
-const DEFAULT_LOOK = { skin: '#e9bd94', hair: '#4a3a2c', style: 'short' as const }
-
-export function lookOf(id: string) {
-  return LOOKS[id] ?? DEFAULT_LOOK
-}
-export function colourOf(id: string): string {
-  return CREW.find((member) => member.id === id)?.colour ?? '#ffffff'
-}
+export { colourOf, lookOf }
 
 export interface PawnDraw {
   id: string
@@ -1239,188 +1226,200 @@ export interface PawnDraw {
   busy?: boolean
 }
 
-/** A darker (below 0) or lighter (above 0) shade of a colour written like "#5fd38d". */
-function shade(hex: string, amount: number): string {
-  const n = parseInt(hex.slice(1), 16)
-  const mix = (c: number) => Math.round(amount < 0 ? c * (1 + amount) : c + (255 - c) * amount)
-  return `rgb(${mix((n >> 16) & 255)},${mix((n >> 8) & 255)},${mix(n & 255)})`
+const unitPaths = new Map<string, Path2D>()
+/** A hair outline from looks.ts, ready to paint. Made once and kept. */
+function unitPath(d: string): Path2D {
+  let path = unitPaths.get(d)
+  if (!path) {
+    path = new Path2D(d)
+    unitPaths.set(d, path)
+  }
+  return path
 }
 
-type Look = ReturnType<typeof lookOf>
+/**
+ * Paints a shape like a sticker: one ink outline around the whole of it, even where its
+ * parts overlap. The trick: draw the outline twice as thick, then fill on top of it.
+ */
+function sticker(ctx: Ctx, d: string, fill: string, edge: number) {
+  if (!d) return
+  const path = unitPath(d)
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = edge * 2
+  ctx.stroke(path)
+  ctx.fillStyle = fill
+  ctx.fill(path)
+}
 
-/** The face: eyes that blink, rosy cheeks and a small smile. `r` is the size of the head. */
-function faceOn(ctx: Ctx, id: string, x: number, y: number, r: number, face: Facing, t: number, asleep: boolean) {
-  if (face === 'up') return
+/**
+ * A head: hair, face and all. (x, y) is its middle and r its size. Inside, everything is drawn
+ * on a head of size 1, so the same shapes serve the figures, the beds and the helmets.
+ */
+function drawHead(ctx: Ctx, id: string, x: number, y: number, r: number, face: Facing, t: number, asleep: boolean) {
+  const look = lookOf(id)
+  const hair = HAIR[look.style]
   const side = face === 'left' ? -1 : face === 'right' ? 1 : 0
-  const cx = x + side * r * 0.3
+  const edge = 2.4 / r
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.scale(r, r)
+  ctx.lineCap = 'round'
+  sticker(ctx, hair.back, look.hair, edge)
+
+  if (face === 'up') {
+    // From behind: all hair.
+    if (hair.down) sticker(ctx, hair.down, look.hair, edge)
+    ctx.beginPath()
+    ctx.ellipse(0, 0, HEAD.rx + 0.07, HEAD.ry + 0.09, 0, 0, TAU)
+    ctx.fillStyle = look.hair
+    ctx.fill()
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = edge
+    ctx.stroke()
+    ctx.restore()
+    return
+  }
+
+  ctx.beginPath()
+  ctx.ellipse(0, 0, HEAD.rx, HEAD.ry, 0, 0, TAU)
+  ctx.fillStyle = look.skin
+  ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = edge
+  ctx.stroke()
+
+  // The face. Looking sideways, it slides across the head, and the edge of the head hides part of it.
+  ctx.save()
+  ctx.clip()
+  const c = side * 0.27
   const seed = id.charCodeAt(0) * 0.37
   const blink = asleep || (t + seed) % 3.7 < 0.13
-  ctx.fillStyle = 'rgba(255,110,125,0.4)'
-  for (const dx of side === 0 ? [-r * 0.58, r * 0.58] : [-side * r * 0.12]) {
-    circle(ctx, cx + dx, y + r * 0.42, r * 0.17)
+  for (const dir of [-1, 1]) {
+    ctx.fillStyle = 'rgba(255,105,125,0.42)'
+    ctx.beginPath()
+    ctx.ellipse(c + dir * FACE.cheekX, FACE.cheekY, 0.17, 0.1, 0, 0, TAU)
     ctx.fill()
+    if (look.freckles) {
+      ctx.fillStyle = shade('#c9824f', -0.1)
+      for (const [dx, dy] of [[-0.1, -0.1], [0.02, -0.15], [0.12, -0.09]]) {
+        circle(ctx, c + dir * FACE.cheekX + dx, FACE.cheekY + dy, 0.032)
+        ctx.fill()
+      }
+    }
   }
-  ctx.lineCap = 'round'
-  ctx.strokeStyle = EDGE
-  for (const dx of side === 0 ? [-r * 0.36, r * 0.36] : [side * r * 0.22]) {
+  for (const dir of [-1, 1]) {
+    const ex = c + dir * FACE.eyeX
+    // The eye nearer the edge of the head is seen from the side: narrower.
+    const rx = side !== 0 && dir === side ? FACE.eyeRx * 0.76 : FACE.eyeRx
+    if (look.glasses) {
+      circle(ctx, ex, FACE.eyeY, 0.3)
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'
+      ctx.fill()
+      ctx.strokeStyle = EDGE
+      ctx.lineWidth = 1.5 / r
+      ctx.stroke()
+    }
     if (blink) {
-      ctx.lineWidth = 1.5
+      ctx.strokeStyle = EDGE
+      ctx.lineWidth = 1.7 / r
       ctx.beginPath()
-      ctx.arc(cx + dx, y + r * 0.06, r * 0.14, 0.15 * Math.PI, 0.85 * Math.PI)
+      ctx.arc(ex, FACE.eyeY + 0.02, rx, 0.12 * Math.PI, 0.88 * Math.PI)
       ctx.stroke()
     } else {
       ctx.fillStyle = EDGE
       ctx.beginPath()
-      ctx.ellipse(cx + dx, y + r * 0.12, r * 0.13, r * 0.18, 0, 0, TAU)
+      ctx.ellipse(ex, FACE.eyeY, rx, FACE.eyeRy, 0, 0, TAU)
       ctx.fill()
+      // Two sparkles make the eye shine.
       ctx.fillStyle = '#ffffff'
-      circle(ctx, cx + dx - r * 0.04, y + r * 0.05, r * 0.055)
+      circle(ctx, ex - rx * 0.3, FACE.eyeY - 0.08, 0.066)
+      ctx.fill()
+      circle(ctx, ex + rx * 0.32, FACE.eyeY + 0.09, 0.032)
       ctx.fill()
     }
   }
-  ctx.lineWidth = 1.4
-  ctx.beginPath()
-  ctx.arc(cx + side * r * 0.12, y + r * 0.34, r * 0.2, 0.18 * Math.PI, 0.82 * Math.PI)
-  ctx.stroke()
-}
-
-/** Hair that hangs behind the head: it is painted before the face. */
-function hairBehind(ctx: Ctx, look: Look, x: number, y: number, r: number, face: Facing) {
-  ctx.fillStyle = look.hair
-  ctx.strokeStyle = EDGE
-  ctx.lineWidth = 1.6
-  if (look.style === 'long' && face === 'up') {
-    // Seen from behind, long hair is one curtain down the back.
-    box(ctx, x - r - 2, y - 5, 2 * r + 4, r + 13, 9)
-    ctx.fill()
-    ctx.stroke()
-  } else if (look.style === 'long') {
-    // Seen from the front it is two locks, one each side of the face.
-    // Joined up under the chin, they looked like a beard.
-    const wide = r * 0.5
-    for (const side of [-1, 1]) {
-      box(ctx, side < 0 ? x - r - 2.5 : x + r + 2.5 - wide, y - 5, wide, r + 12, wide / 2)
-      ctx.fill()
-      ctx.stroke()
-    }
-  }
-  if (look.style === 'bun') {
-    circle(ctx, x, y - r - 3, r * 0.42)
-    ctx.fill()
+  if (look.glasses) {
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = 1.5 / r
+    ctx.beginPath()
+    ctx.moveTo(c - FACE.eyeX + 0.3, FACE.eyeY)
+    ctx.lineTo(c + FACE.eyeX - 0.3, FACE.eyeY)
     ctx.stroke()
   }
-  if (look.style === 'curly') {
-    for (const a of [-2.75, -2.2, -1.57, -0.94, -0.39]) {
-      circle(ctx, x + Math.cos(a) * (r + 1), y + Math.sin(a) * (r + 1), r * 0.38)
-      ctx.fill()
-      ctx.stroke()
-    }
-  }
-}
-
-/** The hair on top of the head, with a fringe. Looking sideways shows more of the back of it. */
-function hairOnTop(ctx: Ctx, look: Look, x: number, y: number, r: number, face: Facing) {
-  ctx.fillStyle = look.hair
-  if (face === 'up') {
-    circle(ctx, x, y, r)
-    ctx.fill()
-    return
-  }
-  const side = face === 'left' ? -1 : face === 'right' ? 1 : 0
-  const R = r + 0.8
-  const from = Math.PI - (side > 0 ? 0.5 : 0.1)
-  const to = TAU + (side < 0 ? 0.5 : 0.1)
-  ctx.beginPath()
-  ctx.arc(x, y, R, from, to)
-  ctx.quadraticCurveTo(x + r * 0.55, y - r * 0.42, x + side * r * 0.22, y - r * 0.4)
-  ctx.quadraticCurveTo(x - r * 0.5, y - r * 0.62, x + Math.cos(from) * R, y + Math.sin(from) * R)
-  ctx.closePath()
-  ctx.fill()
-  // A soft shine on the hair.
-  ctx.strokeStyle = 'rgba(255,255,255,0.28)'
-  ctx.lineWidth = 2
-  ctx.lineCap = 'round'
-  ctx.beginPath()
-  ctx.arc(x, y, r * 0.68, Math.PI * 1.2, Math.PI * 1.48)
-  ctx.stroke()
-}
-
-/** A head with nothing on it. */
-function bareHead(ctx: Ctx, id: string, x: number, y: number, r: number, face: Facing, t: number, asleep: boolean) {
-  const look = lookOf(id)
-  hairBehind(ctx, look, x, y, r, face)
-  circle(ctx, x, y, r)
-  ctx.fillStyle = look.skin
-  ctx.fill()
   ctx.strokeStyle = EDGE
-  ctx.lineWidth = 2
+  ctx.lineWidth = 1.6 / r
+  ctx.beginPath()
+  ctx.arc(c + side * 0.04, FACE.mouthY, FACE.mouthR, 0.15 * Math.PI, 0.85 * Math.PI)
   ctx.stroke()
-  hairOnTop(ctx, look, x, y, r, face)
-  if (look.style === 'curly' && face !== 'up') {
-    ctx.fillStyle = look.hair
-    for (const dx of [-0.55, -0.1, 0.4]) {
-      circle(ctx, x + dx * r, y - r * 0.62, r * 0.3)
-      ctx.fill()
-    }
-  }
-  faceOn(ctx, id, x, y, r, face, t, asleep)
+  ctx.restore()
+
+  // The fringe, turned a little away when looking sideways.
+  ctx.translate(-side * 0.05, 0)
+  sticker(ctx, hair.front, look.hair, edge)
+  ctx.strokeStyle = 'rgba(255,255,255,0.32)'
+  ctx.lineWidth = 0.13
+  ctx.beginPath()
+  ctx.arc(0, 0, 0.8, Math.PI * 1.2, Math.PI * 1.44)
+  ctx.stroke()
+  ctx.restore()
 }
 
-/** A helmet. The glass is clear enough to see who is inside. */
+/** A big round helmet. The glass is clear enough to see who is inside. */
 function helmet(ctx: Ctx, id: string, x: number, y: number, face: Facing, t: number) {
   const colour = colourOf(id)
   const side = face === 'left' ? -1 : face === 'right' ? 1 : 0
+  const R = 21
   // A little aerial with a red light.
   ctx.strokeStyle = EDGE
-  ctx.lineWidth = 2
+  ctx.lineWidth = 2.4
   ctx.beginPath()
-  ctx.moveTo(x + 11, y - 13)
-  ctx.lineTo(x + 15, y - 23)
+  ctx.moveTo(x + 12, y - 16)
+  ctx.lineTo(x + 17, y - 27)
   ctx.stroke()
-  circle(ctx, x + 15, y - 24, 2.6)
+  circle(ctx, x + 17, y - 28, 3)
   ctx.fillStyle = Math.sin(t * 4) > 0 ? '#ff5d6c' : '#a23a48'
   ctx.fill()
-  circle(ctx, x, y, 18)
+  ctx.lineWidth = 1.6
+  ctx.stroke()
+  circle(ctx, x, y, R)
   ctx.fillStyle = '#f6f8fd'
   ctx.fill()
   ctx.strokeStyle = EDGE
-  ctx.lineWidth = 2.2
+  ctx.lineWidth = 2.6
   ctx.stroke()
   if (face === 'up') {
     // From behind: a stripe in their own colour.
+    box(ctx, x - 5, y - 18, 10, 24, 4)
     ctx.fillStyle = colour
-    box(ctx, x - 4, y - 16, 8, 20, 3)
     ctx.fill()
+    ctx.lineWidth = 1.8
+    ctx.stroke()
     return
   }
-  const vx = x + side * 4
+  const vx = x + side * 4.5
+  const rx = side === 0 ? 16 : 13.5
   ctx.save()
   ctx.beginPath()
-  ctx.ellipse(vx, y + 1, side === 0 ? 13.5 : 11.5, 12.5, 0, 0, TAU)
-  ctx.fillStyle = '#243257'
+  ctx.ellipse(vx, y + 1.5, rx, 14.5, 0, 0, TAU)
+  ctx.fillStyle = '#2a3963'
   ctx.fill()
   ctx.clip()
-  // The face inside.
-  const look = lookOf(id)
-  circle(ctx, vx, y + 2.5, 10.5)
-  ctx.fillStyle = look.skin
-  ctx.fill()
-  hairOnTop(ctx, look, vx, y + 2.5, 10.5, face)
-  faceOn(ctx, id, vx, y + 2.5, 10.5, face, t, false)
-  ctx.fillStyle = 'rgba(120,190,255,0.2)'
-  ctx.fillRect(vx - 16, y - 14, 32, 30)
+  drawHead(ctx, id, vx + side, y + 3.5, 12.4, face, t, false)
+  ctx.fillStyle = 'rgba(120,190,255,0.18)'
+  ctx.fillRect(vx - 18, y - 16, 36, 34)
   ctx.restore()
   ctx.beginPath()
-  ctx.ellipse(vx, y + 1, side === 0 ? 13.5 : 11.5, 12.5, 0, 0, TAU)
+  ctx.ellipse(vx, y + 1.5, rx, 14.5, 0, 0, TAU)
   ctx.strokeStyle = EDGE
-  ctx.lineWidth = 1.8
+  ctx.lineWidth = 2.2
   ctx.stroke()
   // The shine on the glass.
-  ctx.strokeStyle = 'rgba(255,255,255,0.75)'
-  ctx.lineWidth = 2.2
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)'
+  ctx.lineWidth = 2.6
   ctx.lineCap = 'round'
   ctx.beginPath()
-  ctx.arc(vx, y + 1, 9.5, Math.PI * 1.12, Math.PI * 1.4)
+  ctx.arc(vx, y + 1.5, rx - 4, Math.PI * 1.12, Math.PI * 1.38)
   ctx.stroke()
 }
 
@@ -1468,34 +1467,36 @@ function nameTag(ctx: Ctx, text: string, colour: string, x: number, y: number, f
   ctx.fillText(text, x - width / 2 + 18, y + 0.5)
 }
 
-export const PAWN_SCALE = 1.25
+// 1 means: a standing astronaut is about as tall as a bed is long, and three fit side by side in a room.
+export const PAWN_SCALE = 1
 
-/** An arm: a short round limb from the shoulder to the hand. */
+/** An arm: a short round limb from the shoulder to a mitten of a hand. */
 function arm(ctx: Ctx, sx: number, sy: number, hx: number, hy: number, sleeve: string, hand: string) {
   ctx.lineCap = 'round'
   ctx.strokeStyle = EDGE
-  ctx.lineWidth = 10
+  ctx.lineWidth = 12
   ctx.beginPath()
   ctx.moveTo(sx, sy)
   ctx.lineTo(hx, hy)
   ctx.stroke()
   ctx.strokeStyle = sleeve
-  ctx.lineWidth = 6.4
+  ctx.lineWidth = 7.4
   ctx.beginPath()
   ctx.moveTo(sx, sy)
   ctx.lineTo(hx, hy)
   ctx.stroke()
-  circle(ctx, hx, hy, 3.9)
+  circle(ctx, hx, hy, 4.3)
   ctx.fillStyle = hand
   ctx.fill()
   ctx.strokeStyle = EDGE
-  ctx.lineWidth = 1.5
+  ctx.lineWidth = 2
   ctx.stroke()
 }
 
 /**
  * One astronaut, seen from above and a little from the front. (x, y) is where the feet are.
- * A small cartoon figure: a big head with a face, a round body, short arms and legs.
+ * A cartoon figure about two heads tall: a big head with big eyes, a small soft body,
+ * mitten hands and little boots. Walking, it hops and leans from foot to foot.
  */
 export function drawPawn(ctx: Ctx, p: PawnDraw, t: number) {
   const colour = colourOf(p.id)
@@ -1512,25 +1513,25 @@ export function drawPawn(ctx: Ctx, p: PawnDraw, t: number) {
   if (p.lie) {
     // In bed: a head on the pillow and a blanket in their own colour.
     if (p.lie === 'v') {
-      box(ctx, p.x - 12, p.y - 6, 24, 28, 7)
+      box(ctx, p.x - 14.5, p.y - 7, 29, 33, 7)
       ctx.fillStyle = colour
       ctx.fill()
       ctx.strokeStyle = EDGE
-      ctx.lineWidth = 2
+      ctx.lineWidth = 2.4
       ctx.stroke()
       ctx.fillStyle = 'rgba(255,255,255,0.3)'
-      ctx.fillRect(p.x - 11, p.y - 5, 22, 5)
-      bareHead(ctx, p.id, p.x, p.y - 15, 12.5, 'down', t, true)
+      ctx.fillRect(p.x - 13, p.y - 5.5, 26, 5)
+      drawHead(ctx, p.id, p.x, p.y - 17, 13, 'down', t, true)
     } else {
-      box(ctx, p.x - 8, p.y - 11, 30, 22, 7)
+      box(ctx, p.x - 8, p.y - 13, 35, 26, 7)
       ctx.fillStyle = colour
       ctx.fill()
       ctx.strokeStyle = EDGE
-      ctx.lineWidth = 2
+      ctx.lineWidth = 2.4
       ctx.stroke()
       ctx.fillStyle = 'rgba(255,255,255,0.3)'
-      ctx.fillRect(p.x - 7, p.y - 10, 5, 20)
-      bareHead(ctx, p.id, p.x - 16, p.y - 2, 12.5, 'down', t, true)
+      ctx.fillRect(p.x - 6.5, p.y - 11.5, 5, 23)
+      drawHead(ctx, p.id, p.x - 17, p.y - 1, 13, 'down', t, true)
     }
     ctx.restore()
     return
@@ -1538,18 +1539,20 @@ export function drawPawn(ctx: Ctx, p: PawnDraw, t: number) {
 
   const walking = p.step > 0
   const seed = p.id.charCodeAt(0)
-  const bob = walking ? -Math.abs(Math.sin(p.step)) * 3 : Math.sin(t * 2 + seed) * 0.7
+  const swing = walking ? Math.sin(p.step) : 0
+  const work = p.busy && !walking ? Math.sin(t * 9 + seed) : 0
+  // A hop on every step. Standing still, a slow breath; at work, a quick nod.
+  const bob = walking ? -Math.abs(swing) * 4.5 : work !== 0 ? work * 0.9 : Math.sin(t * 2 + seed) * 0.8
   const shake = p.flash && p.flash > 0 ? Math.sin(t * 60) * 2.5 : 0
   const x = p.x + shake
   const y = p.y
   const side = p.face === 'left' ? -1 : p.face === 'right' ? 1 : 0
-  const swing = walking ? Math.sin(p.step) : 0
-  const work = p.busy && !walking ? Math.sin(t * 9 + seed) : 0
 
   if (!ghost) {
+    // The shadow shrinks a little while the figure is off the ground.
     ctx.fillStyle = 'rgba(8,10,24,0.38)'
     ctx.beginPath()
-    ctx.ellipse(x + 3, y + 2, 17, 6.5, 0, 0, TAU)
+    ctx.ellipse(x + 2, y + 1.5, 17 - Math.abs(swing) * 3, 6.5 - Math.abs(swing), 0, 0, TAU)
     ctx.fill()
   }
   if (p.selected || p.hover) {
@@ -1560,137 +1563,147 @@ export function drawPawn(ctx: Ctx, p: PawnDraw, t: number) {
     ctx.stroke()
   }
 
-  const cloth = p.suited ? '#f1f3f9' : colour
-  const clothDark = p.suited ? '#c5cbdb' : shade(colour, -0.3)
-  const sleeve = p.suited ? '#e3e7f1' : shade(colour, -0.1)
-  const hand = p.suited ? '#8f98b3' : look.skin
-  const boot = p.suited ? '#8a93ad' : '#2a2f4a'
+  // The whole figure leans from foot to foot while walking.
+  ctx.translate(x, y)
+  ctx.rotate(swing * 0.08)
+  ctx.translate(-x, -y)
 
-  // Legs and boots. The feet take turns while walking.
-  for (const [dx, lift] of [[-6.5, Math.max(0, swing) * 4], [6.5, Math.max(0, -swing) * 4]]) {
-    box(ctx, x + dx - 4.5, y - 14 - lift, 9, 10, 3)
-    ctx.fillStyle = clothDark
-    ctx.fill()
-    ctx.strokeStyle = EDGE
-    ctx.lineWidth = 1.6
-    ctx.stroke()
-    box(ctx, x + dx - 5.5 + side * 1.5, y - 6.5 - lift, 11, 7.5, 3.5)
+  const cloth = p.suited ? '#f6f8fd' : colour
+  const clothDark = p.suited ? '#c5cbdb' : shade(colour, -0.28)
+  const sleeve = p.suited ? '#e6eaf4' : shade(colour, -0.08)
+  const hand = p.suited ? '#8f98b3' : look.skin
+  const boot = p.suited ? '#8a93ad' : '#2f3554'
+
+  // Little boots. The feet take turns while walking.
+  for (const [dx, lift] of [[-6, Math.max(0, swing) * 4.5], [6, Math.max(0, -swing) * 4.5]]) {
+    box(ctx, x + dx - 5.5 + side * 2, y - 8.5 - lift, 11, 8.5, 4.2)
     ctx.fillStyle = boot
     ctx.fill()
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = 2.2
     ctx.stroke()
   }
 
-  const top = y - 37 + bob
-  const shoulder = top + 8
+  const top = y - 30 + bob
+  const shoulder = top + 9
 
-  if (p.suited && p.face !== 'down') {
+  if (p.suited && side !== 0) {
     // The life-support backpack.
-    if (side !== 0) {
-      box(ctx, x - side * 21 - 6, top + 1, 13, 23, 4)
-      ctx.fillStyle = '#aab3ca'
-      ctx.fill()
-      ctx.strokeStyle = EDGE
-      ctx.lineWidth = 2
-      ctx.stroke()
-    }
+    box(ctx, x - side * 19 - 6.5, top + 3, 13, 20, 5)
+    ctx.fillStyle = '#aab3ca'
+    ctx.fill()
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = 2.2
+    ctx.stroke()
   }
 
   // Seen from the front or the back, the arms hang at the sides, behind the body's edge.
   if (side === 0) {
     for (const dir of [-1, 1]) {
-      const reach = work !== 0 ? 6 + work * dir * 3 : 0
+      const reach = work !== 0 ? 5 + work * dir * 3 : 0
       const sway = walking ? swing * dir * 3 : 0
       const up = p.face === 'up' && work !== 0
-      arm(ctx, x + dir * 13.5, shoulder, x + dir * (15.5 - (work !== 0 ? 5 : 0)), shoulder + 13 - reach * (up ? 1.6 : 1) + sway, sleeve, hand)
+      arm(ctx, x + dir * 11, shoulder, x + dir * (15.5 - (work !== 0 ? 5 : 0)), shoulder + 10 - reach * (up ? 1.6 : 1) + sway, sleeve, hand)
     }
   }
 
-  // Body.
-  box(ctx, x - 13, top, 26, 27, 10)
+  // The body: a soft bean, a little wider at the bottom.
+  const body = () => {
+    ctx.beginPath()
+    ctx.moveTo(x - 8.5, top)
+    ctx.quadraticCurveTo(x - 13.5, top + 1, x - 14, top + 13)
+    ctx.quadraticCurveTo(x - 14.5, top + 24, x - 7, top + 24)
+    ctx.lineTo(x + 7, top + 24)
+    ctx.quadraticCurveTo(x + 14.5, top + 24, x + 14, top + 13)
+    ctx.quadraticCurveTo(x + 13.5, top + 1, x + 8.5, top)
+    ctx.closePath()
+  }
+  body()
   ctx.fillStyle = cloth
   ctx.fill()
   ctx.strokeStyle = EDGE
-  ctx.lineWidth = 2.2
+  ctx.lineWidth = 2.6
   ctx.stroke()
+  ctx.save()
+  body()
+  ctx.clip()
   // A little shading down one side makes it round.
-  ctx.fillStyle = 'rgba(10,14,40,0.13)'
-  box(ctx, x + 4, top + 2.5, 7.5, 22, 5)
+  ctx.fillStyle = 'rgba(10,14,40,0.12)'
+  ctx.beginPath()
+  ctx.ellipse(x + 14, top + 14, 7, 15, 0, 0, TAU)
   ctx.fill()
   if (p.suited) {
     // A band in their own colour, so everyone can tell who is who in a suit.
     ctx.fillStyle = colour
-    ctx.fillRect(x - 12, top + 13, 24, 6)
+    ctx.fillRect(x - 16, top + 14, 32, 6)
     ctx.strokeStyle = EDGE
-    ctx.lineWidth = 1
-    ctx.strokeRect(x - 12, top + 13, 24, 6)
-    if (p.face === 'down') {
-      // The control box on the chest, with two small lights.
-      box(ctx, x - 6.5, top + 4, 13, 7, 2)
-      ctx.fillStyle = '#8f98b3'
-      ctx.fill()
-      ctx.stroke()
-      ctx.fillStyle = '#5fd38d'
-      circle(ctx, x - 3, top + 7.5, 1.4)
-      ctx.fill()
-      ctx.fillStyle = '#ffd166'
-      circle(ctx, x + 2.5, top + 7.5, 1.4)
-      ctx.fill()
-    }
-    if (p.face === 'up') {
-      box(ctx, x - 11, top - 1, 22, 24, 5)
-      ctx.fillStyle = '#aab3ca'
-      ctx.fill()
-      ctx.strokeStyle = EDGE
-      ctx.lineWidth = 2
-      ctx.stroke()
-      ctx.strokeStyle = 'rgba(23,28,49,0.45)'
-      ctx.lineWidth = 1.5
-      for (const dy of [6, 11, 16]) {
-        ctx.beginPath()
-        ctx.moveTo(x - 6, top + dy)
-        ctx.lineTo(x + 6, top + dy)
-        ctx.stroke()
-      }
-    }
+    ctx.lineWidth = 1.5
+    ctx.strokeRect(x - 16, top + 14, 32, 6)
   } else {
-    // A belt, and from the front a collar, a zip and a badge.
     ctx.fillStyle = clothDark
-    ctx.fillRect(x - 12, top + 18, 24, 3.6)
-    if (p.face === 'down') {
-      ctx.fillStyle = '#f6f8fd'
+    ctx.fillRect(x - 16, top + 16.5, 32, 3.6)
+  }
+  ctx.restore()
+  // The clip cuts the outline in half: draw it once more on top.
+  body()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2.6
+  ctx.stroke()
+
+  if (p.suited && p.face === 'down') {
+    // The control box on the chest, with two small lights. The head hides the top of it.
+    box(ctx, x - 6.5, top + 6.5, 13, 6, 2.2)
+    ctx.fillStyle = '#8f98b3'
+    ctx.fill()
+    ctx.lineWidth = 1.4
+    ctx.stroke()
+    ctx.fillStyle = '#5fd38d'
+    circle(ctx, x - 3, top + 9.7, 1.4)
+    ctx.fill()
+    ctx.fillStyle = '#ffd166'
+    circle(ctx, x + 2.5, top + 9.7, 1.4)
+    ctx.fill()
+  }
+  if (p.suited && p.face === 'up') {
+    box(ctx, x - 10.5, top + 3, 21, 19, 5)
+    ctx.fillStyle = '#aab3ca'
+    ctx.fill()
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = 2.2
+    ctx.stroke()
+    ctx.strokeStyle = 'rgba(23,28,49,0.45)'
+    ctx.lineWidth = 1.5
+    for (const dy of [11, 15, 19]) {
       ctx.beginPath()
-      ctx.moveTo(x - 6, top + 1.2)
-      ctx.lineTo(x, top + 8)
-      ctx.lineTo(x + 6, top + 1.2)
-      ctx.closePath()
-      ctx.fill()
-      ctx.strokeStyle = 'rgba(255,255,255,0.6)'
-      ctx.lineWidth = 1.5
-      ctx.beginPath()
-      ctx.moveTo(x, top + 8)
-      ctx.lineTo(x, top + 18)
+      ctx.moveTo(x - 6, top + dy)
+      ctx.lineTo(x + 6, top + dy)
       ctx.stroke()
-      circle(ctx, x - 6.5, top + 12, 2.6)
-      ctx.fillStyle = '#ffffff'
-      ctx.fill()
     }
+  }
+  if (!p.suited && p.face === 'down') {
+    // A badge on the chest.
+    circle(ctx, x - 6.5, top + 12, 2.7)
+    ctx.fillStyle = '#ffffff'
+    ctx.fill()
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = 1.2
+    ctx.stroke()
   }
 
   // Seen from the side, one arm swings in front of the body.
   if (side !== 0) {
     const angle = work !== 0 ? -1.15 + work * 0.35 : swing * 0.75
-    const hx = x + side * (2 + Math.sin(-angle) * 14)
-    const hy = shoulder + Math.cos(angle) * 14
-    arm(ctx, x + side * 2, shoulder, hx, hy, sleeve, hand)
+    arm(ctx, x + side * 2, shoulder, x + side * (2 + Math.sin(-angle) * 12), shoulder + Math.cos(angle) * 12, sleeve, hand)
   }
 
-  const hy = top - 10
-  if (p.suited) helmet(ctx, p.id, x, hy, p.face, t)
-  else bareHead(ctx, p.id, x, hy, 15.5, p.face, t, false)
+  // The head nods a little out of step with the body, like something on a spring.
+  const hy = top - 11 + (walking ? Math.sin(p.step * 2) * 0.9 : 0)
+  if (p.suited) helmet(ctx, p.id, x, hy - 1, p.face, t)
+  else drawHead(ctx, p.id, x, hy, 18.5, p.face, t, false)
 
   if (p.flash && p.flash > 0) {
     ctx.fillStyle = `rgba(255,60,90,${Math.min(0.6, p.flash)})`
-    box(ctx, x - 19, top - 30, 38, 68, 16)
+    box(ctx, x - 23, top - 34, 46, 66, 18)
     ctx.fill()
   }
   if (p.selected) {
@@ -1698,10 +1711,14 @@ export function drawPawn(ctx: Ctx, p: PawnDraw, t: number) {
     const lift = Math.abs(Math.sin(t * 4)) * 6
     ctx.fillStyle = '#6cb8ff'
     ctx.beginPath()
-    ctx.moveTo(x - 9, top - 64 - lift)
-    ctx.lineTo(x + 9, top - 64 - lift)
-    ctx.lineTo(x, top - 52 - lift)
+    ctx.moveTo(x - 9, top - 66 - lift)
+    ctx.lineTo(x + 9, top - 66 - lift)
+    ctx.lineTo(x, top - 54 - lift)
+    ctx.closePath()
     ctx.fill()
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = 2
+    ctx.stroke()
   }
   ctx.restore()
 }
@@ -1715,6 +1732,8 @@ export function tagPoint(p: { x: number; y: number; lie?: 'v' | 'h' }): Pt {
 export function drawRover(ctx: Ctx, x: number, y: number, angle: number, moving: boolean, t: number) {
   ctx.save()
   ctx.translate(x, y)
+  // Big enough for an astronaut to climb into.
+  ctx.scale(1.35, 1.35)
   ctx.fillStyle = 'rgba(8,10,24,0.35)'
   ctx.beginPath()
   ctx.ellipse(8, 12, 36, 20, 0, 0, TAU)
