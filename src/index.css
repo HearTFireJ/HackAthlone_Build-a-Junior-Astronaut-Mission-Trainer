@@ -151,6 +151,9 @@ button:disabled { cursor: not-allowed; }
 }
 .goal { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 0.4rem; font-size: 0.78rem; }
 .goal-name { font-weight: 700; white-space: nowrap; }
+.goal-star { color: #7482c4; }
+.goal-star.on { color: var(--power); text-shadow: 0 0 8px rgba(255, 209, 102, 0.6); }
+.goal-head { margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .goal-count { color: var(--muted); font-weight: 600; text-align: right; }
 .goal .bar { grid-column: 1 / -1; display: block; height: 4px; margin: 0.12rem 0 0; }
 .goal .bar-fill { display: block; }

@@ -177,7 +177,7 @@ export function GameScreen(props: Props) {
   const [heldDay, setHeldDay] = useState<number | null>(null)
   const held = phase === 'play' && heldDay === dayKey
   // The row of the mission window the mouse is over.
-  const [goalOver, setGoalOver] = useState<MissionId | 'handover' | null>(null)
+  const [goalOver, setGoalOver] = useState<MissionId | 'shield' | 'handover' | null>(null)
 
   const toastCount = useRef(0)
   useEffect(() => {
@@ -300,7 +300,7 @@ export function GameScreen(props: Props) {
     }
   } else if (goalOver && goalOver !== 'handover') {
     // Pointing at a mission lights up the place where it is done.
-    targets.push(MISSION_PLACE[goalOver])
+    targets.push(goalOver === 'shield' ? 'lab' : MISSION_PLACE[goalOver])
   }
 
   // What the bottom bar says about the thing under the mouse: a name and one short line.
@@ -428,7 +428,8 @@ export function GameScreen(props: Props) {
             return (
               <li key={id} className={`goal${done ? ' done' : ''}${hoverMission === id || goalOver === id ? ' lit' : ''}`} onMouseEnter={() => setGoalOver(id)} onMouseLeave={() => setGoalOver(null)}>
                 <span className="goal-name">
-                  {done ? '✅' : MISSION_ICONS[id]} {MISSIONS[id].name}
+                  {/* A star in front of each mission: finishing it earns that star. */}
+                  <span className={done ? 'goal-star on' : 'goal-star'} aria-hidden="true">★</span> {MISSIONS[id].name}
                 </span>
                 <span className="goal-count">
                   {Math.min(shown.missions[id], MISSIONS[id].goal)}/{MISSIONS[id].goal}
@@ -440,7 +441,9 @@ export function GameScreen(props: Props) {
             )
           })}
           <li className={`goal${handoverReady(game) ? ' done' : ''}${goalOver === 'handover' ? ' lit' : ''}`} onMouseEnter={() => setGoalOver('handover')} onMouseLeave={() => setGoalOver(null)}>
-            <span className="goal-name">🤝 Hand over the base</span>
+            <span className="goal-name">
+              <span className={handoverReady(game) ? 'goal-star on' : 'goal-star'} aria-hidden="true">★</span> Hand over the base
+            </span>
             <span className="goal-count">{handoverReady(game) ? 'ready' : 'not yet'}</span>
             {/* The last star. Say what is still missing, so it is never a surprise at the end. */}
             {!handoverReady(game) && <span className="goal-needs">Needs {handoverNeeds(game).join(', ')}.</span>}
@@ -450,6 +453,17 @@ export function GameScreen(props: Props) {
                 Hand over now
               </button>
             )}
+          </li>
+          {/* Not a mission and no star: what the Lab is working on. Kept here, off the picture. */}
+          <li className="goal-head">Lab research</li>
+          <li className={`goal${missionDone(shown.missions, 'shield') ? ' done' : ''}${goalOver === 'shield' ? ' lit' : ''}`} onMouseEnter={() => setGoalOver('shield')} onMouseLeave={() => setGoalOver(null)}>
+            <span className="goal-name">{MISSION_ICONS.shield} {MISSIONS.shield.name}</span>
+            <span className="goal-count">
+              {missionDone(shown.missions, 'shield') ? 'built' : `${Math.min(shown.missions.shield, MISSIONS.shield.goal)}/${MISSIONS.shield.goal}`}
+            </span>
+            <span className="bar">
+              <span className="bar-fill" style={{ width: `${Math.min(100, (100 * shown.missions.shield) / MISSIONS.shield.goal)}%` }} />
+            </span>
           </li>
         </ul>
 

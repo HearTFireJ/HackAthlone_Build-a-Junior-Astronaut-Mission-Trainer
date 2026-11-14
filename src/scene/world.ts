@@ -600,7 +600,6 @@ export class World {
     const plan = this.plan!
     const on = poweredModules(game, plan)
     const spare = powerAvailable(game) - powerUsed(game, plan)
-    const hud = this.hud ?? hudOf(game)
     return PLACES.map((place) => {
       const label: LabelDraw = { id: place.id, name: place.name, at: place.label }
       if (place.module) {
@@ -614,10 +613,7 @@ export class World {
         else if (!running && MODULES[module].power > spare && this.mode === 'plan') label.note = 'Not enough power left'
       }
       if (place.id === 'panels') label.note = `⚡ ${solarToday(game)} power today${game.battery > 0 ? ` + 🔋 ${game.battery} saved` : ''}`
-      if (place.id === 'site') label.note = missionDone(hud.missions, 'dish') ? 'Listening to space!' : `${Math.min(hud.missions.dish, MISSIONS.dish.goal)} of ${MISSIONS.dish.goal} built`
-      // The shield is a choice, not a mission: its progress shows on the Lab, and the result on the base.
-      if (place.id === 'lab' && !label.note && !missionDone(hud.missions, 'shield')) label.note = `🛡️ Shield: ${hud.missions.shield} of ${MISSIONS.shield.goal}`
-      if (place.id === 'habitat' && missionDone(hud.missions, 'shield')) label.note = '🛡️ Moon-soil shield built'
+      // Progress is not hung under the name tags: the mission list keeps the numbers, the picture shows the thing itself.
       return label
     })
   }
