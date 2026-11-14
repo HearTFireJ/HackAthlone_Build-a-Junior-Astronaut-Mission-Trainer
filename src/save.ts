@@ -6,7 +6,7 @@ import type { GameState, Plan } from './game/outpost.ts'
 import type { Tone } from './scene/script.ts'
 
 /** Change this number whenever the rules or the shape of a saved game change: old saves are then ignored. */
-const VERSION = 2
+const VERSION = 3
 const KEY = 'outpost-save'
 
 export interface SavedGame {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import raw from '../data/scenarios.json'
-import { MISSIONS, MODULE_IDS, type ModuleId } from './content.ts'
+import { MISSIONS, MODULE_IDS, PROJECT_IDS, SETUPS, START_IDS, type ModuleId } from './content.ts'
 import { EVENTS, EVENT_IDS } from './events.ts'
 import {
   RULES,
@@ -14,6 +14,8 @@ import {
   availableTrips,
   calmPreview,
   createGame,
+  drawStart,
+  missionDone,
   emptyPlan,
   allMissionsDone,
   handOver,
@@ -579,5 +581,49 @@ describe('the real NASA records the game ships with', () => {
     expect(noCloud.every((entry) => !entry.storm)).toBe(true)
     const cloud = days.filter((entry) => entry.watchFlare?.cme)
     expect(cloud.filter((entry) => !entry.storm).length).toBeGreaterThanOrEqual(cloud.length / 2)
+  })
+})
+
+describe('what the last crew left behind', () => {
+  it('changes nothing when no start is given', () => {
+    const game = createGame('sep-2017')
+    expect(game.start).toBe(null)
+    expect([game.air, game.food, game.battery, game.solarLoss]).toEqual([SETUPS['sep-2017'].air, SETUPS['sep-2017'].food, 0, 0])
+    expect(game.broken).toEqual([])
+  })
+
+  it('gives every start one good thing and one bad thing', () => {
+    const plain = createGame('sep-2017')
+    for (const id of START_IDS) {
+      const game = createGame('sep-2017', 1, id)
+      const better =
+        Number(game.air > plain.air) + Number(game.food > plain.food) + Number(game.battery > plain.battery) +
+        PROJECT_IDS.filter((project) => game.missions[project] > 0).length
+      const worse =
+        Number(game.air < plain.air) + Number(game.food < plain.food) + Number(game.solarLoss > 0) +
+        Number(game.crew[0].mood < plain.crew[0].mood)
+      // A repair is outside work: a start must never need one before a module can run.
+      expect(game.broken).toEqual([])
+      expect([id, better, worse]).toEqual([id, 1, 1])
+    }
+  })
+
+  it('never finishes a mission before the game begins, and never goes over the store limits', () => {
+    for (const scenario of Object.keys(SETUPS)) {
+      for (const id of START_IDS) {
+        const game = createGame(scenario, 1, id)
+        for (const project of PROJECT_IDS) expect(missionDone(game.missions, project)).toBe(false)
+        expect(game.air).toBeLessThanOrEqual(RULES.airCap)
+        expect(game.food).toBeLessThanOrEqual(RULES.foodCap)
+        expect(game.air).toBeGreaterThan(0)
+        expect(game.food).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('draws the same start for the same seed, and every start for some seed', () => {
+    expect(drawStart(42)).toBe(drawStart(42))
+    const seen = new Set(Array.from({ length: 200 }, (_, seed) => drawStart(seed + 1)))
+    expect(seen.size).toBe(START_IDS.length)
   })
 })

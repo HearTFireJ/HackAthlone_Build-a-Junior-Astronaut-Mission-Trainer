@@ -342,6 +342,12 @@ button:disabled { cursor: not-allowed; }
 .card-intro { --strip: var(--yellow); }
 .card-guide { --strip: #8fc7ff; }
 .steps { padding-left: 1.25rem; display: grid; gap: 0.4rem; }
+/* What the last crew left behind: one good label and one bad label, read at a glance. */
+.start-note { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.5rem; width: 100%; background: var(--paper-2); border: 2px dashed var(--ink); border-radius: 14px; padding: 0.55rem 0.75rem; }
+.start-label { font-family: var(--display); font-weight: 600; }
+.start-tag { display: inline-flex; align-items: center; gap: 0.3rem; border: 2px solid var(--ink); border-radius: 999px; padding: 0.1rem 0.65rem; font-weight: 800; font-size: 0.92rem; white-space: nowrap; }
+.start-tag.good { background: var(--good-soft); }
+.start-tag.bad { background: var(--bad-soft); }
 .choices { display: grid; gap: 0.6rem; width: 100%; }
 .choice { display: grid; gap: 0.1rem; text-align: left; font-family: var(--body); border-radius: 14px; border: var(--edge); background: #fff; padding: 0.6rem 0.85rem; box-shadow: var(--drop); transition: transform 0.06s, box-shadow 0.06s; }
 .choice strong { font-size: 1.05rem; }

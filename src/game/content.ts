@@ -160,6 +160,40 @@ export const SETUPS: Record<string, Setup> = {
   'may-2024': { solar: 7, air: 9, food: 10, crew: ['aoife', 'cian', 'niamh'] },
 }
 
+/**
+ * What the last crew left behind. One of these is drawn at the start of every game, so no two
+ * games begin the same way. Each one pairs a good thing with a bad thing: none is simply better.
+ * No start breaks a module: a repair is outside work, and on a level with a flare alert every
+ * day a careful commander might never get it done. All of it is made up for the game.
+ */
+export const START_IDS = ['dusty', 'pantry', 'airy', 'scouted', 'started', 'notes'] as const
+export type StartId = (typeof START_IDS)[number]
+
+export interface StartInfo {
+  /** A few words each: they are shown as two labels on the welcome card. */
+  good: string
+  bad: string
+  /** Added to the level's starting air and food. */
+  air?: number
+  food?: number
+  battery?: number
+  /** Solar panels that make no power until someone repairs them. */
+  solarLoss?: number
+  /** Progress already made on a mission or on the shield. */
+  progress?: Partial<Record<ProjectId, number>>
+  /** Added to everyone's starting mood. */
+  mood?: number
+}
+
+export const STARTS: Record<StartId, StartInfo> = {
+  dusty: { good: 'Battery full', bad: '2 solar panels dusty', battery: 3, solarLoss: 2 },
+  pantry: { good: 'Extra food', bad: 'Less air', food: 3, air: -3 },
+  airy: { good: 'Extra air', bad: 'Less food', air: 3, food: -3 },
+  scouted: { good: 'Dark crater already scouted', bad: 'Less food', progress: { ice: 1 }, food: -3 },
+  started: { good: 'Radio telescope already started', bad: 'Crew feeling low', progress: { dish: 3 }, mood: -1 },
+  notes: { good: 'Shield research already started', bad: '1 solar panel dusty', progress: { shield: 3 }, solarLoss: 1 },
+}
+
 export function crewInfo(id: string): CrewInfo {
   const info = CREW.find((member) => member.id === id)
   if (!info) throw new Error(`Unknown astronaut: ${id}`)

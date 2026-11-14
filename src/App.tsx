@@ -7,7 +7,7 @@ import { FieldGuide } from './components/FieldGuide.tsx'
 import { EVENT_FACTS, MISSION_FACTS, type FactId } from './data/facts.ts'
 import { type ScenarioInfo, SCENARIOS } from './data/scenarios.ts'
 import { clearGame, loadGame, saveGame } from './save.ts'
-import { MODULES, MODULE_IDS, type ModuleId } from './game/content.ts'
+import { MODULES, MODULE_IDS, STARTS, type ModuleId } from './game/content.ts'
 import { EVENTS, type EventId } from './game/events.ts'
 import {
   type DayReport,
@@ -20,6 +20,7 @@ import {
   allMissionsDone,
   canRun,
   createGame,
+  drawStart,
   emptyPlan,
   handOver,
   jobProblem,
@@ -188,7 +189,10 @@ function App() {
           })
         }}
         onPick={(info) => {
-          const game = createGame(info.scenario.id, seedFromClock())
+          // The seed decides both the event cards and what the last crew left behind.
+          const seed = seedFromClock()
+          const game = createGame(info.scenario.id, seed, drawStart(seed))
+          const left = game.start ? STARTS[game.start] : null
           setScreen({
             name: 'game',
             info,
@@ -204,7 +208,7 @@ function App() {
             guideSeen: 0,
             speed: 1,
             effect: null,
-            log: [],
+            log: left ? [{ day: 1, text: `📦 The last crew left: ${left.good} · ${left.bad}`, tone: 'plain' }] : [],
           })
         }}
       />

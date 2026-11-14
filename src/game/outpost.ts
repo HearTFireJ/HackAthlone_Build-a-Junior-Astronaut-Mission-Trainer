@@ -19,12 +19,15 @@ import {
   MODULES,
   MODULE_IDS,
   SETUPS,
+  STARTS,
+  START_IDS,
   TRIPS,
   crewInfo,
   type JobId,
   type MissionId,
   type ProjectId,
   type ModuleId,
+  type StartId,
   type TripId,
 } from './content.ts'
 import { EVENTS, EVENT_IDS, type EventId } from './events.ts'
@@ -87,6 +90,8 @@ export interface RecordedFlare extends WatchFlare {
 
 export interface GameState {
   scenarioId: string
+  /** What the last crew left behind, drawn when the game started. null: nothing special. */
+  start: StartId | null
   day: number
   status: 'playing' | 'done' | 'evacuated'
   /** Power the solar panels make when nothing is wrong with them. */
@@ -343,25 +348,40 @@ export function alertFor(state: GameState, scenario: Scenario, plan: Plan): Aler
 
 // ---------------------------------------------------------------- starting a game
 
-export function createGame(scenarioId: string, seed = 1): GameState {
+/**
+ * Which starting condition a new game gets. It comes from the game's seed, so the same seed
+ * always gives the same start. The seed is stirred first so that this draw does not line up
+ * with the first event card, which is drawn from the same seed.
+ */
+export function drawStart(seed: number): StartId {
+  const [pick] = roll(seed ^ 0x5bd1e995)
+  return START_IDS[Math.floor(pick * START_IDS.length)]
+}
+
+export function createGame(scenarioId: string, seed = 1, start: StartId | null = null): GameState {
   const setup = SETUPS[scenarioId]
   if (!setup) throw new Error(`No setup for scenario: ${scenarioId}`)
+  const left = start ? STARTS[start] : null
   return {
     scenarioId,
+    start,
     day: 1,
     status: 'playing',
     solar: setup.solar,
-    solarLoss: 0,
+    solarLoss: left?.solarLoss ?? 0,
     powerPenalty: 0,
-    battery: 0,
-    air: setup.air,
-    food: setup.food,
+    battery: Math.min(RULES.batteryCap, left?.battery ?? 0),
+    air: clamp(setup.air + (left?.air ?? 0), RULES.airCap),
+    food: clamp(setup.food + (left?.food ?? 0), RULES.foodCap),
     broken: [],
     offToday: [],
     weakLifeDays: 0,
-    crew: setup.crew.map(newAstronaut),
+    crew: setup.crew.map((id) => {
+      const astronaut = newAstronaut(id)
+      return { ...astronaut, mood: clamp(astronaut.mood + (left?.mood ?? 0), RULES.maxStat) }
+    }),
     arriving: null,
-    missions: { ice: 0, shield: 0, dish: 0, sun: 0 },
+    missions: { ice: 0, shield: 0, dish: 0, sun: 0, ...left?.progress },
     radioYesterday: true,
     airOutDays: 0,
     pod: false,

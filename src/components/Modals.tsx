@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { ScenarioInfo } from '../data/scenarios.ts'
-import { JOBS, crewInfo } from '../game/content.ts'
+import { JOBS, STARTS, crewInfo } from '../game/content.ts'
 import { EVENTS } from '../game/events.ts'
 import {
   RULES,
@@ -52,10 +52,19 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
   if (!modal) return null
 
   if (modal.kind === 'intro') {
+    const fresh = game.day === 1 && game.history.length === 0
+    const left = fresh && game.start ? STARTS[game.start] : null
     return (
       <Card tone="intro">
         <p className="eyebrow">{info.title} · {info.dates}</p>
         <h2>Welcome, Commander</h2>
+        {left && (
+          <div className="start-note">
+            <span className="start-label">The last crew left you:</span>
+            <span className="start-tag good"><Icon name="sparkle" /> {left.good}</span>
+            <span className="start-tag bad"><Icon name="warning" /> {left.bad}</span>
+          </div>
+        )}
         <p>
           This outpost is yours for {RULES.maxDays} days. Your crew came here with missions to do. Then the next crew
           arrives and takes over.
@@ -84,7 +93,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
         <p><Icon name="book" /> The Field guide fills up with the real records and facts behind what you see. Look at it whenever you like.</p>
         <p className="hint"><Icon name="keys" /> Keys: Space starts the day or pauses it, F plays faster, 1 to 5 pick an astronaut.</p>
         <button type="button" className="primary" onClick={onCloseIntro}>
-          {game.day === 1 && game.history.length === 0 ? 'Take command' : 'Back to the base'} <Icon name="play" />
+          {fresh ? 'Take command' : 'Back to the base'} <Icon name="play" />
         </button>
       </Card>
     )

@@ -14,6 +14,8 @@ Built at HackAthlone 2026 (TUS Athlone, Ireland) for the NASA Space Apps Challen
 
 Each turn is one day, and a tour lasts ten days. Then the next crew arrives and you see how you did.
 
+No two tours begin the same way. The crew before you always leaves one good thing and one bad thing behind, drawn at random from six pairs: a full battery but two dusty solar panels, extra food but less air, a radio telescope already started but a crew feeling low, and so on. This part is made up for the game.
+
 You see the base from above. In the morning you give the orders: click the ⚡ switch under a module to give it power, click an astronaut and then the place where they should work. Then you press **Start the day** and watch it play out. The crew walks to work, puts on spacesuits to go outside, waters the plants, welds the telescope together, drives the rover away. If a flare alert comes in, the picture stops and waits for your decision. If a real storm arrives, you see it sweep over the base and hit whoever is not under cover.
 
 Real storm particles are far too small to see. The game draws them so that you can watch the storm arrive.
@@ -170,5 +172,6 @@ No NASA logos or other NASA branding are used anywhere in the project.
 - RTÉ News, "Northern Lights to be visible across Ireland this evening", for the aurora over Ireland in May 2024: https://www.rte.ie/news/ireland/2024/0511/1448552-northern-lights
 - Challenge statement: https://www.spaceappschallenge.org/2026/challenges/junior-astronaut-mission-trainer/
 - Open-source software: React, Vite, Vitest, TypeScript, oxlint.
+- Fonts: Fredoka and Nunito, both under the SIL Open Font License, packaged by Fontsource.
 
 The outpost, the crew, the missions, the morning event cards and "Mission Control, Athlone" are fictional. NASA does not endorse this project.
