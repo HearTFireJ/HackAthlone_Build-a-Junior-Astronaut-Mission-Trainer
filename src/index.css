@@ -211,7 +211,8 @@ button:disabled { cursor: not-allowed; }
   font-size: 1rem; font-weight: 700; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); animation: rise 0.25s ease-out;
 }
 .subtitle.plain { font-weight: 600; font-size: 0.9rem; color: #d7defa; }
-.subtitle.info { font-weight: 600; font-size: 0.95rem; border-color: var(--info); animation: none; }
+.subtitle.info { font-weight: 500; font-size: 0.95rem; color: #d7defa; white-space: nowrap; animation: none; }
+.subtitle.info strong { color: var(--power); font-weight: 800; margin-right: 0.35rem; }
 .subtitle.tone-good { border-color: var(--good); }
 .subtitle.tone-warn { border-color: var(--warn); color: #ffe3b0; }
 .subtitle.tone-bad { border-color: var(--bad); color: #ffd6db; }
