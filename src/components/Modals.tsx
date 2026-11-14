@@ -71,8 +71,12 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
             it fires a big flare, Mission Control will call, but only if your Radio Dish is on.
           </li>
         </ol>
+        <p>
+          ⭐ You earn one star for each mission you finish, and one more for handing the next crew a base with air, food
+          and a healthy, happy crew.
+        </p>
         <button type="button" className="primary" onClick={onCloseIntro}>
-          Take command ▶
+          {game.day === 1 && game.history.length === 0 ? 'Take command ▶' : 'Back to the base ▶'}
         </button>
       </Card>
     )

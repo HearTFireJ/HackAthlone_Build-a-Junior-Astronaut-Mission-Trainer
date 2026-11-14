@@ -42,10 +42,11 @@ interface Props {
   onTogglePower: (module: ModuleId) => void
   onAssign: (astronautId: string, job: Job) => void
   onStart: () => void
+  onHelp: () => void
 }
 
 /** The main screen: the base seen from above, and the commander's panel beside it. */
-export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower, onAssign, onStart }: Props) {
+export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower, onAssign, onStart, onHelp }: Props) {
   const weather = weatherOn(info.scenario, game.day)
   const available = powerAvailable(game)
   const used = powerUsed(game, plan)
@@ -62,6 +63,10 @@ export function GameScreen({ info, game, plan, selected, onSelect, onTogglePower
           <span className="real-date" title="The Sun's weather in this mission is the real weather of this date.">
             {longDate(weather.date)} · real date
           </span>
+          <span className={`tag tag-${info.difficulty.replace(' ', '-').toLowerCase()}`}>{info.title}</span>
+          <button type="button" className="help" onClick={onHelp}>
+            ? How to play
+          </button>
         </div>
         <div className="meters">
           <Meter icon="⚡" label="Power" value={`${available - used} left`} detail={`${used} of ${available} used`} tone={available - used === 0 ? 'calm' : 'good'} />

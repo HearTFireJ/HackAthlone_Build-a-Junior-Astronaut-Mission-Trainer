@@ -109,6 +109,8 @@ button:disabled { cursor: not-allowed; }
 .topbar-day { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; }
 .topbar-day strong { font-size: 1.25rem; }
 .real-date { color: var(--power); font-size: 0.9rem; font-weight: 600; }
+.help { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); padding: 0.1rem 0.7rem; font-size: 0.8rem; font-weight: 600; }
+.help:hover { border-color: var(--info); color: var(--text); }
 .meters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .meter { display: flex; align-items: center; gap: 0.5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0.3rem 0.7rem; }
 .meter-icon { font-size: 1.2rem; }

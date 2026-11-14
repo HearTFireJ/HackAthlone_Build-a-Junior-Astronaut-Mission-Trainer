@@ -116,6 +116,7 @@ function App() {
             return { ...current, plan: { ...current.plan, jobs } }
           })
         }
+        onHelp={() => update((current) => (current.modal ? current : { ...current, modal: { kind: 'intro' } }))}
         onStart={() =>
           update((current) => {
             // A card is open (an event to answer, a report to read): the day cannot start yet.
