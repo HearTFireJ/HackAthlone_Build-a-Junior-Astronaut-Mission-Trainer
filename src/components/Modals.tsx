@@ -14,6 +14,7 @@ import {
 } from '../game/outpost.ts'
 import { handoverNeeds } from './words.ts'
 import type { SceneEffect } from '../scene/Scene.tsx'
+import { Icon, Rich } from './Icon.tsx'
 
 export type Modal =
   | { kind: 'intro' }
@@ -61,7 +62,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
         </p>
         <ol className="steps">
           <li>
-            <strong>Share out the power.</strong> The solar panels cannot run every module at once. Click the ⚡ switch
+            <strong>Share out the power.</strong> The solar panels cannot run every module at once. Click the <Icon name="bolt" /> switch
             under a module to turn it on.
           </li>
           <li>
@@ -77,13 +78,13 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
           </li>
         </ol>
         <p>
-          ⭐ You earn one star for each mission you finish, and one more for handing the next crew a base with air, food
+          <Icon name="star" /> You earn one star for each mission you finish, and one more for handing the next crew a base with air, food
           and a healthy, happy crew.
         </p>
-        <p>📖 The Field guide fills up with the real records and facts behind what you see. Look at it whenever you like.</p>
-        <p className="hint">⌨️ Keys: Space starts the day or pauses it, F plays faster, 1 to 5 pick an astronaut.</p>
+        <p><Icon name="book" /> The Field guide fills up with the real records and facts behind what you see. Look at it whenever you like.</p>
+        <p className="hint"><Icon name="keys" /> Keys: Space starts the day or pauses it, F plays faster, 1 to 5 pick an astronaut.</p>
         <button type="button" className="primary" onClick={onCloseIntro}>
-          {game.day === 1 && game.history.length === 0 ? 'Take command ▶' : 'Back to the base ▶'}
+          {game.day === 1 && game.history.length === 0 ? 'Take command' : 'Back to the base'} <Icon name="play" />
         </button>
       </Card>
     )
@@ -96,7 +97,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
       <Card tone="event">
         <p className="eyebrow">Day {game.day} · This morning</p>
         <h2>
-          <span aria-hidden="true">{card.icon}</span> {card.title}
+          <Rich text={card.icon} /> {card.title}
         </h2>
         <p>{card.text(game, who)}</p>
         <div className="choices">
@@ -115,7 +116,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
     return (
       <Card tone="event">
         <h2>
-          <span aria-hidden="true">{modal.icon}</span> {modal.title}
+          <Rich text={modal.icon} /> {modal.title}
         </h2>
         <p>{modal.text}</p>
         <button type="button" className="primary" onClick={onCloseEventResult}>
@@ -130,16 +131,16 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
     return (
       <Card tone="event">
         <p className="eyebrow">Day {game.day} · This morning</p>
-        <h2>⭐ Every mission is done!</h2>
+        <h2><Icon name="star" /> Every mission is done!</h2>
         <p>The next crew can come as soon as you call them.</p>
         <p className={`clue ${ready ? 'safe' : 'unknown'}`}>
           {ready ? (
             <>
-              🤝 <strong>The base is ready.</strong> Handing over now earns the last star.
+              <Icon name="star" /> <strong>The base is ready.</strong> Handing over now earns the last star.
             </>
           ) : (
             <>
-              🤝 <strong>The base is not ready for the last star.</strong> Needs {handoverNeeds(game).join(', ')}.
+              <Icon name="star" /> <strong>The base is not ready for the last star.</strong> Needs {handoverNeeds(game).join(', ')}.
             </>
           )}
         </p>
@@ -169,7 +170,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
     return (
       <Card tone="alert">
         <p className="eyebrow">Day {game.day} · Mission Control calling</p>
-        <h2>⚠️ Flare alert</h2>
+        <h2><Icon name="warning" /> Flare alert</h2>
         <p>
           The Sun has just fired a <strong>class {flare.class} flare</strong>.
         </p>
@@ -178,16 +179,16 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
           {cloudKnown ? (
             flare.cme ? (
               <>
-                🔭 <strong>A huge cloud of gas left the Sun with this flare.</strong>
+                <Icon name="telescope" /> <strong>A huge cloud of gas left the Sun with this flare.</strong>
               </>
             ) : (
               <>
-                🔭 <strong>No cloud of gas was seen with this flare.</strong>
+                <Icon name="telescope" /> <strong>No cloud of gas was seen with this flare.</strong>
               </>
             )
           ) : (
             <>
-              🔭 <strong>We cannot tell if a cloud of gas left the Sun.</strong> Your Sun Telescope is off today.
+              <Icon name="telescope" /> <strong>We cannot tell if a cloud of gas left the Sun.</strong> Your Sun Telescope is off today.
             </>
           )}
         </p>

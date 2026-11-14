@@ -830,18 +830,18 @@ export class World {
       if (!actor.hidden || this.rover.state !== 'gone') continue
       const away = game.crew.find((a) => a.id === actor.id)?.away
       const text = `🚙 ${crewInfo(actor.id).name}${this.mode === 'plan' && away ? `: back in ${away.daysLeft} day${away.daysLeft === 1 ? '' : 's'}` : ' is out with the rover'}`
-      ctx.font = '700 16px "Segoe UI", system-ui, sans-serif'
+      ctx.font = '700 16px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
       const w = ctx.measureText(text).width + 22
       const x = WORLD.w - 18 - w
       const y = 728 - row * 30
       ctx.beginPath()
       ctx.roundRect(x, y - 13, w, 26, 13)
-      ctx.fillStyle = 'rgba(10,14,30,0.82)'
+      ctx.fillStyle = '#fff8ea'
       ctx.fill()
-      ctx.strokeStyle = colourOf(actor.id)
-      ctx.lineWidth = 2
+      ctx.strokeStyle = '#1c2340'
+      ctx.lineWidth = 2.2
       ctx.stroke()
-      ctx.fillStyle = '#fff'
+      ctx.fillStyle = '#1c2340'
       ctx.textAlign = 'left'
       ctx.textBaseline = 'middle'
       ctx.fillText(text, x + 11, y + 1)
@@ -853,7 +853,7 @@ export class World {
       const life = f.life ?? 2.4
       const alpha = f.age < life - 0.7 ? 1 : Math.max(0, 1 - (f.age - (life - 0.7)) / 0.7)
       ctx.globalAlpha = alpha
-      ctx.font = '800 22px "Segoe UI", system-ui, sans-serif'
+      ctx.font = '800 22px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       const y = f.y - f.age * (f.rise ?? 22)

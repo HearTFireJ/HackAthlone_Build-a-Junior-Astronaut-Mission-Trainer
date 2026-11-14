@@ -3,6 +3,7 @@ import { MISSIONS, MISSION_IDS, crewInfo } from '../game/content.ts'
 import { RULES, type DayReport, type GameState, handoverReady, missionDone, rate } from '../game/outpost.ts'
 import { AboutData } from './AboutData.tsx'
 import { FactLine, Pips, Token } from './bits.tsx'
+import { Icon } from './Icon.tsx'
 import { clock, longDate } from './words.ts'
 
 interface Props {
@@ -57,7 +58,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
           </p>
         )}
         <button type="button" className="primary" onClick={onAgain}>
-          Command another mission ▶
+          Command another mission <Icon name="play" />
         </button>
       </header>
 
@@ -71,7 +72,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
                 <li key={id} className={done ? 'mission done' : 'mission'}>
                   <div className="mission-head">
                     <span>
-                      {done ? '⭐' : '⬜'} {MISSIONS[id].name}
+                      <span className={done ? 'goal-star on' : 'goal-star'}><Icon name="star" /></span> {MISSIONS[id].name}
                     </span>
                     <span className="mission-count">
                       {Math.min(game.missions[id], MISSIONS[id].goal)}/{MISSIONS[id].goal}
@@ -82,9 +83,9 @@ export function EndScreen({ info, game, onAgain }: Props) {
             })}
             <li className={handoverReady(game) ? 'mission done' : 'mission'}>
               <div className="mission-head">
-                <span>{handoverReady(game) ? '⭐' : '⬜'} Hand over the base</span>
+                <span><span className={handoverReady(game) ? 'goal-star on' : 'goal-star'}><Icon name="star" /></span> Hand over the base</span>
                 <span className="mission-count">
-                  💨 {game.air} · 🥕 {game.food}
+                  <Icon name="air" /> {game.air} <Icon name="food" /> {game.food}
                 </span>
               </div>
               <p className="mission-text">
@@ -182,7 +183,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
 
       {game.flares.length > 0 && (
         <section className="panel">
-          <h2>🔭 Flares your Sun Telescope recorded</h2>
+          <h2><Icon name="telescope" /> Flares your Sun Telescope recorded</h2>
           <ul className="flare-cards">
             {game.flares.map((flare) => (
               <li key={flare.time}>

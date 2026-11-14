@@ -4,6 +4,7 @@ import { RULES } from '../game/outpost.ts'
 import { AboutData } from './AboutData.tsx'
 import { HeroArt } from './HeroArt.tsx'
 import { plural } from './words.ts'
+import { Icon } from './Icon.tsx'
 
 interface Props {
   onPick: (info: ScenarioInfo) => void
@@ -30,7 +31,7 @@ export function StartScreen({ onPick, saved, onContinue }: Props) {
 
       {saved && (
         <button type="button" className="continue-card" onClick={onContinue}>
-          <span className="continue-go">▶ Continue</span>
+          <span className="continue-go"><Icon name="play" /> Continue</span>
           <span>
             {saved.title}, day {saved.day}
           </span>
@@ -53,9 +54,11 @@ export function StartScreen({ onPick, saved, onContinue }: Props) {
                 <span className="mission-dates">{info.dates}</span>
                 <span className="mission-blurb">{info.blurb}</span>
                 <span className="mission-setup">
-                  👩‍🚀 {plural(setup.crew.length, 'astronaut')} · 💨 {setup.air} air · 🥕 {setup.food} food
+                  <span><Icon name="person" /> {plural(setup.crew.length, 'astronaut')}</span>
+                  <span><Icon name="air" /> {setup.air} air</span>
+                  <span><Icon name="food" /> {setup.food} food</span>
                 </span>
-                <span className="mission-go">Take command ▶</span>
+                <span className="mission-go">Take command <Icon name="play" /></span>
               </button>
             )
           })}

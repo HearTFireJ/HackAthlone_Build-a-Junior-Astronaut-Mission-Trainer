@@ -4,6 +4,7 @@ import type { DayReport, GameState } from '../game/outpost.ts'
 import { AboutBody } from './AboutData.tsx'
 import { FactLine } from './bits.tsx'
 import { clock, longDate } from './words.ts'
+import { Icon } from './Icon.tsx'
 
 /** True for a day on which the real Sun did something worth a line in the guide. */
 const sunDid = (day: DayReport) => day.flare !== null || day.storm !== null
@@ -27,10 +28,10 @@ export function FieldGuide({ info, game, facts, onClose }: Props) {
     <div className="overlay" role="dialog" aria-modal="true" aria-label="Field guide">
       <div className="card card-guide">
         <p className="eyebrow">Field guide</p>
-        <h2>📖 The real science behind your outpost</h2>
+        <h2><Icon name="book" /> The real science behind your outpost</h2>
 
         <section className="guide-part">
-          <h3>☀️ What the real Sun did</h3>
+          <h3><Icon name="sun" /> What the real Sun did</h3>
           <p className="hint">
             The Sun in this mission does what the real Sun did on {info.dates}. Each line opens NASA's own record.
           </p>
@@ -61,7 +62,7 @@ export function FieldGuide({ info, game, facts, onClose }: Props) {
 
         <section className="guide-part">
           <h3>
-            🔎 Real life: {facts.length} of {total} found
+            <Icon name="look" /> Real life: {facts.length} of {total} found
           </h3>
           <div className="guide-facts">
             {facts.map((id) => (
@@ -77,7 +78,7 @@ export function FieldGuide({ info, game, facts, onClose }: Props) {
         </section>
 
         <button type="button" className="primary" onClick={onClose}>
-          Back to the base ▶
+          Back to the base <Icon name="play" />
         </button>
       </div>
     </div>

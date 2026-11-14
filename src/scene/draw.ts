@@ -86,6 +86,8 @@ function distToSegment(p: Pt, a: Pt, b: Pt): number {
   return Math.hypot(p.x - (a.x + along * dx), p.y - (a.y + along * dy))
 }
 
+/** The colour of every sign and label: the same paper as the windows around the picture. */
+const PAPER = '#fff8ea'
 const roomList = Object.values(ROOMS) as Rect[]
 
 /** True where a crater would sit under a building, a corridor or the road. */
@@ -328,7 +330,7 @@ export function paintGround(ctx: Ctx, width: number, height: number, scale: numb
   ctx.lineWidth = 2.5
   ctx.stroke()
   ctx.fillStyle = '#2a2f45'
-  ctx.font = '700 15px "Segoe UI", system-ui, sans-serif'
+  ctx.font = '700 15px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText('Dark crater →', 1500, 786)
@@ -1432,7 +1434,7 @@ export interface NameTag {
 
 /** Draws the name tags. A tag that would cover another one is moved up, like a little list. */
 export function drawNameTags(ctx: Ctx, tags: NameTag[]) {
-  ctx.font = '700 17px "Segoe UI", system-ui, sans-serif'
+  ctx.font = '700 17px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
   const placed: Rect[] = []
   for (const tag of [...tags].sort((a, b) => b.y - a.y)) {
     const width = ctx.measureText(tag.text).width + 24
@@ -1445,20 +1447,22 @@ export function drawNameTags(ctx: Ctx, tags: NameTag[]) {
 }
 
 function nameTag(ctx: Ctx, text: string, colour: string, x: number, y: number, faint: boolean) {
-  ctx.font = '700 17px "Segoe UI", system-ui, sans-serif'
+  ctx.font = '700 17px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
   const width = ctx.measureText(text).width + 24
   box(ctx, x - width / 2, y - 11, width, 22, 11)
-  ctx.fillStyle = faint ? 'rgba(10,14,30,0.5)' : 'rgba(10,14,30,0.82)'
+  ctx.fillStyle = faint ? 'rgba(255,248,234,0.6)' : PAPER
   ctx.fill()
-  ctx.strokeStyle = colour
-  ctx.lineWidth = 1.5
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2
   if (faint) ctx.setLineDash([4, 3])
   ctx.stroke()
   ctx.setLineDash([])
   ctx.fillStyle = colour
-  circle(ctx, x - width / 2 + 10, y, 4)
+  circle(ctx, x - width / 2 + 10, y, 4.5)
   ctx.fill()
-  ctx.fillStyle = '#ffffff'
+  ctx.lineWidth = 1.2
+  ctx.stroke()
+  ctx.fillStyle = faint ? 'rgba(28,35,64,0.6)' : EDGE
   ctx.textAlign = 'left'
   ctx.textBaseline = 'middle'
   ctx.fillText(text, x - width / 2 + 18, y + 0.5)
@@ -1761,42 +1765,65 @@ export interface LabelDraw {
 
 /** Draws a label and returns the area of its switch, so a click on it can be found. */
 export function drawLabel(ctx: Ctx, label: LabelDraw): Rect | null {
-  ctx.font = '700 17px "Segoe UI", system-ui, sans-serif'
+  ctx.font = '700 17px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
   const nameWidth = ctx.measureText(label.name).width
-  const switchText = label.switch ? `⚡${label.switch.cost} ${label.switch.state === 'on' ? 'ON' : 'OFF'}` : ''
-  const switchWidth = label.switch ? ctx.measureText(switchText).width + 20 : 0
+  const switchText = label.switch ? `${label.switch.cost} ${label.switch.state === 'on' ? 'ON' : 'OFF'}` : ''
+  // Room for the little bolt in front of the number.
+  const BOLT = 15
+  const switchWidth = label.switch ? ctx.measureText(switchText).width + 20 + BOLT : 0
   const total = nameWidth + 24 + switchWidth
   const x = label.at.x - total / 2
   const y = label.at.y - 14
   box(ctx, x, y, total, 28, 14)
-  ctx.fillStyle = 'rgba(10,14,30,0.8)'
+  ctx.fillStyle = PAPER
   ctx.fill()
+  ctx.strokeStyle = EDGE
+  ctx.lineWidth = 2.2
+  ctx.stroke()
   ctx.textBaseline = 'middle'
   ctx.textAlign = 'left'
   let area: Rect | null = null
   if (label.switch) {
     const on = label.switch.state === 'on'
-    box(ctx, x + 2, y + 2, switchWidth, 24, 12)
-    ctx.fillStyle = on ? '#ffd166' : label.hot ? '#33406e' : '#1c2440'
+    const cannot = label.switch.state === 'cannot'
+    box(ctx, x + 3, y + 3, switchWidth - 2, 22, 11)
+    ctx.fillStyle = on ? '#ffc93c' : label.hot ? '#ffe9a8' : cannot ? '#e4dcc8' : '#ffffff'
     ctx.fill()
-    ctx.strokeStyle = on ? '#fff0c2' : label.switch.state === 'cannot' ? '#59607c' : '#8f9bd0'
-    ctx.lineWidth = 1.5
+    ctx.strokeStyle = cannot ? '#a9a595' : EDGE
+    ctx.lineWidth = 1.8
     ctx.stroke()
-    ctx.fillStyle = on ? '#1c1400' : label.switch.state === 'cannot' ? '#7f87a6' : '#e3e8ff'
-    ctx.fillText(switchText, x + 11, y + 15)
+    // The bolt: the same one as in the top bar. Grey when the switch cannot be used.
+    ctx.save()
+    ctx.translate(x + 8, y + 6.5)
+    ctx.scale(0.62, 0.62)
+    ctx.beginPath()
+    for (const [px, py] of [[13.5, 2], [5, 13.5], [11, 13.5], [9.5, 22], [19, 10], [12.8, 10]]) ctx.lineTo(px, py)
+    ctx.closePath()
+    ctx.fillStyle = on ? '#ffffff' : cannot ? '#c9c2ae' : '#ffc93c'
+    ctx.fill()
+    ctx.strokeStyle = cannot ? '#a9a595' : EDGE
+    ctx.lineWidth = 2.4
+    ctx.lineJoin = 'round'
+    ctx.stroke()
+    ctx.restore()
+    ctx.fillStyle = cannot ? '#8a8676' : EDGE
+    ctx.fillText(switchText, x + 11 + BOLT, y + 15)
     area = { x: x - 4, y: y - 6, w: switchWidth + 10, h: 40 }
   }
-  ctx.fillStyle = '#ffffff'
+  ctx.fillStyle = EDGE
   ctx.fillText(label.name, x + switchWidth + 12, y + 15)
   if (label.note) {
-    ctx.font = '600 14px "Segoe UI", system-ui, sans-serif'
+    ctx.font = '700 14px "Nunito Variable", "Segoe UI", system-ui, sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillStyle = 'rgba(10,14,30,0.8)'
+    ctx.fillStyle = '#ffe9a8'
     const noteWidth = ctx.measureText(label.note).width + 16
-    box(ctx, label.at.x - noteWidth / 2, y + 30, noteWidth, 20, 10)
+    box(ctx, label.at.x - noteWidth / 2, y + 31, noteWidth, 20, 10)
     ctx.fill()
-    ctx.fillStyle = '#ffe9b0'
-    ctx.fillText(label.note, label.at.x, y + 41)
+    ctx.strokeStyle = EDGE
+    ctx.lineWidth = 1.6
+    ctx.stroke()
+    ctx.fillStyle = EDGE
+    ctx.fillText(label.note, label.at.x, y + 42)
   }
   return area
 }

@@ -3,13 +3,14 @@
 import type { CSSProperties } from 'react'
 import { FACTS, type FactId } from '../data/facts.ts'
 import { crewInfo } from '../game/content.ts'
+import { Icon } from './Icon.tsx'
 
 /** One real-life fact with a link to where it comes from. */
 export function FactLine({ id }: { id: FactId }) {
   const fact = FACTS[id]
   return (
     <p className="fact">
-      <strong>🔎 Real life:</strong> {fact.text}{' '}
+      <strong><Icon name="look" /> Real life:</strong> {fact.text}{' '}
       <a href={fact.url} target="_blank" rel="noreferrer">
         {fact.source}
       </a>
