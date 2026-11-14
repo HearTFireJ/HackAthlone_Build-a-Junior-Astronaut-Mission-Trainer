@@ -77,18 +77,18 @@ How the records drive the game:
 | In the game | From the real data | Made simple for the game |
 |---|---|---|
 | Flare alert | The biggest solar flare of that day, with its class and peak time. | Mission Control only calls about flares of class M5 or bigger. If a storm arrived that day, the alert shows the biggest such flare that peaked before the storm. |
-| "A cloud of gas left the Sun" | DONKI links each flare to the events that came with it. A linked coronal mass ejection (CME) is the cloud. | Only yes or no. You need the Sun Telescope to see it. |
-| Is there a particle storm today? | DONKI lists each solar energetic particle event with the time a spacecraft near Earth (GOES, SOHO or ACE) first measured it. Model predictions and the distant STEREO A spacecraft are left out. | Records less than 12 hours apart count as one storm. A storm lasts one day in the game: the day it started. Real particle storms can go on for several days. |
+| "A cloud of gas left the Sun" | DONKI links each flare to the events that came with it. A linked coronal mass ejection (CME) is the cloud. | Only "a cloud" or "no cloud listed". No linked CME in the record does not prove there was none, and the game says so. You need the Sun Telescope to see the clue. |
+| Is there a particle storm today? | DONKI lists each solar energetic particle event with the time a spacecraft near Earth (GOES, SOHO or ACE) first measured it. Model predictions and the distant STEREO A spacecraft are left out. | Records less than 12 hours apart count as one storm. A storm lasts one day in the game: the day it started. Real particle storms can go on for several days, so the game says "no new storm today", not "a calm day". The measurements were made near Earth; the game pretends the same storms reached the Moon base. |
 | Is the storm severe? | Protons above 100 MeV were measured. | Only two levels. |
 | Morning Sun report | The number of flares the day before, and the class of the biggest. | Summed up as quiet, active or very active. |
 | What a storm does | Nothing. | Game rules: how much it hurts people, how much it wears the solar panels, how much crop it spoils. Scientists are still finding out what space radiation does to plants. |
 | Power, air, food, health, mood | Nothing. | Made-up units. |
 
-Across the two stormy missions there are 15 alert days. On 13 of them the alert flare came with a cloud, and 6 of those 13 days had a particle storm. Neither of the 2 days without a cloud had one. That is the pattern a player can learn, and it matches what NASA says: scientists increasingly think the clouds drive the most dangerous particle storms, only a small fraction of flares and clouds produce them, and nobody can yet tell which ones will. Two tests in `src/game/outpost.test.ts` check this pattern against the saved records, so the hint in the game cannot drift away from the data.
+Across the two stormy missions there are 15 alert days. On 13 of them the alert flare has a linked cloud, and 6 of those 13 days had a particle storm. Neither of the 2 days with no cloud listed had one. That is the pattern a player can learn, and it matches what NASA says: scientists increasingly think the clouds drive the most dangerous particle storms, only a small fraction of flares and clouds produce them, and nobody can yet tell which ones will. Two tests in `src/game/outpost.test.ts` check this pattern against the saved records, so the hint in the game cannot drift away from the data.
 
 The game uses **saved records, not live data**, and says so on screen. The file `src/data/scenarios.json` is produced by `scripts/fetch-donki.mjs`, which downloads the records from the DONKI API. Run `npm run data` to regenerate it and check it against NASA's database. In the game, every flare and every storm links to its DONKI record, and every day shows its real date.
 
-The short "Real life" lines in the game (why astronauts look for ice, how a storm shelter works, why Moon dust is a problem, and so on) each link to the page they were checked against. They are all in `src/data/facts.ts`.
+The short "Real life" lines in the game (what a solar flare is, why astronauts look for ice, how a storm shelter works, why Moon dust is a problem, and so on) each link to the page they were checked against. They are all in `src/data/facts.ts`.
 
 The panel "What is real in this game?" in the game tells players the same thing in plain language.
 

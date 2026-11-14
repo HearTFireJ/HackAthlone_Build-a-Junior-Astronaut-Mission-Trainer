@@ -68,8 +68,8 @@ export interface Astronaut {
   fed: number
   /** Days worked in a row without a break. */
   streak: number
-  /** Set while the astronaut is far from the base on a rover trip. */
-  away: { trip: TripId; daysLeft: number } | null
+  /** Set while the astronaut is far from the base on a rover trip. "found" means they are carrying a find home. */
+  away: { trip: TripId; daysLeft: number; found?: boolean } | null
 }
 
 export type Missions = Record<MissionId, number>
@@ -212,6 +212,12 @@ export function powerAvailable(state: GameState): number {
   return solarToday(state) + state.battery
 }
 
+/** Air that Life Support makes on a day it has power. */
+export function airPerDay(state: GameState): number {
+  const normal = missionDone(state.missions, 'ice') ? RULES.lifeAirWithIce : RULES.lifeAir
+  return state.weakLifeDays > 0 ? normal - 2 : normal
+}
+
 export function canRun(state: GameState, module: ModuleId): boolean {
   return !state.broken.includes(module) && !state.offToday.includes(module)
 }
@@ -260,6 +266,7 @@ export function jobProblem(state: GameState, plan: Plan, astronautId: string, jo
   if (job.kind === 'trip') {
     if (condition(astronaut) !== 'well') return 'Not well enough to drive.'
     if (!job.trip || !availableTrips(state).includes(job.trip)) return 'That trip is not possible today.'
+    if (TRIPS[job.trip].days > RULES.maxDays - state.day + 1) return 'Not enough days left for this trip.'
     // One rover: if two people are given a trip, the first one on the crew list gets it.
     const order = state.crew.map((member) => member.id)
     const earlier = order.slice(0, order.indexOf(astronautId))
@@ -427,6 +434,12 @@ export function resolveDay(
       riskIfCarriedOn: 0,
     }
     if (astronaut.away) {
+      if (condition(astronaut) === 'unable') {
+        astronaut.away = null
+        entry.job = astronaut.health <= 1 ? 'sickbay' : 'rest'
+        entry.notes.push('Too poorly to carry on: drove home early. The trip has to start again.')
+        return entry
+      }
       entry.job = 'trip-away'
       entry.trip = astronaut.away.trip
       entry.where = 'outside'
@@ -458,7 +471,7 @@ export function resolveDay(
   for (const entry of doing) entry.riskIfCarriedOn = damageAt(entry.where)
 
   // The commander's answer to the alert moves people, and costs them half their work.
-  const half = (points: number) => (points > 0 ? Math.max(1, Math.floor(points / 2)) : 0)
+  const half = (points: number) => Math.floor(points / 2)
   for (const entry of doing) {
     const wasOutside = entry.where === 'outside'
     if (answer === 'shelter' || (answer === 'inside' && wasOutside)) {
@@ -496,6 +509,10 @@ export function resolveDay(
       astronaut.away.daysLeft -= 1
       if (astronaut.away.daysLeft <= 0) {
         const trip = astronaut.away.trip
+        if (astronaut.away.found) {
+          next.missions.shield += 2
+          entry.notes.push('Brought home a glassy kind of Moon soil for the Lab: the shield research jumps ahead.')
+        }
         astronaut.away = null
         if (trip === 'pod') {
           next.pod = false
@@ -513,11 +530,7 @@ export function resolveDay(
   }
 
   // The machines.
-  let airMade = 0
-  if (on.includes('life')) {
-    airMade = missionDone(state.missions, 'ice') ? RULES.lifeAirWithIce : RULES.lifeAir
-    if (state.weakLifeDays > 0) airMade -= 2
-  }
+  const airMade = on.includes('life') ? airPerDay(state) : 0
   let foodMade = (on.includes('farm') ? RULES.farmFood : 0) + gardenFood
   if (on.includes('scope')) {
     next.missions.sun += 1
@@ -669,7 +682,14 @@ export function resolveDay(
     notes.push(`Mission complete: ${MISSIONS[id].name}! ${MISSIONS[id].reward}`)
     if (id === 'ice') next.air = Math.min(RULES.airCap, next.air + RULES.iceBonusAir)
     if (id === 'dish') {
-      for (const astronaut of next.crew) astronaut.mood = clamp(astronaut.mood + 2, RULES.maxStat)
+      for (const astronaut of next.crew) {
+        astronaut.mood = clamp(astronaut.mood + 2, RULES.maxStat)
+        const line = crewReports.find((entry) => entry.id === astronaut.id)
+        if (line) {
+          line.moodAfter = astronaut.mood
+          line.notes.push('Cheered when the radio telescope was finished.')
+        }
+      }
     }
   }
 
@@ -760,6 +780,7 @@ export interface Rating {
 export function handoverReady(state: GameState): boolean {
   return (
     state.status !== 'evacuated' &&
+    state.crew.every((a) => !a.away) &&
     state.air >= RULES.handover.air &&
     state.food >= RULES.handover.food &&
     state.crew.every((a) => a.health >= RULES.handover.stat && a.mood >= RULES.handover.stat)

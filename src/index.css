@@ -141,7 +141,8 @@ button:disabled { cursor: not-allowed; }
 .side { display: grid; gap: 0.55rem; align-content: start; overflow-y: auto; min-height: 0; padding-right: 0.2rem; }
 
 .action-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.6rem 1rem; border-top: 1px solid var(--line); background: rgba(10, 15, 31, 0.92); }
-.action-notes { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; font-size: 0.85rem; color: var(--muted); }
+.action-notes { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; font-size: 0.85rem; color: var(--muted); min-width: 0; }
+.action-bar .primary { flex: none; white-space: nowrap; }
 .note.warn { color: var(--warn); }
 .note.bad { color: var(--bad); font-weight: 700; }
 

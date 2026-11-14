@@ -14,8 +14,9 @@ export function AboutData() {
             NASA's space weather database, called DONKI, and each one links to its record.
           </li>
           <li>
-            Whether a huge cloud of gas left the Sun with a flare. Scientists call that cloud a coronal mass ejection,
-            or CME. DONKI records which flares came with one.
+            Whether NASA's record links a flare to a huge cloud of gas leaving the Sun. Scientists call that cloud a
+            coronal mass ejection, or CME. When the game says "no cloud listed", it means the record links none: it
+            does not prove there was none.
           </li>
           <li>
             These are saved records, not live data. We copied them from{' '}
@@ -33,7 +34,11 @@ export function AboutData() {
           </li>
           <li>
             In the game a storm lasts one day: the day spacecraft near Earth first measured it. Real particle storms
-            can go on for several days.
+            can go on for several days, so "no new storm today" does not mean space was calm.
+          </li>
+          <li>
+            The spacecraft that measured the storms were near Earth, not on the Moon. The game pretends the same
+            storms reached the Moon base.
           </li>
           <li>
             A storm is called "severe" in the game when the spacecraft measured protons above 100 MeV, which get

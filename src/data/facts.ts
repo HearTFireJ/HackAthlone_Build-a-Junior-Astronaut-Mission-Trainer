@@ -89,6 +89,16 @@ export const FACTS = {
     source: 'NASA: Growing Plants in Space',
     url: 'https://www.nasa.gov/exploration-research-and-technology/growing-plants-in-space/',
   },
+  flare: {
+    text: 'A solar flare is a huge burst of light on the Sun. Sometimes very fast particles fly out too. They can go right through a person, and that is a danger to astronauts in space.',
+    source: 'NASA Science: Solar Storms and Flares',
+    url: 'https://science.nasa.gov/sun/solar-storms-and-flares/',
+  },
+  classes: {
+    text: 'Flares are sorted into classes by how strong they are. An X flare is 10 times stronger than an M flare, and 100 times stronger than a C flare.',
+    source: 'NASA Science: Solar Storms and Flares',
+    url: 'https://science.nasa.gov/sun/solar-storms-and-flares/',
+  },
   quakes: {
     text: 'The Moon has quakes too. Seismometers from the Apollo missions recorded 28 shallow moonquakes between 1969 and 1977.',
     source: 'NASA: Shrinking Moon May Be Generating Moonquakes',

@@ -71,6 +71,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
             it fires a big flare, Mission Control will call, but only if your Radio Dish is on.
           </li>
         </ol>
+        <FactLine id="flare" />
         <p>
           ⭐ You earn one star for each mission you finish, and one more for handing the next crew a base with air, food
           and a healthy, happy crew.
@@ -145,12 +146,13 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
             flare.cme ? (
               <>
                 🔭 <strong>A huge cloud of gas left the Sun with this flare.</strong> In the records this game uses,
-                every particle storm came after a flare like that. But many flares like that brought no storm at all.
+                every particle storm came after a flare like that. But more than half of the flares like that brought
+                no storm at all.
               </>
             ) : (
               <>
-                🔭 <strong>No cloud of gas left the Sun.</strong> In the records this game uses, flares without a cloud
-                never brought a particle storm.
+                🔭 <strong>NASA's record lists no cloud of gas with this flare.</strong> In the records this game uses,
+                no flare like that was followed by a particle storm.
               </>
             )
           ) : (
@@ -160,6 +162,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
             </>
           )}
         </p>
+        <FactLine id="classes" />
         <FactLine id="particles" />
         <p>
           <strong>{names.length > 0 ? `Outside right now: ${names.join(', ')}.` : 'Nobody is outside right now.'}</strong>
@@ -171,7 +174,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
           </button>
           <button type="button" className="choice" disabled={names.length === 0} onClick={() => onRespond('inside')}>
             <strong>Call outside crew in</strong>
-            <span>{names.length > 0 ? `${names.join(', ')} stop early. Rover trips are cancelled and must start again.` : 'Nobody is outside.'}</span>
+            <span>{names.length > 0 ? `${names.join(', ')} ${names.length === 1 ? 'stops' : 'stop'} early. A rover trip is cancelled and must start again.` : 'Nobody is outside.'}</span>
           </button>
           <button type="button" className="choice" onClick={() => onRespond('shelter')}>
             <strong>Everyone to the storm shelter</strong>
@@ -221,11 +224,11 @@ function Report({ report, game, onNextDay }: { report: DayReport; game: GameStat
           </>
         ) : (
           <>
-            <h2>☀️ No particle storm reached the base today</h2>
+            <h2>☀️ No new particle storm today</h2>
             <p>
               {flare
-                ? `The Sun fired a class ${flare.class} flare, but NASA's records show no new particle storm near Earth that day.`
-                : "NASA's records show no big flare and no new particle storm for this date."}
+                ? `The Sun fired a class ${flare.class} flare, but NASA's records show no new particle storm starting near Earth that day.`
+                : "NASA's records show no big flare and no new particle storm starting on this date."}
             </p>
           </>
         )}

@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { JOBS, MISSIONS, MODULES, TRIPS, type ModuleId, type Place } from '../game/content.ts'
 import {
   RULES,
+  airPerDay,
   type GameState,
   type Job,
   type Plan,
@@ -220,7 +221,7 @@ export function BaseMap({ game, plan, selected, onTogglePower, onAssign, onSelec
       )}
 
       {powered('scope', 'scope', null, 'Watching the Sun')}
-      {powered('life', 'life', null, `+${missionDone(game.missions, 'ice') ? RULES.lifeAirWithIce : RULES.lifeAir} air today`)}
+      {powered('life', 'life', null, `+${airPerDay(game)} air today${game.weakLifeDays > 0 ? ' (weak pump)' : ''}`)}
 
       {place(
         'habitat',

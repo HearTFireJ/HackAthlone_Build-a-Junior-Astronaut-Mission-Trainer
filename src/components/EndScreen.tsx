@@ -126,8 +126,8 @@ export function EndScreen({ info, game, onAgain }: Props) {
         </p>
         <p>
           {storms.length === 0
-            ? 'No particle storm reached the base while you were in command.'
-            : `${storms.length} real particle ${storms.length === 1 ? 'storm' : 'storms'} reached the base while you were in command.`}
+            ? 'No particle storm began while you were in command.'
+            : `${storms.length} real particle ${storms.length === 1 ? 'storm' : 'storms'} began while you were in command.`}
         </p>
         <div className="table-wrap">
           <table className="timeline">
@@ -149,7 +149,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
                     {day.flare ? (
                       <a href={day.flare.link} target="_blank" rel="noreferrer">
                         {day.flare.class} at {clock(day.flare.time)}
-                        {day.flare.cme ? ', with a cloud' : ', no cloud'}
+                        {day.flare.cme ? ', with a cloud' : ', no cloud listed'}
                       </a>
                     ) : (
                       '—'
@@ -161,7 +161,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
                         {day.storm.severe ? 'Severe storm' : 'Storm'} at {clock(day.storm.time)}
                       </a>
                     ) : (
-                      'None'
+                      'None began'
                     )}
                   </td>
                   <td>{day.alertShown ? ANSWER_WORDS[day.response] : day.flare ? 'Radio was off' : '—'}</td>
@@ -170,7 +170,10 @@ export function EndScreen({ info, game, onAgain }: Props) {
             </tbody>
           </table>
         </div>
-        <p className="hint">Times are in UTC. Every flare and storm links to its record in NASA's DONKI database.</p>
+        <p className="hint">
+          Times are in UTC. Every flare and storm links to its record in NASA's DONKI database. A storm is shown on the
+          day it began; real particle storms can go on for days.
+        </p>
       </section>
 
       {game.flares.length > 0 && (
@@ -183,7 +186,7 @@ export function EndScreen({ info, game, onAgain }: Props) {
                 <span>
                   {longDate(flare.date)}, {clock(flare.time)} UTC
                 </span>
-                <span>{flare.cme ? 'Threw a cloud of gas into space' : 'No cloud of gas'}</span>
+                <span>{flare.cme ? 'Threw a cloud of gas into space' : 'No cloud of gas listed'}</span>
                 <a href={flare.link} target="_blank" rel="noreferrer">
                   NASA record
                 </a>

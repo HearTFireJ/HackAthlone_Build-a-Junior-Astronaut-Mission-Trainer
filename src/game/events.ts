@@ -182,23 +182,25 @@ export const EVENTS: Record<EventId, EventCard> = {
   pod: {
     title: 'A supply pod has landed',
     icon: '📦',
-    text: () => 'A cargo pod from Earth came down a long drive from the base. It is full of food and air.',
+    text: () => 'A cargo pod from Earth came down a long drive from the base. It is full of food and air. Its door is stuck open, so the food will not keep for long.',
     aboutSomeone: false,
     when: (state) => !state.pod,
     options: [
       {
         label: 'Mark it on the map',
-        detail: 'A new 2-day rover trip: Fetch the supply pod',
+        detail: 'A new 2-day rover trip brings home all of it',
         apply: (state) => {
           state.pod = true
         },
         result: () => 'The pod is on the map. Send someone with the rover when you can.',
       },
       {
-        label: 'Leave it',
-        detail: 'Nothing changes',
-        apply: () => {},
-        result: () => 'The pod sits in the dust. Maybe the next crew will want it.',
+        label: 'Send the little drone for one box',
+        detail: '2 food today. The rest of the pod is lost',
+        apply: (state) => {
+          state.food += 2
+        },
+        result: () => 'The drone came back with one box: 2 more food. The rest of the pod is left in the dust.',
       },
     ],
   },
@@ -361,21 +363,21 @@ export const EVENTS: Record<EventId, EventCard> = {
     text: (_state, who) => `${nameOf(who)} calls from the rover: something is glinting in a little crater beside the track.`,
     aboutSomeone: false,
     aboutTraveller: true,
-    when: someoneAway,
+    // The find helps the shield research, so the card only turns up while that research is still going.
+    when: (state) => someoneAway(state) && state.missions.shield < MISSIONS.shield.goal,
     options: [
       {
         label: 'Stop and take a look',
-        detail: 'The trip takes 1 more day. They bring something home',
+        detail: 'The trip takes 1 more day. They bring home something for the Lab',
         apply: (state, who) => {
           const driver = traveller(state, who)
-          if (driver?.away) driver.away.daysLeft += 1
-          if (state.missions.shield < MISSIONS.shield.goal) state.missions.shield = Math.min(MISSIONS.shield.goal - 1, state.missions.shield + 2)
-          else moodFor(state, () => 1)
+          if (driver?.away) {
+            driver.away.daysLeft += 1
+            driver.away.found = true
+          }
         },
-        result: (state, who) =>
-          state.missions.shield < MISSIONS.shield.goal
-            ? `${nameOf(who)} found a glassy kind of Moon soil. It is just what the Lab needed: the shield research jumps ahead.`
-            : `${nameOf(who)} found a glassy rock, and the whole crew wants to see it.`,
+        result: (_state, who) =>
+          `${nameOf(who)} found a glassy kind of Moon soil, just what the Lab needs. It will help the shield research when ${nameOf(who)} gets home.`,
       },
       {
         label: 'Keep driving',
