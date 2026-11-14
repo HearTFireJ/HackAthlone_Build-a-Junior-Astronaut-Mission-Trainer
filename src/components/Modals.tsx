@@ -136,23 +136,20 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
           The Sun has just fired a <strong>class {flare.class} flare</strong>.
         </p>
         <p className={`clue ${cloudKnown ? (flare.cme ? 'danger' : 'safe') : 'unknown'}`}>
+          {/* Only what was seen. What it means for storms is for the player to find out; the field guide helps. */}
           {cloudKnown ? (
             flare.cme ? (
               <>
-                🔭 <strong>A huge cloud of gas left the Sun with this flare.</strong> In the records this game uses,
-                every particle storm came after a flare like that. But more than half of the flares like that brought
-                no storm at all.
+                🔭 <strong>A huge cloud of gas left the Sun with this flare.</strong>
               </>
             ) : (
               <>
-                🔭 <strong>NASA's record lists no cloud of gas with this flare.</strong> In the records this game uses,
-                no flare like that was followed by a particle storm.
+                🔭 <strong>No cloud of gas was seen with this flare.</strong>
               </>
             )
           ) : (
             <>
-              🔭 <strong>We cannot tell if a cloud of gas left the Sun.</strong> Your Sun Telescope is off today, so
-              this is a guess.
+              🔭 <strong>We cannot tell if a cloud of gas left the Sun.</strong> Your Sun Telescope is off today.
             </>
           )}
         </p>

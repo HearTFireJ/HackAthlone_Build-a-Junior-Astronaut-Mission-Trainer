@@ -23,8 +23,9 @@ export function AboutBody() {
           </li>
           <li>
             Whether NASA's record links a flare to a huge cloud of gas leaving the Sun. Scientists call that cloud a
-            coronal mass ejection, or CME. When the game says "no cloud listed", it means the record links none: it
-            does not prove there was none.
+            coronal mass ejection, or CME. When the game says no cloud was seen or listed, it means the record links
+            none: it does not prove there was none. The game shows this at the moment of the alert, as if your
+            telescope had just seen it; the saved record was put together afterwards.
           </li>
           <li>
             These are saved records, not live data. We copied them from{' '}
