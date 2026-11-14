@@ -3,7 +3,7 @@
 // The rules (src/game/outpost.ts) have already decided everything that happens. This
 // file only decides how to show it. It is plain data, so it can be tested without a screen.
 
-import { JOBS, MISSIONS, TRIPS, crewInfo, type JobId, type MissionId, type ModuleId } from '../game/content.ts'
+import { JOBS, MISSIONS, MODULES, TRIPS, crewInfo, type JobId, type MissionId, type ModuleId } from '../game/content.ts'
 import { RULES, type DayReport, type GameState, type Missions, type Why } from '../game/outpost.ts'
 import type { Activity, PlaceId } from './layout.ts'
 
@@ -25,7 +25,7 @@ export type Cue = { t: number } & (
   | { kind: 'go'; who: string; act: Activity; repairAt?: ModuleId | 'panels'; hurry?: boolean }
   | { kind: 'rover-in'; who: string; act: Activity; hurry?: boolean }
   /** Words that float up over a place or a person. `named` writes the person's name in front. */
-  | { kind: 'float'; at: PlaceId | { who: string }; text: string; tone: Tone; named?: boolean }
+  | { kind: 'float'; at: PlaceId | { who: string }; text: string; tone: Tone; named?: boolean; /** The same thing in full, for the log. */ log?: string }
   /** A line for the log only: nothing is drawn. */
   | { kind: 'note'; text: string; tone: Tone }
   | { kind: 'hit'; who: string }
@@ -140,6 +140,9 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
   let t = 0
 
   add(t, { kind: 'time', label: 'Midday' })
+  for (const member of report.crew) {
+    if (member.gaveUp) add(t, { kind: 'note', text: `${crewInfo(member.id).name} was too poorly to carry on and drove home. The trip has to start again.`, tone: 'bad' })
+  }
   if (report.alertShown) {
     if (report.response === 'shelter') {
       add(t, { kind: 'caption', text: 'Everyone to the storm shelter!', tone: 'warn' })
@@ -199,7 +202,9 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
   if (worked('build') > 0) add(t + 0.9, { kind: 'float', at: 'site', text: `+${worked('build')} 🏗️ built`, tone: 'good' })
   if (report.missions.after.sun > report.missions.before.sun) add(t + 1.2, { kind: 'float', at: 'scope', text: '+1 🔭 day of watching', tone: 'good' })
   for (const member of report.crew) {
-    if (member.job === 'repair' && member.points > 0) add(t + 0.4, { kind: 'float', at: { who: member.id }, text: '🔧 Fixed!', tone: 'good' })
+    if (member.job !== 'repair') continue
+    const mended = member.fixedModule ? `🔧 ${MODULES[member.fixedModule].name} fixed!` : member.fixedPanels > 0 ? `🔧 +${member.fixedPanels} ⚡ panels mended` : null
+    add(t + 0.4, { kind: 'float', at: { who: member.id }, text: mended ?? '🔧 Repair not finished', tone: mended ? 'good' : 'warn' })
   }
   add(t + 0.3, {
     kind: 'hud',
@@ -265,7 +270,8 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
         : reason === 'rival' && member.rival
           ? `grumpy beside ${crewInfo(member.rival).name}`
           : WHY_WORDS[reason]
-    const why = member.why.map(words).slice(0, 3).join(', ')
+    const reasons = member.why.map(words)
+    const why = reasons.slice(0, 3).join(', ')
     const parts: string[] = []
     // A mood that is already full cannot go up: say so, or "±0 loves this job" reads like a bug.
     const steady = member.moodAfter >= RULES.maxStat ? 'full' : '±0'
@@ -273,7 +279,9 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
     if (health !== 0) parts.push(`♥ ${signed(health)}`)
     if (why) parts.push(why)
     if (parts.length === 0) continue
-    add(t + shown * EVENING_GAP, { kind: 'float', at: { who: member.id }, text: parts.join('  '), tone: mood < 0 || health < 0 ? 'bad' : 'good', named: true })
+    // The words over a head stay short; the log gets every reason.
+    const full = why ? [...parts.slice(0, -1), reasons.join(', ')].join('  ') : parts.join('  ')
+    add(t + shown * EVENING_GAP, { kind: 'float', at: { who: member.id }, text: parts.join('  '), log: full, tone: mood < 0 || health < 0 ? 'bad' : 'good', named: true })
     shown += 1
   }
   // Leave the last line up long enough to be read.

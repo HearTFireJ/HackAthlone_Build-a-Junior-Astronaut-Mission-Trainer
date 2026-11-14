@@ -160,6 +160,9 @@ export interface CrewReport {
   cameHome: boolean
   /** Was away this morning, and had to give up the trip and drive home. */
   gaveUp: boolean
+  /** What a day of repairs really mended: a broken module, or some worn solar panels. */
+  fixedModule: ModuleId | null
+  fixedPanels: number
   /** Short reasons for today's change of mood, for the picture to show over their head. */
   why: Why[]
   /** Who they were happy to be beside today, and who got on their nerves. */
@@ -439,6 +442,10 @@ interface Doing {
   riskIfCarriedOn: number
   cameHome: boolean
   gaveUp: boolean
+  /** The work they would have done, if the commander called them in before it was finished. */
+  stoppedFrom: number | null
+  fixedModule: ModuleId | null
+  fixedPanels: number
 }
 
 export function resolveDay(
@@ -476,6 +483,9 @@ export function resolveDay(
       riskIfCarriedOn: 0,
       cameHome: false,
       gaveUp: false,
+      stoppedFrom: null,
+      fixedModule: null,
+      fixedPanels: 0,
     }
     if (astronaut.away) {
       if (condition(astronaut) === 'unable') {
@@ -527,6 +537,7 @@ export function resolveDay(
         entry.points = 0
         entry.notes.push('Drove back early. The trip has to start again.')
       } else if (JOBS[entry.job].work) {
+        entry.stoppedFrom = entry.points
         entry.points = half(entry.points)
         entry.notes.push('Stopped work early.')
       }
@@ -540,14 +551,22 @@ export function resolveDay(
     if (job === 'garden') gardenFood += points
     if (job === 'lab') next.missions.shield += points
     if (job === 'build') next.missions.dish += points
-    if (job === 'repair' && points > 0) {
-      const fixed = next.broken.shift()
-      if (fixed) {
-        entry.notes.push(`Fixed the ${MODULES[fixed].name}.`)
-      } else {
-        const panels = panelsFixed(next.solarLoss, points)
+    if (job === 'repair') {
+      // Being called in has to cost something here too: half a repair mends nothing in a
+      // broken module, and half as many panels (rounded down) as a whole day would.
+      const stopped = entry.stoppedFrom !== null
+      const broken = next.broken[0]
+      if (broken && stopped) {
+        entry.notes.push(`Stopped early: the ${MODULES[broken].name} is still broken.`)
+      } else if (broken && points > 0) {
+        next.broken.shift()
+        entry.fixedModule = broken
+        entry.notes.push(`Fixed the ${MODULES[broken].name}.`)
+      } else if (!broken) {
+        const panels = stopped ? Math.floor(panelsFixed(next.solarLoss, entry.stoppedFrom ?? 0) / 2) : points > 0 ? panelsFixed(next.solarLoss, points) : 0
         next.solarLoss -= panels
-        entry.notes.push(`Got the solar panels back to work (+${panels} power).`)
+        entry.fixedPanels = panels
+        entry.notes.push(panels > 0 ? `Got the solar panels back to work (+${panels} power).` : 'Stopped early: no panel was finished.')
       }
     }
     if ((job === 'trip' || job === 'trip-away') && astronaut.away) {
@@ -742,6 +761,8 @@ export function resolveDay(
       hurt,
       cameHome: entry.cameHome,
       gaveUp: entry.gaveUp,
+      fixedModule: entry.fixedModule,
+      fixedPanels: entry.fixedPanels,
       why,
       friend: friend ? friend.astronaut.id : null,
       rival: rival ? rival.astronaut.id : null,

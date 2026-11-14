@@ -62,7 +62,7 @@ The challenge names five kinds of decision. This is where each one is in the gam
 
 | Challenge | In the game |
 |---|---|
-| Life support | Life Support needs 2 power every day or the air runs down. Finding ice makes it much stronger, but the three ice trips take the rover and an astronaut away for five days. |
+| Life support | Life Support needs 2 power every day or the air runs down. Finding ice makes it much stronger, but the three ice trips take the rover and an astronaut away for five days (three for the one who loves driving). |
 | Radiation protection | Every flare alert: keep working or take cover. The Moon-soil shield costs Lab power and research days that could have gone to anything else. |
 | Power budgeting | Six modules, never enough power. Storms wear the panels down and dust settles on them, and someone has to go outside to fix that. |
 | Food production | The Greenhouse needs power and grows more if someone tends it. A storm spoils part of the day's crop unless the shield is built. |

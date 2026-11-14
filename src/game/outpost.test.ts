@@ -309,6 +309,25 @@ describe('flares, alerts and storms', () => {
     expect(resolveDay(state, stormy, plan, 'shelter').state.missions.shield).toBe(0)
   })
 
+  it('calling a repairer in costs the repair: a broken module stays broken, and fewer panels are mended', () => {
+    const state = createGame('sep-2017')
+    state.broken = ['farm']
+    const plan = planOf(state, ['comms'], { niamh: { kind: 'repair' } })
+    expect(resolveDay(state, stormy, plan, 'carry').state.broken).toEqual([])
+    expect(resolveDay(state, stormy, plan, 'shelter').state.broken).toEqual(['farm'])
+    expect(resolveDay(state, stormy, plan, 'shelter').report.crew.find((member) => member.id === 'niamh')?.fixedModule).toBeNull()
+
+    // One worn panel: staying mends it, being called in does not. (The storm itself wears one more.)
+    const worn = createGame('sep-2017')
+    worn.solarLoss = 1
+    const fixing = planOf(worn, ['comms'], { niamh: { kind: 'repair' } })
+    const stayed = resolveDay(worn, stormy, fixing, 'carry')
+    const called = resolveDay(worn, stormy, fixing, 'shelter')
+    expect(stayed.report.crew.find((member) => member.id === 'niamh')?.fixedPanels).toBe(1)
+    expect(called.report.crew.find((member) => member.id === 'niamh')?.fixedPanels).toBe(0)
+    expect(called.state.solarLoss).toBe(stayed.state.solarLoss + 1)
+  })
+
   it('a day in the shelter for nothing costs mood; a day in the shelter during a storm does not', () => {
     const state = createGame('sep-2017')
     crew(state, 'cian').mood = 2

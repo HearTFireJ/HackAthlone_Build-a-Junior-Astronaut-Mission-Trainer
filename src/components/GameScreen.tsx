@@ -225,7 +225,7 @@ export function GameScreen(props: Props) {
     } else if (cue.kind === 'float') {
       // The words that float up over a person or a place, with whose they are.
       const whose = typeof cue.at === 'string' ? PLACE_WORDS[cue.at][0] : crewInfo(cue.at.who).name
-      props.onLog(`${whose}: ${cue.text}`, cue.tone)
+      props.onLog(`${whose}: ${cue.log ?? cue.text}`, cue.tone)
       play(cue.tone === 'bad' ? 'bad' : 'good')
     } else if (cue.kind === 'time') {
       setTimeLabel(cue.label)
@@ -268,7 +268,8 @@ export function GameScreen(props: Props) {
   // Escape lets go of them. Keys do nothing while a card is open.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (props.locked || event.ctrlKey || event.metaKey || event.altKey) return
+      // A held-down key repeats: without this, holding Space would pause and resume over and over.
+      if (props.locked || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return
       const target = event.target as HTMLElement | null
       const typing = target && ['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'SELECT'].includes(target.tagName)
       if (event.code === 'Space' && !typing) {
@@ -347,7 +348,7 @@ export function GameScreen(props: Props) {
   const activity = sunActivity(yesterday)
 
   return (
-    <main className="game">
+    <main className="game" inert={props.locked}>
       <header className="topbar">
         <div className="topbar-day">
           <strong>

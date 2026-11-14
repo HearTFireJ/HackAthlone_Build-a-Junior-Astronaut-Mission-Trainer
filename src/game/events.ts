@@ -182,13 +182,13 @@ export const EVENTS: Record<EventId, EventCard> = {
   pod: {
     title: 'A supply pod has landed',
     icon: '📦',
-    text: () => 'A cargo pod from Earth came down a long drive from the base. It is full of food and air. Its door is stuck open, so the food will not keep for long.',
+    text: () => 'A cargo pod from Earth came down a long drive from the base. It is full of food and air. The little drone could grab one box today, but it has to break the seal to do it, and the rest would spoil.',
     aboutSomeone: false,
     when: (state) => !state.pod,
     options: [
       {
         label: 'Mark it on the map',
-        detail: 'A new 2-day rover trip brings home all of it',
+        detail: 'A new rover trip brings home all of it',
         apply: (state) => {
           state.pod = true
         },

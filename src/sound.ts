@@ -4,6 +4,8 @@
 export type SoundName = 'click' | 'on' | 'off' | 'assign' | 'start' | 'alert' | 'storm' | 'good' | 'bad' | 'star' | 'evening'
 
 let audio: AudioContext | null = null
+// Every sound goes through this one volume knob, so muting also cuts off a sound that is already playing.
+let master: GainNode | null = null
 let muted = false
 try {
   muted = localStorage.getItem('muted') === '1'
@@ -18,11 +20,20 @@ export function isMuted(): boolean {
 
 export function setMuted(value: boolean) {
   muted = value
+  if (audio && master) master.gain.setValueAtTime(value ? 0 : 1, audio.currentTime)
   try {
     localStorage.setItem('muted', value ? '1' : '0')
   } catch {
     // Not remembered next time: that is fine.
   }
+}
+
+function output(ctx: AudioContext): GainNode {
+  if (!master) {
+    master = ctx.createGain()
+    master.connect(ctx.destination)
+  }
+  return master
 }
 
 /** One note: it starts at `from` hertz, may slide to `to`, and fades out. */
@@ -35,7 +46,7 @@ function note(ctx: AudioContext, at: number, length: number, from: number, to: n
   gain.gain.setValueAtTime(0.0001, at)
   gain.gain.exponentialRampToValueAtTime(loud, at + 0.012)
   gain.gain.exponentialRampToValueAtTime(0.0001, at + length)
-  osc.connect(gain).connect(ctx.destination)
+  osc.connect(gain).connect(output(ctx))
   osc.start(at)
   osc.stop(at + length + 0.02)
 }
@@ -57,7 +68,7 @@ function rush(ctx: AudioContext, at: number, length: number, loud: number) {
   gain.gain.setValueAtTime(0.0001, at)
   gain.gain.exponentialRampToValueAtTime(loud, at + length * 0.3)
   gain.gain.exponentialRampToValueAtTime(0.0001, at + length)
-  source.connect(filter).connect(gain).connect(ctx.destination)
+  source.connect(filter).connect(gain).connect(output(ctx))
   source.start(at)
 }
 
