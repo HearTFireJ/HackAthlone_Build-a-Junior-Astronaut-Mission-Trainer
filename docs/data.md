@@ -58,17 +58,23 @@
 
 ## I-LOFAR（爱尔兰的射电望远镜）——已提及
 
-- 在 Offaly 郡 Birr 城堡，2017 年建成，观测到过 2017 年 9 月大耀斑的射电爆发。
+- 在 Offaly 郡 Birr 城堡，2017 年 7 月 27 日正式启用。它观测到的是 2017 年 9 月 10 日那次大耀斑的射电爆发，不是 9 月 6 日的 X9.3。
 - 它是科研望远镜，不是预警机构。游戏里写的是地面指挥中心“inspired by” I-LOFAR，没有说预警由它发布。
 - 出处：https://www.tcd.ie/news_events/articles/new-radio-telescope-in-birr-detects-huge-solar-storms/
 
-## 任务简介里的事实性说法——还需要补出处
+## 任务简介里的事实性说法——已核实（2026-11-14）
 
-这三句写在 `src/data/scenarios.ts`，是常见说法，但还没有逐条附上来源链接：
+这几句写在 `src/data/scenarios.ts`，出处链接也在那里，任务报告的 “What really happened” 一段会显示。
 
-- 2017 年 9 月的 X9.3 是十多年来最强的耀斑。
-- 2024 年 5 月是二十年来到达地球的最大太阳风暴，爱尔兰各地看到了极光。
-- 太阳活动大约每 11 年安静一次。
+| 说法 | 出处原文怎么说 | 链接 |
+|---|---|---|
+| 太阳活动大约 11 年一个周期；2019 年 12 月是极小期 | NASA：“solar minimum occurred in December 2019”；“the approximately 11-year-cycle” | https://www.nasa.gov/news-release/solar-cycle-25-is-here-nasa-noaa-scientists-explain-what-that-means/ |
+| 2017 年 9 月 6 日的 X9.3 是那个太阳周期里最大的耀斑 | NASA：“The X9.3 flare was the largest flare so far in the current solar cycle”；那个周期从 2008 年 12 月开始 | https://www.nasa.gov/solar-system/sun-erupts-with-significant-flare/ |
+| Birr 的望远镜收到了另一次大耀斑的射电爆发 | TCD：9 月 10 日耀斑的射电爆发 “was observed by I-LOFAR at Birr Castle” | https://www.tcd.ie/news_events/articles/new-radio-telescope-in-birr-detects-huge-solar-storms/ |
+| 2024 年 5 月是二十年来到达地球的最强太阳风暴 | NASA：“the strongest solar storm to reach Earth in two decades” | https://science.nasa.gov/science-research/heliophysics/how-nasa-tracked-the-most-intense-solar-storm-in-decades/ |
+| 爱尔兰各地看到了极光 | RTÉ：极光 “visible across the country”，配图来自 Galway 和 Kerry | https://www.rte.ie/news/ireland/2024/0511/1448552-northern-lights |
+
+核实时改掉了一处错：原来写的是“十多年来最强的耀斑，Birr 的望远镜收到了这次爆发”。NASA 的说法是“本太阳周期最大”（周期当时不到十年），而且 I-LOFAR 收到的是四天后另一次耀斑的射电爆发。简介已按出处改写。
 
 ## 题目页列出的其他资源（还没用）
 

@@ -107,7 +107,19 @@ export function ReportScreen({ game, info, onReplay, onPickAnother }: Props) {
               Read about it at NASA
             </a>
           </p>
+          <h2>What really happened</h2>
           <p>{info.blurb}</p>
+          <p className="hint">
+            Sources:{' '}
+            {info.sources.map((source, index) => (
+              <span key={source.url}>
+                {index > 0 && ' · '}
+                <a href={source.url} target="_blank" rel="noreferrer">
+                  {source.label}
+                </a>
+              </span>
+            ))}
+          </p>
         </section>
 
         <section className="panel">

@@ -94,7 +94,11 @@ No NASA logos or other NASA branding are used anywhere in the project.
 
 - NASA DONKI space weather database, Community Coordinated Modeling Center, NASA Goddard: https://ccmc.gsfc.nasa.gov/tools/DONKI/
 - NASA, "Scientists and Engineers Evaluate Orion Radiation Protection Plan", for the storm shelter fact in the mission report: https://www.nasa.gov/missions/artemis/orion/scientists-and-engineers-evaluate-orion-radiation-protection-plan/
-- Trinity College Dublin, "New radio telescope in Birr detects huge solar storms", for I-LOFAR and the September 2017 flare: https://www.tcd.ie/news_events/articles/new-radio-telescope-in-birr-detects-huge-solar-storms/
+- Trinity College Dublin, "New radio telescope in Birr detects huge solar storms", for I-LOFAR and the radio burst of 10 September 2017: https://www.tcd.ie/news_events/articles/new-radio-telescope-in-birr-detects-huge-solar-storms/
+- NASA, "Sun Erupts With Significant Flare", for the X9.3 flare of 6 September 2017: https://www.nasa.gov/solar-system/sun-erupts-with-significant-flare/
+- NASA, "How NASA Tracked the Most Intense Solar Storm in Decades", for the May 2024 storm: https://science.nasa.gov/science-research/heliophysics/how-nasa-tracked-the-most-intense-solar-storm-in-decades/
+- NASA, "Solar Cycle 25 Is Here", for the solar minimum of December 2019: https://www.nasa.gov/news-release/solar-cycle-25-is-here-nasa-noaa-scientists-explain-what-that-means/
+- RTÉ News, "Northern Lights to be visible across Ireland this evening", for the aurora over Ireland in May 2024: https://www.rte.ie/news/ireland/2024/0511/1448552-northern-lights
 - Challenge statement: https://www.spaceappschallenge.org/2026/challenges/junior-astronaut-mission-trainer/
 - Open-source software: React, Vite, Vitest, TypeScript, oxlint.
 
