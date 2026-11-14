@@ -3,8 +3,8 @@ import { EndScreen } from './components/EndScreen.tsx'
 import { GameScreen } from './components/GameScreen.tsx'
 import { type Modal, Modals } from './components/Modals.tsx'
 import { StartScreen } from './components/StartScreen.tsx'
-import { longDate } from './components/words.ts'
-import { EVENT_FACTS } from './data/facts.ts'
+import { FieldGuide } from './components/FieldGuide.tsx'
+import { EVENT_FACTS, MISSION_FACTS, type FactId } from './data/facts.ts'
 import type { ScenarioInfo } from './data/scenarios.ts'
 import { MODULES, MODULE_IDS, type ModuleId } from './game/content.ts'
 import { EVENTS, type EventId } from './game/events.ts'
@@ -48,7 +48,10 @@ type Screen =
       script: Cue[] | null
       /** The day's result, worked out by the rules, waiting for the film to finish. */
       pending: { state: GameState; report: DayReport } | null
-      lastReport: DayReport | null
+      /** Real-life facts found so far. They are kept in the field guide, not shown while playing. */
+      facts: FactId[]
+      /** How many field guide entries there were when the player last opened it. */
+      guideSeen: number
       speed: number
       effect: SceneEffect | null
     }
@@ -85,9 +88,30 @@ function seedFromClock(): number {
 
 /** The film for everything after the morning, from the result the rules worked out. */
 function restOfDay(before: GameState, result: { state: GameState; report: DayReport }): Cue[] {
-  const { report } = result
-  const link = report.storm ? { href: report.storm.link, label: "See NASA's record" } : null
-  return restScript(before, result.state, report, link, longDate(report.date))
+  return restScript(before, result.state, result.report)
+}
+
+/** How many entries the field guide holds right now. Its button lights up when this grows. */
+function guideEntries(game: GameState, facts: FactId[]): number {
+  return game.history.filter((day) => day.flare !== null || day.storm !== null).length + facts.length
+}
+
+/** Adds facts to the list of found ones, without repeats. */
+function withFacts(facts: FactId[], ...more: (FactId | undefined)[]): FactId[] {
+  const all = [...facts]
+  for (const id of more) if (id && !all.includes(id)) all.push(id)
+  return all
+}
+
+/** The real-life facts that a day's events bring to light. */
+function factsOf(report: DayReport): FactId[] {
+  const facts: FactId[] = report.finished.map((id) => MISSION_FACTS[id])
+  if (report.storm && report.response === 'shelter') facts.push('shelter')
+  if (report.call === 'false-alarm') facts.push('fraction')
+  if (report.storm) facts.push('panels')
+  if (report.cropLoss > 0) facts.push('plants')
+  if (report.crew.some((member) => member.why.includes('rival') || member.why.includes('bored'))) facts.push('hazards')
+  return facts
 }
 
 /** What the picture shows when an event card has been answered. */
@@ -124,7 +148,8 @@ function App() {
             dayKey: 1,
             script: null,
             pending: null,
-            lastReport: null,
+            facts: ['flare'],
+            guideSeen: 0,
             speed: 1,
             effect: null,
           })
@@ -149,7 +174,12 @@ function App() {
         script={screen.script}
         speed={screen.speed}
         effect={screen.effect}
-        lastReport={screen.lastReport}
+        guideNew={Math.max(0, guideEntries(screen.game, screen.facts) - screen.guideSeen)}
+        onGuide={() =>
+          update((current) =>
+            current.modal || current.phase !== 'plan' ? current : { ...current, modal: { kind: 'guide' }, guideSeen: guideEntries(current.game, current.facts) },
+          )
+        }
         onSelect={(id) => update((current) => ({ ...current, selected: id }))}
         onSpeed={() => update((current) => ({ ...current, speed: current.speed > 1 ? 1 : 3 }))}
         onTogglePower={(module) =>
@@ -190,7 +220,7 @@ function App() {
         onAlert={() =>
           update((current) => {
             const alert = alertFor(current.game, current.info.scenario, current.plan)
-            return alert ? { ...current, modal: { kind: 'alert', alert } } : current
+            return alert ? { ...current, modal: { kind: 'alert', alert }, facts: withFacts(current.facts, 'classes', 'particles', 'flash') } : current
           })
         }
         onDayEnd={() =>
@@ -207,11 +237,14 @@ function App() {
               dayKey: current.dayKey + 1,
               script: null,
               pending: null,
-              lastReport: report,
+              facts: withFacts(current.facts, ...factsOf(report)),
             }
           })
         }
       />
+      {screen.modal?.kind === 'guide' && (
+        <FieldGuide info={screen.info} game={screen.game} facts={screen.facts} onClose={() => update((current) => ({ ...current, modal: null }))} />
+      )}
       <Modals
         modal={screen.modal}
         info={screen.info}
@@ -233,7 +266,8 @@ function App() {
               game: state,
               // The answer may have cost power: make sure the plan still fits.
               plan: fitToPower(state, current.plan),
-              modal: { kind: 'event-result', icon: card.icon, title: card.title, text: result, fact: EVENT_FACTS[pending.id], reaction },
+              modal: { kind: 'event-result', icon: card.icon, title: card.title, text: result, reaction },
+              facts: withFacts(current.facts, EVENT_FACTS[pending.id]),
             }
           })
         }

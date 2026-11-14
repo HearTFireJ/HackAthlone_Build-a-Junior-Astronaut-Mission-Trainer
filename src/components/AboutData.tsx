@@ -6,6 +6,14 @@ export function AboutData() {
   return (
     <details className="about">
       <summary>What is real in this game?</summary>
+      <AboutBody />
+    </details>
+  )
+}
+
+/** The same text without the fold-away heading, for the field guide. */
+export function AboutBody() {
+  return (
       <div className="about-body">
         <h3>Real</h3>
         <ul>
@@ -35,6 +43,10 @@ export function AboutData() {
           <li>
             In the game a storm lasts one day: the day spacecraft near Earth first measured it. Real particle storms
             can go on for several days, so "no new storm today" does not mean space was calm.
+          </li>
+          <li>
+            Real storm particles are far too small to see. The game draws them as streaks so that you can watch the
+            storm arrive.
           </li>
           <li>
             The spacecraft that measured the storms were near Earth, not on the Moon. The game pretends the same
@@ -69,6 +81,5 @@ export function AboutData() {
           </li>
         </ul>
       </div>
-    </details>
   )
 }

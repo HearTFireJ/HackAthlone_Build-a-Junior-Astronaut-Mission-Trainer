@@ -56,7 +56,7 @@ describe('the film of a day', () => {
     const plan = busyPlan(state)
     for (const response of ['carry', 'inside', 'shelter'] as const) {
       const result = resolveDay(state, scenario, plan, response)
-      const film = restScript(state, result.state, result.report, null, 'a day')
+      const film = restScript(state, result.state, result.report)
       expect(film[film.length - 1].kind).toBe('end')
       expect(lastHud(film, 'air')).toBe(result.state.air)
       expect(lastHud(film, 'food')).toBe(result.state.food)
@@ -75,7 +75,7 @@ describe('the film of a day', () => {
     const scenario = scenarioOf('sep-2017', [{ watchFlare: FLARE, storm: STORM }])
     const plan = busyPlan(state)
     const carried = resolveDay(state, scenario, plan, 'carry')
-    const film = restScript(state, carried.state, carried.report, null, 'a day')
+    const film = restScript(state, carried.state, carried.report)
     expect(kinds(film)).toContain('storm')
     const hit = film.filter((cue) => cue.kind === 'hit').map((cue) => (cue.kind === 'hit' ? cue.who : ''))
     const hurt = carried.report.crew.filter((member) => member.hurt > 0).map((member) => member.id)
@@ -83,7 +83,7 @@ describe('the film of a day', () => {
     expect(hurt).toContain('niamh')
 
     const sheltered = resolveDay(state, scenario, plan, 'shelter')
-    const safe = restScript(state, sheltered.state, sheltered.report, null, 'a day')
+    const safe = restScript(state, sheltered.state, sheltered.report)
     expect(kinds(safe)).not.toContain('hit')
     expect(safe.filter((cue) => cue.kind === 'go' && cue.act === 'shelter')).toHaveLength(state.crew.length)
   })
@@ -96,7 +96,7 @@ describe('the film of a day', () => {
     plan.power.garage = true
     plan.jobs.cian = { kind: 'trip', trip: 'scout' }
     const result = resolveDay(state, scenario, plan, 'inside')
-    const film = restScript(state, result.state, result.report, null, 'a day')
+    const film = restScript(state, result.state, result.report)
     expect(film.some((cue) => cue.kind === 'rover-in' && cue.who === 'cian')).toBe(true)
   })
 
@@ -109,7 +109,7 @@ describe('the film of a day', () => {
         const calm = resolveDay(state, scenario, plan, 'carry')
         const morning = morningScript(state, calm.report, alert !== null)
         const result = alert ? resolveDay(state, scenario, plan, day % 2 ? 'shelter' : 'inside') : calm
-        const film = [...morning, ...later(restScript(state, result.state, result.report, null, 'a day'), MORNING)]
+        const film = [...morning, ...later(restScript(state, result.state, result.report), MORNING)]
         expect(film.filter((cue) => cue.kind === 'end')).toHaveLength(1)
         state = result.state
         state.event = null

@@ -18,14 +18,9 @@ export interface Hud {
 
 export type Tone = 'plain' | 'good' | 'warn' | 'bad'
 
-export interface CaptionLink {
-  href: string
-  label: string
-}
-
 /** One thing that happens in the film, at a time in seconds from its start. */
 export type Cue = { t: number } & (
-  | { kind: 'caption'; text: string; tone: Tone; link?: CaptionLink; /** Only for the Mission Control log, not the big caption. */ logOnly?: boolean }
+  | { kind: 'caption'; text: string; tone: Tone }
   | { kind: 'time'; label: string }
   | { kind: 'go'; who: string; act: Activity; repairAt?: ModuleId | 'panels'; hurry?: boolean }
   | { kind: 'rover-in'; who: string; act: Activity; hurry?: boolean }
@@ -127,7 +122,7 @@ const signed = (value: number) => (value > 0 ? `+${value}` : `−${Math.abs(valu
  * The rest of the day, once the commander's answer is known: people move if they were
  * called in, the storm comes or does not, the work pays off, everyone goes home to eat.
  */
-export function restScript(before: GameState, after: GameState, report: DayReport, stormLink: CaptionLink | null, dateWords: string): Cue[] {
+export function restScript(before: GameState, after: GameState, report: DayReport): Cue[] {
   const cues: Cue[] = []
   const add = (t: number, cue: Body<Cue>) => cues.push({ t, ...cue } as Cue)
   const stats = hudOf(before).crew
@@ -159,13 +154,7 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
   if (report.storm) {
     add(t, { kind: 'time', label: 'Storm' })
     add(t, { kind: 'storm', seconds: 4.8, severe: report.storm.severe })
-    add(t, {
-      kind: 'caption',
-      text: `A ${report.storm.severe ? 'severe ' : ''}solar particle storm hits the base! This really happened on ${dateWords}.`,
-      tone: 'bad',
-      link: stormLink ?? undefined,
-    })
-    add(t + 0.1, { kind: 'caption', text: 'Real storm particles are far too small to see. The game draws them so you can watch the storm.', tone: 'plain', logOnly: true })
+    add(t, { kind: 'caption', text: `A ${report.storm.severe ? 'severe ' : ''}solar particle storm hits the base!`, tone: 'bad' })
     let sheltered = false
     for (const member of report.crew) {
       if (member.hurt > 0) {
@@ -186,11 +175,7 @@ export function restScript(before: GameState, after: GameState, report: DayRepor
     }
     t += 5.6
   } else if (report.alertShown) {
-    add(t, {
-      kind: 'caption',
-      text: `No storm came. NASA's records show no particle storm starting on ${dateWords}.`,
-      tone: report.response === 'carry' ? 'good' : 'plain',
-    })
+    add(t, { kind: 'caption', text: 'No storm came this time.', tone: report.response === 'carry' ? 'good' : 'plain' })
     t += 3
   }
 

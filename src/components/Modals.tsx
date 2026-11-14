@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import type { FactId } from '../data/facts.ts'
 import type { ScenarioInfo } from '../data/scenarios.ts'
 import { JOBS, crewInfo } from '../game/content.ts'
 import { EVENTS } from '../game/events.ts'
@@ -13,13 +12,12 @@ import {
   missionDone,
 } from '../game/outpost.ts'
 import type { SceneEffect } from '../scene/Scene.tsx'
-import { FactLine } from './bits.tsx'
-import { clock, longDate } from './words.ts'
 
 export type Modal =
   | { kind: 'intro' }
   | { kind: 'event' }
-  | { kind: 'event-result'; icon: string; title: string; text: string; fact?: FactId; reaction?: Omit<SceneEffect, 'key'> }
+  | { kind: 'event-result'; icon: string; title: string; text: string; reaction?: Omit<SceneEffect, 'key'> }
+  | { kind: 'guide' }
   | { kind: 'alert'; alert: Alert }
   | null
 
@@ -72,11 +70,11 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
             it fires a big flare, Mission Control will call, but only if your Radio Dish is on.
           </li>
         </ol>
-        <FactLine id="flare" />
         <p>
           ⭐ You earn one star for each mission you finish, and one more for handing the next crew a base with air, food
           and a healthy, happy crew.
         </p>
+        <p>📖 The Field guide fills up with the real records and facts behind what you see. Look at it whenever you like.</p>
         <button type="button" className="primary" onClick={onCloseIntro}>
           {game.day === 1 && game.history.length === 0 ? 'Take command ▶' : 'Back to the base ▶'}
         </button>
@@ -102,7 +100,6 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
             </button>
           ))}
         </div>
-        <p className="hint">This event is made up for the game. Only the Sun's flares and storms are real records.</p>
       </Card>
     )
   }
@@ -114,7 +111,6 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
           <span aria-hidden="true">{modal.icon}</span> {modal.title}
         </h2>
         <p>{modal.text}</p>
-        {modal.fact && <FactLine id={modal.fact} />}
         <button type="button" className="primary" onClick={onCloseEventResult}>
           OK
         </button>
@@ -136,11 +132,7 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
         <p className="eyebrow">Day {game.day} · Mission Control calling</p>
         <h2>⚠️ Flare alert</h2>
         <p>
-          The Sun has just fired a <strong>class {flare.class} flare</strong>.{' '}
-          <a href={flare.link} target="_blank" rel="noreferrer">
-            Real NASA record
-          </a>
-          : {longDate(flare.time)}, {clock(flare.time)} UTC.
+          The Sun has just fired a <strong>class {flare.class} flare</strong>.
         </p>
         <p className={`clue ${cloudKnown ? (flare.cme ? 'danger' : 'safe') : 'unknown'}`}>
           {cloudKnown ? (
@@ -163,8 +155,6 @@ export function Modals({ modal, info, game, plan, onCloseIntro, onAnswerEvent, o
             </>
           )}
         </p>
-        <FactLine id="classes" />
-        <FactLine id="particles" />
         <p>
           <strong>{names.length > 0 ? `Outside right now: ${names.join(', ')}.` : 'Nobody is outside right now.'}</strong>
         </p>

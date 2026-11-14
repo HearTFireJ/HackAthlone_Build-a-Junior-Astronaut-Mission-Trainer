@@ -112,6 +112,18 @@ button:disabled { cursor: not-allowed; }
 .help { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); padding: 0.1rem 0.7rem; font-size: 0.8rem; font-weight: 600; }
 .help:hover:not(:disabled) { border-color: var(--info); color: var(--text); }
 .help:disabled { opacity: 0.4; }
+/* The field guide button glows when something new has been written in it. */
+.guide-button { display: inline-flex; align-items: center; gap: 0.35rem; }
+.guide-button.fresh { border-color: var(--power); color: var(--text); animation: glow 1.4s ease-in-out infinite alternate; }
+.guide-new { background: var(--power); color: #1c1400; border-radius: 999px; padding: 0 0.45rem; font-size: 0.72rem; font-weight: 800; }
+@keyframes glow { from { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0); } to { box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.3), 0 0 14px rgba(255, 209, 102, 0.5); } }
+.card-guide { width: min(760px, 100%); border-color: var(--power); }
+.guide-part { width: 100%; display: grid; gap: 0.4rem; }
+.guide-part h3 { color: var(--power); font-size: 1rem; }
+.guide-empty { color: var(--muted); font-size: 0.88rem; font-style: italic; }
+.guide-sun { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+.guide-sun li { display: grid; gap: 0.1rem; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 0.6rem; font-size: 0.9rem; }
+.guide-facts { display: grid; gap: 0.4rem; }
 .meters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .meter { display: flex; align-items: center; gap: 0.45rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0.25rem 0.65rem; }
 .meter-icon { font-size: 1.2rem; }

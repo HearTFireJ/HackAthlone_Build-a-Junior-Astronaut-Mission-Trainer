@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { MISSION_FACTS, type FactId } from '../data/facts.ts'
 import type { ScenarioInfo } from '../data/scenarios.ts'
 import {
   CLASHES,
@@ -17,7 +16,6 @@ import {
 } from '../game/content.ts'
 import {
   RULES,
-  type DayReport,
   type GameState,
   type Job,
   type Plan,
@@ -35,10 +33,10 @@ import {
 import { sunActivity, weatherOn, yesterdayOf } from '../game/weather.ts'
 import type { PlaceId } from '../scene/layout.ts'
 import { Scene, type SceneEffect } from '../scene/Scene.tsx'
-import { hudOf, type CaptionLink, type Cue, type Hud, type Tone } from '../scene/script.ts'
+import { hudOf, type Cue, type Hud, type Tone } from '../scene/script.ts'
 import type { Pick } from '../scene/world.ts'
 import { Avatar } from './Avatar.tsx'
-import { FactLine, Pips } from './bits.tsx'
+import { Pips } from './bits.tsx'
 import { CONDITION_WORDS, JOB_ICONS, MISSION_ICONS, longDate, plural } from './words.ts'
 
 interface Props {
@@ -52,7 +50,9 @@ interface Props {
   script: Cue[] | null
   speed: number
   effect: SceneEffect | null
-  lastReport: DayReport | null
+  /** How many entries in the field guide the player has not looked at yet. */
+  guideNew: number
+  onGuide: () => void
   onSelect: (astronautId: string | null) => void
   onTogglePower: (module: ModuleId) => void
   onAssign: (astronautId: string, job: Job) => void
@@ -66,7 +66,6 @@ interface Props {
 interface LogLine {
   text: string
   tone: Tone
-  link?: CaptionLink
 }
 
 /** The job done at a place, for "pick someone, then click where they should go". */
@@ -105,7 +104,7 @@ const PLACE_HINTS: Partial<Record<PlaceId, string>> = {
 
 /** The main screen: the living base, with a few numbers around it. */
 export function GameScreen(props: Props) {
-  const { info, game, plan, selected, phase, dayKey, script, speed, effect, lastReport } = props
+  const { info, game, plan, selected, phase, dayKey, script, speed, effect, guideNew } = props
   // The numbers shown while a day plays. They belong to one day: "day" says which.
   const [played, setPlayed] = useState<{ day: number; hud: Hud } | null>(null)
   const hud = played && played.day === dayKey ? played.hud : null
@@ -136,8 +135,8 @@ export function GameScreen(props: Props) {
 
   const onCue = (cue: Cue) => {
     if (cue.kind === 'caption') {
-      const line = { text: cue.text, tone: cue.tone, link: cue.link }
-      if (!cue.logOnly) setCaption(line)
+      const line = { text: cue.text, tone: cue.tone }
+      setCaption(line)
       setLog((lines) => [...lines, line])
     } else if (cue.kind === 'time') {
       setTimeLabel(cue.label)
@@ -195,7 +194,6 @@ export function GameScreen(props: Props) {
 
   const yesterday = yesterdayOf(info.scenario, game.day)
   const activity = sunActivity(yesterday)
-  const fact = lastReport ? factFor(lastReport) : null
 
   return (
     <main className="game">
@@ -204,12 +202,14 @@ export function GameScreen(props: Props) {
           <strong>
             Day {game.day} of {RULES.maxDays}
           </strong>
-          <span className="real-date" title="The Sun's weather in this mission is the real weather of this date.">
-            {longDate(weather.date)} · real date
-          </span>
+          <span className="real-date">{longDate(weather.date)}</span>
           <span className={`tag tag-${info.difficulty.replace(' ', '-').toLowerCase()}`}>{info.title}</span>
           <button type="button" className="help" onClick={props.onHelp} disabled={!planning}>
             ? How to play
+          </button>
+          <button type="button" className={guideNew > 0 ? 'help guide-button fresh' : 'help guide-button'} onClick={props.onGuide} disabled={!planning}>
+            📖 Field guide
+            {guideNew > 0 && <span className="guide-new">{guideNew} new</span>}
           </button>
         </div>
 
@@ -316,18 +316,11 @@ export function GameScreen(props: Props) {
                 {planning && <li className="radio-when">Yesterday:</li>}
                 {log.map((line, index) => (
                   <li key={index} className={`tone-${line.tone}`}>
-                    {line.text}{' '}
-                    {line.link && (
-                      <a href={line.link.href} target="_blank" rel="noreferrer">
-                        {line.link.label}
-                      </a>
-                    )}
+                    {line.text}
                   </li>
                 ))}
               </ul>
             )}
-            {planning && fact && <FactLine id={fact} />}
-            <p className="hint">Sun records: NASA DONKI. Saved records, not live.</p>
           </section>
         </aside>
 
@@ -343,12 +336,7 @@ export function GameScreen(props: Props) {
           ) : (
             caption && (
               <div className={`subtitle tone-${caption.tone}`} key={caption.text}>
-                {caption.text}{' '}
-                {caption.link && (
-                  <a href={caption.link.href} target="_blank" rel="noreferrer">
-                    {caption.link.label}
-                  </a>
-                )}
+                {caption.text}
               </div>
             )
           )}
@@ -402,15 +390,6 @@ export function GameScreen(props: Props) {
       </div>
     </main>
   )
-}
-
-/** One real-life fact that fits what happened yesterday. */
-function factFor(report: DayReport): FactId | null {
-  if (report.finished.length > 0) return MISSION_FACTS[report.finished[0]]
-  if (report.storm && report.response === 'shelter') return 'shelter'
-  if (report.call === 'false-alarm') return 'fraction'
-  if (report.storm) return 'panels'
-  return null
 }
 
 /** True when at least one astronaut is set to do this job today and really can. */

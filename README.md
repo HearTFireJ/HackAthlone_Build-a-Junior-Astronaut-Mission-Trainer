@@ -18,6 +18,8 @@ You see the base from above. In the morning you give the orders: click the ⚡ s
 
 Real storm particles are far too small to see. The game draws them so that you can watch the storm arrive.
 
+While you play, the game does not lecture. The real records and the real-life facts are collected in a **Field guide**: its button lights up when something new has been written in it, such as a real flare or storm you have just lived through (with a link to NASA's record), or a fact about what you have just seen. The guide also says plainly what is real, what is simplified and what is made up.
+
 **Every morning you plan the day:**
 
 1. **Share out the power.** The solar panels make about 7 units a day. Running everything would take 10. You choose which modules get power:
