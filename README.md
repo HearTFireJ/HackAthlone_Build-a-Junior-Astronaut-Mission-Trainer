@@ -12,7 +12,7 @@ No download, no account. Made for a laptop screen; it also works on a phone. The
 
 Built at HackAthlone 2026 (TUS Athlone, Ireland) for the NASA Space Apps Challenge 2026, challenge *Build a Junior Astronaut Mission Trainer*.
 
-> Status: work in progress during the hackathon weekend. The game's name, the crew's names, the artwork and the balance numbers are not final.
+> Status: built over the hackathon weekend, 13 to 15 November 2026. The game's name and the crew's names are working names.
 
 ## How the game works
 
@@ -146,10 +146,10 @@ AI tools were used heavily in this project, and this section says where.
 
 - **Code and tests:** written almost entirely by an AI coding assistant (Anthropic's Claude, through Claude Code), directed, reviewed and play-tested by the author. The commit history records this: AI-written commits carry a `Co-Authored-By` line.
 - **Code review:** a second AI model (OpenAI Codex) was asked to review the rules for bugs and loopholes, once for each version of the game. It only read the code. Its findings were checked and fixed by the first assistant.
-- **Game design:** the challenge sets the frame: an outpost, the five kinds of decision, real NASA data. The author decided what kind of game it is: an outpost to run, with a crew that has missions, moods and friendships, and with no deaths. The author threw away the first version after playing it. The AI assistant proposed the details (modules, numbers, event cards) and wrote them up.
+- **Game design:** the challenge sets the frame: an outpost, the five kinds of decision, real NASA data. The author decided what kind of game it is, and kept deciding while playing each version: an outpost to run, with a crew that has missions, moods and friendships, and with no deaths; no storm shelter; the Moon-soil shield as a choice and not a mission; a flare alert that only says what was seen; a crew the player chooses; the player decides when to hand the base over. The author threw away the first version after playing it. The AI assistant proposed the details (modules, numbers, event cards, who the astronauts are, the starting conditions) and wrote them up.
 - **Research:** the AI assistant searched NASA's pages for the "Real life" facts and recorded a quote and a link for each one.
 - **Text in the game:** drafted by the AI assistant.
-- **Images:** no AI-generated images are used. The game is drawn with CSS and emoji.
+- **Pictures:** no image-generating model was used. Everything on screen (the base, the astronauts, the icons) is drawn by program code, on a canvas and as SVG, and that code was written by the AI assistant. The author set the direction: a base seen from above, big-headed cartoon astronauts instead of the first stick-like figures, and people, beds and rover in sizes that fit together.
 - **Working notes:** while building, the author and the AI assistant kept their instructions and design notes in Chinese. Those files are not part of this repository.
 
 No NASA logos or other NASA branding are used anywhere in the project.
