@@ -621,8 +621,14 @@ function shortReason(why: string): string {
 /** What the jobs that make nothing do, in two or three words. */
 const SHORT_DOES: Partial<Record<JobId, string>> = { rest: 'Mood, a little health', sickbay: 'Much better health', call: 'Much better mood' }
 
+// The menu's size when the page's base font is 16px. On wide screens the base font grows with
+// the window (see :root in index.css), so the menu has to grow with it: a menu of fixed width
+// makes the bigger text wrap, and then the list no longer fits and has to scroll.
 const MENU_WIDTH = 316
 const MENU_HEIGHT = 520
+function fontScale(): number {
+  return (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16
+}
 
 /**
  * The list of jobs. It opens on the picture, just left of the crew quarters where the
@@ -647,9 +653,11 @@ function JobMenu({ astronautId, game, plan, anchor, onAssign, onClose }: { astro
 
   let place: { left: number; top: number; maxHeight: number } | undefined
   if (anchor) {
+    const scale = fontScale()
+    const width = MENU_WIDTH * scale
     const edge = Math.min(anchor.x - 44, anchor.roomLeft - 10)
-    const left = edge - MENU_WIDTH >= 8 ? edge - MENU_WIDTH : Math.max(8, Math.min(anchor.x + 44, anchor.width - MENU_WIDTH - 8))
-    const maxHeight = Math.min(MENU_HEIGHT, anchor.height - 16)
+    const left = edge - width >= 8 ? edge - width : Math.max(8, Math.min(anchor.x + 44, anchor.width - width - 8))
+    const maxHeight = Math.min(MENU_HEIGHT * scale, anchor.height - 16)
     const top = Math.max(8, Math.min(anchor.y - maxHeight * 0.8, anchor.height - maxHeight - 8))
     place = { left, top, maxHeight }
   }

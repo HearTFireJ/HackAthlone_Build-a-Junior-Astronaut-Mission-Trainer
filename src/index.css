@@ -278,7 +278,7 @@ button:disabled { cursor: not-allowed; }
 .log-bad { border-color: var(--bad); color: #a31f36; }
 
 /* The list of jobs opens beside the astronaut, on the picture. */
-.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: 316px; overflow: hidden auto; scrollbar-width: thin; background: var(--paper); color: var(--ink); border: var(--edge); border-radius: 16px; padding: 0.55rem; box-shadow: 0 5px 0 var(--ink), 0 14px 30px rgba(15, 20, 48, 0.35); display: grid; gap: 0.4rem; align-content: start; }
+.job-menu { position: absolute; left: 0.6rem; top: 0.6rem; z-index: 6; width: 19.75rem; overflow: hidden auto; scrollbar-width: thin; background: var(--paper); color: var(--ink); border: var(--edge); border-radius: 16px; padding: 0.55rem; box-shadow: 0 5px 0 var(--ink), 0 14px 30px rgba(15, 20, 48, 0.35); display: grid; gap: 0.4rem; align-content: start; }
 .job-menu-about { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.35rem; margin: 0; font-size: 0.78rem; padding-right: 1.6rem; }
 .job-menu-about strong { font-size: 1.05rem; margin-right: 0.15rem; }
 .trait { display: inline-flex; align-items: center; gap: 0.25rem; border: 2px solid var(--ink); border-radius: 999px; padding: 0 0.5rem; white-space: nowrap; font-weight: 700; background: #fff; }
