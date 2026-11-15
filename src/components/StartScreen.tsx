@@ -20,7 +20,9 @@ export function StartScreen({ onPick, saved, onContinue }: Props) {
       <header className="start-head hero">
         <div className="hero-text">
           <p className="eyebrow">Mission Control · Athlone, Ireland</p>
-          <h1>Junior Astronaut Mission Trainer</h1>
+          <h1>
+            Ten Days on the Moon <span className="title-sub">Flare Alert</span>
+          </h1>
           <p className="lead">
             You are the commander of a Moon outpost. Your crew has missions to do, not enough power for everything, and
             a Sun that does exactly what the real Sun did.

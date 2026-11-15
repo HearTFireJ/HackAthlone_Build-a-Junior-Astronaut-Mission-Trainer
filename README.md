@@ -1,4 +1,4 @@
-# Junior Astronaut Mission Trainer
+# Ten Days on the Moon: Flare Alert
 
 A browser game for children aged 7 to 12. You are the commander of a Moon outpost. Your crew has missions to do, there is never enough power for everything, and the Sun does exactly what the **real Sun** did on those dates, replayed from NASA's space weather records.
 
@@ -12,7 +12,7 @@ No download, no account. Made for a laptop screen; it also works on a phone. The
 
 Built at HackAthlone 2026 (TUS Athlone, Ireland) for the NASA Space Apps Challenge 2026, challenge *Build a Junior Astronaut Mission Trainer*.
 
-> Status: built over the hackathon weekend, 13 to 15 November 2026. The game's name and the crew's names are working names.
+> Status: built over the hackathon weekend, 13 to 15 November 2026. The crew's names are working names.
 
 ## How the game works
 

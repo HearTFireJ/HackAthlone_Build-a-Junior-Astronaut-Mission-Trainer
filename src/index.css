@@ -110,6 +110,8 @@ button:disabled { cursor: not-allowed; }
 .start-head, .end-head { display: grid; gap: 0.7rem; justify-items: start; }
 .hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: 1.5rem; }
 .hero-text { display: grid; gap: 0.7rem; }
+/* The second half of the game's name sits on its own line, in the alert colour. */
+.title-sub { display: block; color: var(--yellow); font-size: 0.72em; }
 .hero-art { width: 100%; height: auto; border-radius: 22px; border: var(--edge); border-color: var(--ink-deep); box-shadow: 0 5px 0 var(--ink-deep); background: radial-gradient(circle at 80% 20%, #2a3470 0%, #0d1126 70%); }
 @media (max-width: 700px) {
   .hero { grid-template-columns: 1fr; }
